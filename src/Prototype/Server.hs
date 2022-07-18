@@ -31,19 +31,15 @@ import qualified Network.HTTP.Types            as HTTP
 import qualified Network.Wai                   as Wai
 import qualified Network.Wai.Handler.Warp      as Warp
 import qualified Prototype.Data.User           as User
+import qualified Prototype.Example             as Example
 import qualified Prototype.Form.Login          as Login
 import qualified Prototype.Form.Signup         as Signup
-import qualified Prototype.Html.Errors
-                                               as Pages
-import qualified Prototype.Html.Homepage
-                                               as Pages
-import qualified Prototype.Html.LandingPage
-                                               as Pages
-import qualified Prototype.Html.Profile
-                                               as Pages
+import qualified Prototype.Html.Errors         as Pages
+import qualified Prototype.Html.Homepage       as Pages
+import qualified Prototype.Html.LandingPage    as Pages
+import qualified Prototype.Html.Profile        as Pages
 import qualified Prototype.Runtime             as Rt
-import qualified Prototype.Server.Helpers
-                                               as H
+import qualified Prototype.Server.Helpers      as H
 import           Servant                 hiding ( serve )
 import qualified Servant.Auth.Server           as SAuth
 import qualified Servant.HTML.Blaze            as B
@@ -53,9 +49,11 @@ import qualified Smart.Server.Page             as SS.P
 import qualified Text.Blaze.Html5              as H
 import           Text.Blaze.Renderer.Utf8       ( renderMarkup )
 import           WaiAppStatic.Storage.Filesystem
-                                                ( defaultWebAppSettings
+                                                ( defaultWebAppSettings )
+import           WaiAppStatic.Storage.Filesystem.Extended
+                                                ( hashFileIfExists
+                                                , webAppLookup
                                                 )
-import WaiAppStatic.Storage.Filesystem.Extended ( hashFileIfExists, webAppLookup )
 import           WaiAppStatic.Types             ( ss404Handler
                                                 , ssLookupFile
                                                 )
@@ -70,7 +68,7 @@ type App = H.UserAuthentication :> Get '[B.HTML] (PageEither
              )
              :<|> "forms" :> "login" :> Get '[B.HTML] Login.Page
              :<|> "forms" :> "signup" :> Get '[B.HTML] Signup.Page
-             -- TODO Add the user profile update form.
+             :<|> "forms" :> "profile" :> Get '[B.HTML] Pages.ProfilePage
              -- TODO Add the user profile view.
 
              :<|> "messages" :> "signup" :> Get '[B.HTML] Signup.SignupResultPage
@@ -96,6 +94,7 @@ serverT root =
   showLandingPage
     :<|> documentLoginPage
     :<|> documentSignupPage
+    :<|> documentEditProfilePage
     :<|> messageSignupSuccess
     :<|> echoLogin
     :<|> echoSignup
@@ -321,6 +320,12 @@ handleUserUpdate User.Update {..} profile = case _editPassword of
   Nothing -> pure . SS.P.AuthdPage profile . Pages.ProfileSaveFailure $ Just
     "Nothing to update."
 
+documentEditProfilePage :: ServerC m => m Pages.ProfilePage
+documentEditProfilePage =
+  pure $ Pages.ProfilePage Example.alice "/echo/profile"
+
+
+--------------------------------------------------------------------------------
 -- | Run a handler, ensuring a user profile can be extracted from the
 -- authentication result, or throw an error.
 withUser
