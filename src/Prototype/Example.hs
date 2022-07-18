@@ -3,7 +3,9 @@ Module: Prototype.Example
 Description: Provide example data and scenarios.
 
 -}
-module Prototype.Example where
+module Prototype.Example
+  ( alice
+  ) where
 
 import qualified Prototype.Data.User           as User
 

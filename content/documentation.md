@@ -11,5 +11,6 @@ title: Curiosity
 - [Forms](/documentation/forms)
 - [Man pages](/documentation/man-pages)
 - [Messages](/documentation/messages)
+- [Objects](/documentation/objects)
 - [Sitemap](/documentation/sitemap)
 - [Virtual machine image](/documentation/machine)
