@@ -30,6 +30,7 @@ import "exceptions" Control.Monad.Catch         ( MonadMask )
 import qualified Network.HTTP.Types            as HTTP
 import qualified Network.Wai                   as Wai
 import qualified Network.Wai.Handler.Warp      as Warp
+import           Prototype.Data                 ( readFullStmDbInHask )
 import qualified Prototype.Data.User           as User
 import qualified Prototype.Example             as Example
 import qualified Prototype.Form.Login          as Login
@@ -75,6 +76,8 @@ type App = H.UserAuthentication :> Get '[B.HTML] (PageEither
 
              :<|> "messages" :> "signup" :> Get '[B.HTML] Signup.SignupResultPage
 
+             :<|> "state" :> Get '[B.HTML] Login.ResultPage -- TODO Proper type.
+
              :<|> "echo" :> "login"
                   :> ReqBody '[FormUrlEncoded] User.Credentials
                   :> Post '[B.HTML] Login.ResultPage
@@ -99,6 +102,7 @@ serverT root =
     :<|> documentEditProfilePage
     :<|> documentProfilePage
     :<|> messageSignupSuccess
+    :<|> showState
     :<|> echoLogin
     :<|> echoSignup
     :<|> showLoginPage
@@ -350,6 +354,13 @@ withUser authResult f = case authResult of
   authFailedErr = Errs.throwError' . User.UserNotFound . mappend
     "Authentication failed, please login again. Error: "
 
+
+--------------------------------------------------------------------------------
+showState :: ServerC m => m Login.ResultPage
+showState = do
+  stmDb <- asks Rt._rDb
+  state <- readFullStmDbInHask stmDb
+  pure $ Login.Success $ show state
 
 --------------------------------------------------------------------------------
 -- | Serve the static files for the documentation. This also provides a custom

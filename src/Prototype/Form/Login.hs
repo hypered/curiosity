@@ -116,4 +116,6 @@ instance H.ToMarkup ResultPage where
     Failure msg -> withText msg
    where
     withText msg =
-      Render.renderCanvas $ Dsl.SingletonCanvas $ H.code $ H.toMarkup msg
+      Render.renderCanvas $ Dsl.SingletonCanvas $
+        H.div ! A.class_ "c-display" $
+          H.code $ H.toMarkup msg

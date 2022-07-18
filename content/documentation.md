@@ -6,6 +6,7 @@ title: Curiosity
 # Documentation
 
 - [About](/about)
+- [Application state](/documentation/state)
 - [Command-line interfaces](/documentation/clis)
 - [Deployment](/documentation/deployment)
 - [Forms](/documentation/forms)
