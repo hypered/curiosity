@@ -1,0 +1,9 @@
+{
+  "_userProfileId": "USER-1",
+  "_userProfileCreds": {
+    "_userCredsName": "alice",
+    "_userCredsPassword": "secret"
+  },
+  "_userProfileEmailAddr": "alice@example.com",
+  "_userProfileDisplayName": "TODO"
+}

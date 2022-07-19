@@ -40,7 +40,7 @@ confParser = do
 
 defaultConf :: Conf
 defaultConf =
-  let _confServer = ServerConf 9000 "./_site/"
+  let _confServer = ServerConf 9000 "./_site/" "./data/"
       _confRepl   = Repl.ReplConf "> " False ["exit", "quit"]
       _confDbFile = Nothing
   in  Conf
@@ -74,6 +74,13 @@ serverParser =
           <> A.help
                "A directory served as static assets, in particular HTML \
             \documentation."
+          )
+    <*> A.strOption
+          (  A.long "data-dir"
+          <> A.value "./data/"
+          <> A.metavar "DIR"
+          <> A.help
+               "A directory containing example data."
           )
 
 replParser :: A.Parser Repl.ReplConf

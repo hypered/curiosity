@@ -27,12 +27,15 @@ import qualified Commence.Runtime.Errors       as Errs
 import qualified Commence.Runtime.Storage      as S
 import           Control.Lens
 import "exceptions" Control.Monad.Catch         ( MonadMask )
+import           Data.Aeson                     ( FromJSON, eitherDecode )
+import qualified Data.ByteString.Lazy          as BS
 import qualified Network.HTTP.Types            as HTTP
 import qualified Network.Wai                   as Wai
 import qualified Network.Wai.Handler.Warp      as Warp
-import           Prototype.Data                 ( readFullStmDbInHask, HaskDb )
+import           Prototype.Data                 ( HaskDb
+                                                , readFullStmDbInHask
+                                                )
 import qualified Prototype.Data.User           as User
-import qualified Prototype.Example             as Example
 import qualified Prototype.Form.Login          as Login
 import qualified Prototype.Form.Signup         as Signup
 import qualified Prototype.Html.Errors         as Pages
@@ -91,12 +94,13 @@ type App = H.UserAuthentication :> Get '[B.HTML] (PageEither
 
              :<|> Public
              :<|> Private
+             :<|> "data" :> Raw
              :<|> Raw -- Catchall for static files (documentation)
                       -- and for a custom 404
 
 -- | This is the main Servant server definition, corresponding to @App@.
-serverT :: forall m . ServerC m => FilePath -> ServerT App m
-serverT root =
+serverT :: forall m . ServerC m => FilePath -> FilePath -> ServerT App m
+serverT root dataDir =
   showLandingPage
     :<|> documentLoginPage
     :<|> documentSignupPage
@@ -111,6 +115,7 @@ serverT root =
     :<|> showSignupPage
     :<|> publicT
     :<|> privateT
+    :<|> serveData dataDir
     :<|> serveDocumentation root
 
 
@@ -138,8 +143,8 @@ run
   -> m ()
 run runtime@Rt.Runtime {..} = liftIO $ Warp.run port waiApp
  where
-  Rt.ServerConf port root = runtime ^. Rt.rConf . Rt.confServer
-  waiApp = serve @Rt.ExeAppM (Rt.exampleAppMHandlerNatTrans runtime) ctx root
+  Rt.ServerConf port root dataDir = runtime ^. Rt.rConf . Rt.confServer
+  waiApp = serve @Rt.ExeAppM (Rt.exampleAppMHandlerNatTrans runtime) ctx root dataDir
   ctx =
     _rConf
       ^.        Rt.confCookie
@@ -155,11 +160,12 @@ serve
                                    -- arbitrary @m@ to a Servant @Handler@
   -> Server.Context ServerSettings
   -> FilePath
+  -> FilePath
   -> Wai.Application
-serve handlerNatTrans ctx root =
+serve handlerNatTrans ctx root dataDir =
   Servant.serveWithContext appProxy ctx
     $ hoistServerWithContext appProxy settingsProxy handlerNatTrans
-    $ serverT root
+    $ serverT root dataDir
  where
   appProxy      = Proxy @App
   settingsProxy = Proxy @ServerSettings
@@ -283,6 +289,8 @@ handleLogin User.Credentials {..} =
 type Private = H.UserAuthentication :> (
                    "settings" :> "profile"
                    :> Get '[B.HTML] Pages.ProfileView
+             :<|>  "settings" :> "profile.json"
+                   :> Get '[JSON] User.UserProfile
              :<|>  "settings" :> "profile" :> "edit"
                    :> Get '[B.HTML] Pages.ProfilePage
              :<|>  "a" :>"set-user-profile"
@@ -293,10 +301,15 @@ type Private = H.UserAuthentication :> (
 privateT :: forall m . ServerC m => ServerT Private m
 privateT authResult =
   (withUser authResult showProfilePage)
+    :<|> (withUser authResult showProfileAsJson)
     :<|> (withUser authResult showEditProfilePage)
     :<|> (withUser authResult . handleUserUpdate)
 
 showProfilePage profile = pure $ Pages.ProfileView profile
+
+showProfileAsJson
+  :: forall m . ServerC m => User.UserProfile -> m User.UserProfile
+showProfileAsJson = pure
 
 showEditProfilePage profile =
   pure $ Pages.ProfilePage profile "/a/set-user-profile"
@@ -330,11 +343,27 @@ handleUserUpdate User.Update {..} profile = case _editPassword of
     "Nothing to update."
 
 documentEditProfilePage :: ServerC m => m Pages.ProfilePage
-documentEditProfilePage =
-  pure $ Pages.ProfilePage Example.alice "/echo/profile"
+documentEditProfilePage = do
+  profile <- readJson "data/alice.json"
+  pure $ Pages.ProfilePage profile "/echo/profile"
 
 documentProfilePage :: ServerC m => m Pages.ProfileView
-documentProfilePage = pure $ Pages.ProfileView Example.alice
+documentProfilePage = do
+  profile <- readJson "data/alice.json"
+  pure $ Pages.ProfileView profile
+
+
+--------------------------------------------------------------------------------
+-- TODO When given a wrong path, e.g, in documentProfilePage above, the
+-- returned HTML is not what I expect, nor the error is logged to our log files.
+readJson :: (ServerC m, FromJSON a) => FilePath -> m a
+readJson path = do
+  content <- liftIO $ BS.readFile path
+  let ma = eitherDecode content
+  case ma of
+    Right a -> pure a
+    -- TODO Be more specific, e.g. the error can also be malformed JSON.
+    Left _ -> Errs.throwError' $ Rt.FileDoesntExistErr path
 
 
 --------------------------------------------------------------------------------
@@ -361,7 +390,7 @@ withUser authResult f = case authResult of
 showState :: ServerC m => m Login.ResultPage
 showState = do
   stmDb <- asks Rt._rDb
-  db <- readFullStmDbInHask stmDb
+  db    <- readFullStmDbInHask stmDb
   pure . Login.Success $ show db
 
 -- TODO The passwords are displayed in clear. Would be great to have the option
@@ -369,8 +398,9 @@ showState = do
 showStateAsJson :: ServerC m => m (HaskDb Rt.Runtime)
 showStateAsJson = do
   stmDb <- asks Rt._rDb
-  db <- readFullStmDbInHask stmDb
+  db    <- readFullStmDbInHask stmDb
   pure db
+
 
 --------------------------------------------------------------------------------
 -- | Serve the static files for the documentation. This also provides a custom
@@ -387,3 +417,12 @@ custom404 _request sendResponse = sendResponse $ Wai.responseLBS
   HTTP.status404
   [("Content-Type", "text/html; charset=UTF-8")]
   (renderMarkup $ H.toMarkup Pages.NotFoundPage)
+
+
+--------------------------------------------------------------------------------
+-- | Serve example data as JSON files.
+serveData path = serveDirectoryWith settings
+ where
+  settings = (defaultWebAppSettings path)
+    { ss404Handler = Just custom404
+    }
