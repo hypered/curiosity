@@ -3,6 +3,7 @@
 {-# LANGUAGE GeneralisedNewtypeDeriving #-}
 module Prototype.Runtime
   ( Conf(..)
+  , IOErr(..)
   , confRepl
   , confServer
   , confLogging

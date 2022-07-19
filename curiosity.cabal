@@ -89,7 +89,6 @@ library
     Prototype.Runtime
     Prototype.Data.Todo
     Prototype.Data.User
-    Prototype.Example
     Prototype.Form.Login
     Prototype.Form.Signup
     Prototype.Html.Errors

@@ -27,6 +27,8 @@ import qualified Commence.Runtime.Errors       as Errs
 import qualified Commence.Runtime.Storage      as S
 import           Control.Lens
 import "exceptions" Control.Monad.Catch         ( MonadMask )
+import           Data.Aeson                     ( FromJSON, eitherDecode )
+import qualified Data.ByteString.Lazy          as BS
 import qualified Network.HTTP.Types            as HTTP
 import qualified Network.Wai                   as Wai
 import qualified Network.Wai.Handler.Warp      as Warp
@@ -34,7 +36,6 @@ import           Prototype.Data                 ( HaskDb
                                                 , readFullStmDbInHask
                                                 )
 import qualified Prototype.Data.User           as User
-import qualified Prototype.Example             as Example
 import qualified Prototype.Form.Login          as Login
 import qualified Prototype.Form.Signup         as Signup
 import qualified Prototype.Html.Errors         as Pages
@@ -339,11 +340,27 @@ handleUserUpdate User.Update {..} profile = case _editPassword of
     "Nothing to update."
 
 documentEditProfilePage :: ServerC m => m Pages.ProfilePage
-documentEditProfilePage =
-  pure $ Pages.ProfilePage Example.alice "/echo/profile"
+documentEditProfilePage = do
+  profile <- readJson "data/alice.json"
+  pure $ Pages.ProfilePage profile "/echo/profile"
 
 documentProfilePage :: ServerC m => m Pages.ProfileView
-documentProfilePage = pure $ Pages.ProfileView Example.alice
+documentProfilePage = do
+  profile <- readJson "data/alice.json"
+  pure $ Pages.ProfileView profile
+
+
+--------------------------------------------------------------------------------
+-- TODO When given a wrong path, e.g, in documentProfilePage above, the
+-- returned HTML is not what I expect, nor the error is logged to our log files.
+readJson :: (ServerC m, FromJSON a) => FilePath -> m a
+readJson path = do
+  content <- liftIO $ BS.readFile path
+  let ma = eitherDecode content
+  case ma of
+    Right a -> pure a
+    -- TODO Be more specific, e.g. the error can also be malformed JSON.
+    Left _ -> Errs.throwError' $ Rt.FileDoesntExistErr path
 
 
 --------------------------------------------------------------------------------
