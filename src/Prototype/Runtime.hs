@@ -55,6 +55,7 @@ import           System.Directory               ( doesFileExist )
 data ServerConf = ServerConf
   { _serverPort      :: Int
   , _serverStaticDir :: FilePath
+  , _serverDataDir   :: FilePath
   }
   deriving Show
 

@@ -19,4 +19,14 @@ in
       mv _site $out
     '';
   };
+
+  # Define this here, instead of creating a .nix file in data/.
+  data = pkgs.stdenv.mkDerivation {
+    name = "data";
+    # TODO We only need data/
+    src = ../.;
+    installPhase = ''
+      cp -r data $out
+    '';
+  };
 }

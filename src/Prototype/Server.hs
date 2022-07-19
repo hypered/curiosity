@@ -94,12 +94,13 @@ type App = H.UserAuthentication :> Get '[B.HTML] (PageEither
 
              :<|> Public
              :<|> Private
+             :<|> "data" :> Raw
              :<|> Raw -- Catchall for static files (documentation)
                       -- and for a custom 404
 
 -- | This is the main Servant server definition, corresponding to @App@.
-serverT :: forall m . ServerC m => FilePath -> ServerT App m
-serverT root =
+serverT :: forall m . ServerC m => FilePath -> FilePath -> ServerT App m
+serverT root dataDir =
   showLandingPage
     :<|> documentLoginPage
     :<|> documentSignupPage
@@ -114,6 +115,7 @@ serverT root =
     :<|> showSignupPage
     :<|> publicT
     :<|> privateT
+    :<|> serveData dataDir
     :<|> serveDocumentation root
 
 
@@ -141,8 +143,8 @@ run
   -> m ()
 run runtime@Rt.Runtime {..} = liftIO $ Warp.run port waiApp
  where
-  Rt.ServerConf port root = runtime ^. Rt.rConf . Rt.confServer
-  waiApp = serve @Rt.ExeAppM (Rt.exampleAppMHandlerNatTrans runtime) ctx root
+  Rt.ServerConf port root dataDir = runtime ^. Rt.rConf . Rt.confServer
+  waiApp = serve @Rt.ExeAppM (Rt.exampleAppMHandlerNatTrans runtime) ctx root dataDir
   ctx =
     _rConf
       ^.        Rt.confCookie
@@ -158,11 +160,12 @@ serve
                                    -- arbitrary @m@ to a Servant @Handler@
   -> Server.Context ServerSettings
   -> FilePath
+  -> FilePath
   -> Wai.Application
-serve handlerNatTrans ctx root =
+serve handlerNatTrans ctx root dataDir =
   Servant.serveWithContext appProxy ctx
     $ hoistServerWithContext appProxy settingsProxy handlerNatTrans
-    $ serverT root
+    $ serverT root dataDir
  where
   appProxy      = Proxy @App
   settingsProxy = Proxy @ServerSettings
@@ -398,6 +401,7 @@ showStateAsJson = do
   db    <- readFullStmDbInHask stmDb
   pure db
 
+
 --------------------------------------------------------------------------------
 -- | Serve the static files for the documentation. This also provides a custom
 -- 404 fallback.
@@ -413,3 +417,12 @@ custom404 _request sendResponse = sendResponse $ Wai.responseLBS
   HTTP.status404
   [("Content-Type", "text/html; charset=UTF-8")]
   (renderMarkup $ H.toMarkup Pages.NotFoundPage)
+
+
+--------------------------------------------------------------------------------
+-- | Serve example data as JSON files.
+serveData path = serveDirectoryWith settings
+ where
+  settings = (defaultWebAppSettings path)
+    { ss404Handler = Just custom404
+    }

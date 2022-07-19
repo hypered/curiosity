@@ -25,6 +25,7 @@ in with nixpkgs.haskellPackages;
     binaries = nixpkgs.haskellPackages.curiosity;
     haddock = nixpkgs.haskellPackages.curiosity.doc;
     content = (import ./content {}).html.all;
+    data = (import ./content {}).data;
     man-pages = (import ./man {}).man-pages;
     toplevel = os.config.system.build.toplevel;
     image = os.config.system.build.digitalOceanImage;

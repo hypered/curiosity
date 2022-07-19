@@ -5,7 +5,8 @@
     script = ''
       ${(import ../.).binaries}/bin/cty-serve \
         --server-port 9000 \
-        --static-dir ${(import ../.).content}
+        --static-dir ${(import ../.).content} \
+        --data-dir ${(import ../.).data}
     '';
   };
 }
