@@ -30,7 +30,7 @@ import "exceptions" Control.Monad.Catch         ( MonadMask )
 import qualified Network.HTTP.Types            as HTTP
 import qualified Network.Wai                   as Wai
 import qualified Network.Wai.Handler.Warp      as Warp
-import           Prototype.Data                 ( readFullStmDbInHask )
+import           Prototype.Data                 ( readFullStmDbInHask, HaskDb )
 import qualified Prototype.Data.User           as User
 import qualified Prototype.Example             as Example
 import qualified Prototype.Form.Login          as Login
@@ -77,6 +77,7 @@ type App = H.UserAuthentication :> Get '[B.HTML] (PageEither
              :<|> "messages" :> "signup" :> Get '[B.HTML] Signup.SignupResultPage
 
              :<|> "state" :> Get '[B.HTML] Login.ResultPage -- TODO Proper type.
+             :<|> "state.json" :> Get '[JSON] (HaskDb Rt.Runtime)
 
              :<|> "echo" :> "login"
                   :> ReqBody '[FormUrlEncoded] User.Credentials
@@ -103,6 +104,7 @@ serverT root =
     :<|> documentProfilePage
     :<|> messageSignupSuccess
     :<|> showState
+    :<|> showStateAsJson
     :<|> echoLogin
     :<|> echoSignup
     :<|> showLoginPage
@@ -359,8 +361,16 @@ withUser authResult f = case authResult of
 showState :: ServerC m => m Login.ResultPage
 showState = do
   stmDb <- asks Rt._rDb
-  state <- readFullStmDbInHask stmDb
-  pure $ Login.Success $ show state
+  db <- readFullStmDbInHask stmDb
+  pure . Login.Success $ show db
+
+-- TODO The passwords are displayed in clear. Would be great to have the option
+-- to hide/show them.
+showStateAsJson :: ServerC m => m (HaskDb Rt.Runtime)
+showStateAsJson = do
+  stmDb <- asks Rt._rDb
+  db <- readFullStmDbInHask stmDb
+  pure db
 
 --------------------------------------------------------------------------------
 -- | Serve the static files for the documentation. This also provides a custom
