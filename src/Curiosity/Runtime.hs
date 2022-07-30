@@ -321,22 +321,16 @@ modifyUserProfiles id f userProfiles =
 
 selectUserById runtime id = do
   let usersTVar = Data._dbUserProfiles $ _rDb runtime
-  users' <- STM.readTVar usersTVar
-  case filter ((== id) . S.dbId) users' of
-    [profile] -> pure $ Just profile
-    _         -> pure Nothing
+  STM.readTVar usersTVar <&> find ((== id) . S.dbId)
 
 selectUserByUsername
   :: Runtime -> User.UserName -> STM (Maybe User.UserProfile)
 selectUserByUsername runtime username = do
   let usersTVar = Data._dbUserProfiles $ _rDb runtime
   users' <- STM.readTVar usersTVar
-  case
-      filter ((== username) . User._userCredsName . User._userProfileCreds)
-             users'
-    of
-      [u] -> pure $ Just u
-      _   -> pure Nothing
+  pure $ find ((== username) . User._userCredsName . User._userProfileCreds)
+              users'
+
 
 createUser
   :: Runtime
@@ -350,22 +344,19 @@ createUser runtime (newId, User.Signup {..}) = do
 createUserFull
   :: Runtime -> User.UserProfile -> STM (Either User.UserErr User.UserId)
 createUserFull runtime newProfile = do
-  mprofile <- selectUserById runtime newProfileId
+  mprofile <- liftA2 (<|>)
+                     (selectUserById runtime newProfileId)
+                     (selectUserByUsername runtime userName)
   case mprofile of
-    Just profile -> existsErr
-    Nothing      -> createNew
+    Just _  -> existsErr
+    Nothing -> createNew
  where
   newProfileId = S.dbId newProfile
   createNew    = do
-    mprofile <- selectUserByUsername
-      runtime
-      (newProfile ^. User.userProfileCreds . User.userCredsName)
-    case mprofile of
-      Just profile -> existsErr
-      Nothing      -> do
-        modifyUsers runtime (newProfile :)
-        pure $ Right newProfileId
+    modifyUsers runtime (newProfile :)
+    pure $ Right newProfileId
   existsErr = pure . Left $ User.UserExists
+  userName  = newProfile ^. User.userProfileCreds . User.userCredsName
 
 modifyUsers :: Runtime -> ([User.UserProfile] -> [User.UserProfile]) -> STM ()
 modifyUsers runtime f = do
