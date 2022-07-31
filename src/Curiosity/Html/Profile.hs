@@ -40,7 +40,7 @@ instance H.ToMarkup ProfilePage where
             profile
             submitUrl
 
-profileForm profile submitUrl = do
+profileForm profile submitUrl =
   H.div
     ! A.class_ "u-scroll-wrapper-body"
     $ H.div
@@ -56,12 +56,11 @@ profileForm profile submitUrl = do
           ! A.class_ "c-navbar c-navbar--unpadded c-navbar--bordered-bottom"
           $ H.div
           ! A.class_ "c-toolbar"
-          $ do
-              H.div
-                ! A.class_ "c-toolbar__left"
-                $ H.h3
-                ! A.class_ "c-h3 u-m-b-0"
-                $ "User profile"
+          $ H.div
+          ! A.class_ "c-toolbar__left"
+          $ H.h3
+          ! A.class_ "c-h3 u-m-b-0"
+          $ "User profile"
         H.div
           ! A.class_ "o-form-group-layout o-form-group-layout--horizontal"
           $ H.form
@@ -96,12 +95,11 @@ profileForm profile submitUrl = do
                 H.div
                   ! A.class_
                       "o-form-group__controls o-form-group__controls--full-width"
-                  $ do
-                      H.input
-                        ! A.class_ "c-input"
-                        ! A.type_ "password"
-                        ! A.id "password"
-                        ! A.name "password"
+                  $ H.input
+                  ! A.class_ "c-input"
+                  ! A.type_ "password"
+                  ! A.id "password"
+                  ! A.name "password"
               H.div ! A.class_ "o-form-group" $ do
                 H.label
                   ! A.class_ "o-form-group__label"
@@ -148,8 +146,9 @@ profileForm profile submitUrl = do
                 ! A.formmethod "POST"
                 $ H.span
                 ! A.class_ "c-button__content"
-                $ do
-                    H.span ! A.class_ "c-button__label" $ "Update profile"
+                $ H.span
+                ! A.class_ "c-button__label"
+                $ "Update profile"
 
 -- Partial re-creation of
 -- https://design.smart.coop/prototypes/old-desk/contract-create-1.html
@@ -250,7 +249,7 @@ contractCreate1 =
                 $ H.toMarkup svgIconArrowRight
 
 
-data ProfileView = ProfileView
+newtype ProfileView = ProfileView
   { _profileViewUserProfile :: User.UserProfile
   }
 
@@ -392,5 +391,5 @@ instance H.ToMarkup ProfileSaveConfirmPage where
   toMarkup = \case
     ProfileSaveSuccess      -> "All done, you can now go back."
     ProfileSaveFailure mmsg -> do
-      H.text $ "We had a problem saving your data."
+      H.text "We had a problem saving your data."
       maybe mempty (H.text . mappend "Reason: ") mmsg
