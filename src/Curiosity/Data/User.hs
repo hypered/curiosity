@@ -112,15 +112,36 @@ type UserProfile = UserProfile' Credentials UserDisplayName UserEmailAddr
 
 -- | The username is an identifier (i.e. it is unique).
 newtype UserName = UserName Text
-                 deriving (Eq, Show, IsString, FromJSON , ToJSON) via Text
+                 deriving ( Eq
+                          , Show
+                          , IsString
+                          , FromJSON
+                          , ToJSON
+                          , H.ToMarkup
+                          , H.ToValue
+                          ) via Text
                  deriving (FromHttpApiData, FromForm) via W.Wrapped "username" Text
 
 newtype UserDisplayName = UserDisplayName Text
-                 deriving (Eq, Show, IsString, FromJSON , ToJSON) via Text
+                 deriving ( Eq
+                          , Show
+                          , IsString
+                          , FromJSON
+                          , ToJSON
+                          , H.ToMarkup
+                          , H.ToValue
+                          ) via Text
                  deriving (FromHttpApiData, FromForm) via W.Wrapped "display-name" Text
 
 newtype UserEmailAddr = UserEmailAddr Text
-                 deriving (Eq, Show, IsString, FromJSON , ToJSON) via Text
+                 deriving ( Eq
+                          , Show
+                          , IsString
+                          , FromJSON
+                          , ToJSON
+                          , H.ToMarkup
+                          , H.ToValue
+                          ) via Text
                  deriving (FromHttpApiData, FromForm) via W.Wrapped "email-addr" Text
 
 newtype Password = Password (Secret.Secret '[ 'Secret.ToJSONExp] Text)
@@ -135,7 +156,12 @@ newtype Password = Password (Secret.Secret '[ 'Secret.ToJSONExp] Text)
 -- | Record ID of the form USER-xxx.
 newtype UserId = UserId Text
                deriving (Eq, Show, SAuth.ToJWT, SAuth.FromJWT)
-               deriving (IsString, FromHttpApiData, FromJSON, ToJSON) via Text
+               deriving ( IsString
+                        , FromJSON
+                        , ToJSON
+                        , H.ToMarkup
+                        , H.ToValue
+                        ) via Text
                deriving FromForm via W.Wrapped "user-id" Text
 
 -- | Randomly generated and character based user-id.
@@ -171,7 +197,7 @@ instance Storage.DBStorageOps UserProfile where
     | UserDelete UserId
     | UserPasswordUpdate UserId Password
     deriving (Show, Eq)
-
+  
   data DBSelect UserProfile =
     -- | Attempt a user-login using the more ambiguous but more friendly
     -- `UserName` and `Password.
@@ -276,7 +302,7 @@ instance Errs.IsRuntimeErr UserErr where
       409
       "User exists"
       "A user with the same username or ID already exists."
-    UserNotFound msg            -> msg
+    UserNotFound msg -> msg
     IncorrectUsernameOrPassword ->
       LT.toStrict . renderMarkup . H.toMarkup $ Pages.ErrorPage
         401

@@ -80,8 +80,7 @@ profileForm profile submitUrl = do
                         ! A.id "username"
                         ! A.name "username"
                         ! A.value
-                            ( H.toValue @Text
-                            . show
+                            ( H.toValue
                             . User._userCredsName
                             . User._userProfileCreds
                             $ profile
@@ -117,11 +116,7 @@ profileForm profile submitUrl = do
                         ! A.id "display-name"
                         ! A.name "display-name"
                         ! A.value
-                            ( H.toValue @Text
-                            . show
-                            . User._userProfileDisplayName
-                            $ profile
-                            )
+                            (H.toValue . User._userProfileDisplayName $ profile)
                       H.p
                         ! A.class_ "c-form-help-text"
                         $ "This is the name that appears in e.g. your public profile"
@@ -139,11 +134,7 @@ profileForm profile submitUrl = do
                         ! A.id "email-addr"
                         ! A.name "email-addr"
                         ! A.value
-                            ( H.toValue @Text
-                            . show
-                            . User._userProfileEmailAddr
-                            $ profile
-                            )
+                            (H.toValue . User._userProfileEmailAddr $ profile)
                       H.p
                         ! A.class_ "c-form-help-text"
                         $ "Your email address is private"
@@ -316,8 +307,7 @@ profileView profile =
                 H.dt ! A.class_ "c-key-value-item__key" $ "Username"
                 H.dd
                   ! A.class_ "c-key-value-item__value"
-                  $ ( H.toHtml @Text
-                    . show
+                  $ ( H.toHtml
                     . User._userCredsName
                     . User._userProfileCreds
                     $ profile
@@ -329,20 +319,12 @@ profileView profile =
                 H.dt ! A.class_ "c-key-value-item__key" $ "Display name"
                 H.dd
                   ! A.class_ "c-key-value-item__value"
-                  $ ( H.toHtml @Text
-                    . show
-                    . User._userProfileDisplayName
-                    $ profile
-                    )
+                  $ (H.toHtml . User._userProfileDisplayName $ profile)
               H.div ! A.class_ "c-key-value-item" $ do
                 H.dt ! A.class_ "c-key-value-item__key" $ "Email address"
                 H.dd
                   ! A.class_ "c-key-value-item__value"
-                  $ ( H.toHtml @Text
-                    . show
-                    . User._userProfileEmailAddr
-                    $ profile
-                    )
+                  $ (H.toHtml . User._userProfileEmailAddr $ profile)
 
 -- TODO Move to smart-design-hs and refactor.
 contractCreate1Confirm =
