@@ -68,6 +68,7 @@ import           Servant.API.WebSocket
 import qualified Servant.Auth.Server           as SAuth
 import qualified Servant.HTML.Blaze            as B
 import qualified Servant.Server                as Server
+import           Servant.RawM.Server            ( RawM )
 import           Smart.Server.Page              ( PageEither )
 import qualified Smart.Server.Page             as SS.P
 import           System.FilePath                ( (</>) )
@@ -204,7 +205,8 @@ type App = H.UserAuthentication :> Get '[B.HTML] (PageEither
              :<|> "errors" :> "500" :> Get '[B.HTML, JSON] Text
              -- TODO Make a single handler for any namespace:
              :<|> "alice"  :> H.UserAuthentication
-                  :> Get '[B.HTML] (PageEither Pages.PublicProfileView Pages.UnitView)
+                  :> RawM
+                  -- Get '[B.HTML] (PageEither Pages.PublicProfileView Pages.UnitView)
              :<|> "mila"   :> H.UserAuthentication
                   :> Get '[B.HTML] (PageEither Pages.PublicProfileView Pages.UnitView)
              :<|> "alpha"  :> H.UserAuthentication
@@ -268,7 +270,7 @@ serverT conf jwtS root dataDir =
     :<|> serveData dataDir
     :<|> serveUBL dataDir
     :<|> serveErrors
-    :<|> serveNamespace "alice"
+    :<|> serveNamespace' root "alice"
     :<|> serveNamespace "mila"
     :<|> serveNamespace "alpha"
     :<|> serveNamespaceDocumentation "alice"
@@ -1046,7 +1048,7 @@ showStateAsJson = do
 --------------------------------------------------------------------------------
 -- | Serve the static files for the documentation. This also provides a custom
 -- 404 fallback.
--- serveDocumentation :: FilePath -> Tagged m Application
+serveDocumentation :: ServerC m => FilePath -> Tagged m Application
 serveDocumentation root = serveDirectoryWith settings
  where
   settings = (defaultWebAppSettings root)
@@ -1110,6 +1112,15 @@ serveNamespace name authResult = withMaybeUserFromUsername
     (\profile ->
       pure . SS.P.PageL $ Pages.PublicProfileView (Just profile) targetProfile
     )
+
+-- Serve a namespace profile if the username exists, or serve static files.
+serveNamespace' :: ServerC m => FilePath -> User.UserName -> Tagged m Application
+serveNamespace' root username = withMaybeUserFromUsername
+  username
+  (\username -> serveDocumentation root)
+  (\profile -> serveDocumentation root)
+  -- ^^^ Must be replaced by
+  -- (\profile -> someFunction $ Pages.PublicProfileView profile)
 
 serveNamespaceDocumentation
   :: ServerC m => User.UserName -> m Pages.ProfileView

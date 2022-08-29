@@ -65,6 +65,7 @@ common common-dependencies
     -- Servant
     , servant
     , servant-blaze
+    , servant-rawm-server
     , servant-server
     , servant-websockets
     -- Authentication: use Jose based JWK settings as well.
