@@ -84,12 +84,23 @@ $ cabal build curiosity
 $ ./dist-newstyle/build/x86_64-linux/ghc-8.6.5/curiosity-0.1.0.0/x/curiosity/build/curiosity/cty serve
 ```
 
-And finally, we can build a binary with Nix:
+We can build a binary with Nix:
 
 ```
 $ nix-build -A curiosity
 $ ./result/bin/cty serve
 ```
+
+And finally, we can run a local dev environment containing curiosity and a Nginx reverse proxy using:
+
+```
+$ nix-build -A integration-tests.local-dev-environment
+$ ./result/bin/run-interactive-integration-env
+$ # Or alternatively from a nix-shell via an injected alias
+$ nix-shell
+$ interactive-integration-env
+```
+
 
 # Example REPL commands
 

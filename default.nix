@@ -20,13 +20,17 @@ let
       ./machine/no-gui.nix
     ];
   };
-in rec
-  {
     # Build with nix-build -A <attr>
     # binaries + haddock are also available as binaries.all.
     binaries = nixpkgs.haskellPackages.curiosity;
-    haddock = nixpkgs.haskellPackages.curiosity.doc;
     content = (import ./content {}).html.all;
+    haddock = nixpkgs.haskellPackages.curiosity.doc;
+    run = import ./scripts/integration-tests {
+      inherit nixpkgs binaries haddock content;
+    };
+in rec
+  {
+    inherit nixpkgs binaries content haddock run;
     data = (import ./content {}).data;
     scenarios = (import ./content {}).scenarios;
     static = (import "${sources.design-hs}").static;
