@@ -94,6 +94,7 @@ import qualified Smart.Server.Page             as SS.P
 import           System.FilePath                ( (</>)
                                                 , takeBaseName
                                                 )
+import           System.Systemd.Daemon          as SD
 import           Text.Blaze.Html5               ( (!), Html )
 import qualified Text.Blaze.Html5              as H
 import qualified Text.Blaze.Html5.Attributes   as A
@@ -685,7 +686,11 @@ run conf@Parse.ServerConf {..} runtime = liftIO $ do
   jwk <- SAuth.generateKey
   -- FIXME: See if this can be customized via parsing.
   let jwtSettings = SAuth.defaultJWTSettings jwk
-  Warp.run _serverPort $ waiApp jwtSettings
+  let warpSettings =
+        Warp.setPort _serverPort $
+        Warp.setBeforeMainLoop (SD.notifyReady >> pure ()) $
+        Warp.defaultSettings
+  Warp.runSettings warpSettings $ waiApp jwtSettings
  where
   waiApp jwtS = serve @Rt.AppM (Rt.appMHandlerNatTrans runtime)
                                conf
