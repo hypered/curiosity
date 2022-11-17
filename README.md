@@ -120,7 +120,29 @@ $ run-full-environment
 ```
 
 It is also possible to only run Nginx in that shell with `run-nginx`. This is
-usefull for instance to proxy a `cty serve` running from GHCi.
+useful for instance to proxy a `cty serve` running from GHCi.
+
+The `run-vm-test` attribute let's you run a NixOS VM integration test
+that mirrors the production setup. You can run it either interactively
+or non-interactively:
+
+```sh
+$ nix-build -A run-vm-test
+# ^ Will run the VM test in a non interactive fashion.
+$ nix-build -A run-vm-test.driverInteractive && ./result/bin/nixos-test-driver
+> start_all( )
+# ^ Will open two qemu windows, one for the server, one for the client.
+
+```
+
+You can use the root account to interactively log in the VMs. The
+client can access to the server using the smartcoop.sh domain name.
+You can read the relevant [NixOS manual
+section](https://nixos.org/manual/nixos/stable/index.html#sec-running-nixos-tests-interactively)
+for more informations.
+
+Note: these VMs are not connected to internet, smartcoop.sh refers to
+the server VM, not the production machine in that context.
 
 And finally, we can run a local virtual machine running `cty serve` and a Nginx
 reverse proxy using [see below](#qemu):

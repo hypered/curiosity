@@ -7,7 +7,7 @@
   scenarios ? (import ../../.).scenarios,
   system ? builtins.currentSystem,
   lib ? nixpkgs.lib
-}:
+}@attrs:
 
 let
   runCuriosity = nixpkgs.writers.writeBashBin "run-curiosity" ''
@@ -39,6 +39,7 @@ let
     set -euo pipefail
     ${nixpkgs.hivemind}/bin/hivemind ${procFile}
   '';
+  run-vm-test = import ./vm-test.nix attrs;
 in {
-  inherit run-full-environment run-nginx;
+  inherit run-full-environment run-nginx run-vm-test;
 }
