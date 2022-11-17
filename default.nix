@@ -33,7 +33,7 @@ in rec
     # Build with nix-build -A <attr>
     # binaries + haddock are also available as binaries.all.
     inherit nixpkgs binaries content data scenarios haddock run;
-    static = (import "${sources.design-hs}").static;
+    static = (import "${sources.smart-design-hs}").static;
     man-pages = (import ./man {}).man-pages;
     toplevel = os.config.system.build.toplevel;
     image = os.config.system.build.digitalOceanImage;

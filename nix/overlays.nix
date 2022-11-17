@@ -4,14 +4,14 @@
 let
 
   sources = import ./sources.nix;
-  inherit (sources) commence design-hs; 
+  inherit (sources) commence smart-design-hs;
 
   getOverlays = pkg : import "${pkg}/nix/overlays.nix";
 
   # We can overlay haskell packages here.
   haskellOverlays =
           getOverlays commence # we get 2 packages: commence-core and commence-interactive-state
-       ++ getOverlays design-hs
+       ++ getOverlays smart-design-hs
        ;
 
 in haskellOverlays ++ [ (import ./overlay.nix) ]

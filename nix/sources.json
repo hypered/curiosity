@@ -7,15 +7,15 @@
     },
     "commence": {
         "branch": "main",
-        "repo": "git@github.com:hypered/commence.git",
+        "description": "Building blocks to prototype classical three-tier web applications with Servant and STM",
+        "homepage": null,
+        "owner": "hypered",
+        "repo": "commence",
         "rev": "9ab2e5bc2e4b278477a3df77270e2d62ac8acc4c",
-        "type": "git"
-    },
-    "design-hs": {
-        "branch": "main",
-        "repo": "git@github.com:hypered/smart-design-hs.git",
-        "rev": "4233098ba310370587f1b5548e2d78c2d8e0353d",
-        "type": "git"
+        "sha256": "0l4s5y7gmxr7y56q4sqk7mn0aknqa55vl4f5iyvmbcwrs5kgbgmz",
+        "type": "tarball",
+        "url": "https://github.com/hypered/commence/archive/9ab2e5bc2e4b278477a3df77270e2d62ac8acc4c.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "gitignore": {
         "branch": "master",
@@ -63,6 +63,18 @@
         "sha256": "1q8hin4wj8iic4f9nlrpfh3pnyba1v89hfv9vlkgii37v44yl5cr",
         "type": "tarball",
         "url": "https://github.com/NixOS/nixpkgs/archive/b3a8f7ed267e0a7ed100eb7d716c9137ff120fe3.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "smart-design-hs": {
+        "branch": "main",
+        "description": "An implementation of smartcoop/design in Haskell ",
+        "homepage": "https://design.smartcoop.sh",
+        "owner": "hypered",
+        "repo": "smart-design-hs",
+        "rev": "4233098ba310370587f1b5548e2d78c2d8e0353d",
+        "sha256": "1p5nd1mpnd7y2hfm8zjnc9l503whahlzb3whhnqh1iqwz252ryqs",
+        "type": "tarball",
+        "url": "https://github.com/hypered/smart-design-hs/archive/4233098ba310370587f1b5548e2d78c2d8e0353d.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }
