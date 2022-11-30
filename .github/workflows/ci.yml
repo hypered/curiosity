@@ -41,4 +41,4 @@ jobs:
         sudo cp .github/workflows/post-build-hook /etc/nix/post-build-hook
 
     - name: Build Curiosity
-      run: nix-build -A toplevel --show-trace
+      run: nix-shell -p nix-build-uncached --run 'nix-build-uncached -build-flags "--experimental-features nix-command" -A toplevel'
