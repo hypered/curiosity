@@ -121,14 +121,14 @@ run (Command.CommandWithTarget (Command.Run conf scriptPath runOutput) target (C
 
 run (Command.CommandWithTarget (Command.Parse confParser) _ _) =
   case confParser of
-    Command.ConfCommand command -> do
+    Command.ConfCommand input -> do
       let result =
             A.execParserPure A.defaultPrefs Command.parserInfo
               $   T.unpack
-              <$> T.words command
+              <$> T.words input
       case result of
-        A.Success x -> do
-          print x
+        A.Success command -> do
+          print command
           exitSuccess
         A.Failure err -> do
           print err

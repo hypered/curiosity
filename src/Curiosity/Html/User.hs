@@ -217,9 +217,9 @@ displayAdvisors (Just (User.Advisors {..})) = do
   H.text . User.unUserId $ _userAdvisorsCurrent
   "Past advisors:"
   H.ul $ mapM_
-    (\(from, to, id) -> H.li
+    (\(since, till, id) -> H.li
       (  H.text (User.unUserId id)
-      >> H.text (" (From " <> show from <> ", to " <> show to <> ")")
+      >> H.text (" (From " <> show since <> ", to " <> show till <> ")")
       )
     )
     _userAdvisorsPast

@@ -1177,7 +1177,7 @@ handleUserProfileUpdate
   => User.Update
   -> User.UserProfile
   -> m (Headers '[Header "Location" Text] NoContent)
-handleUserProfileUpdate update profile = do
+handleUserProfileUpdate update _ = do
   db <- asks Rt._rDb
   b  <- liftIO . atomically $ Core.updateUser db update
   case b of
@@ -2362,35 +2362,6 @@ withMaybeUserFromUsername username a f = do
   db       <- asks Rt._rDb
   mprofile <- liftIO $ Rt.selectUserByUsername db username
   maybe (a username) f mprofile
-
--- | Similar to `withUserFromUsername`, but also returns the related entities.
-withUserFromUsernameResolved
-  :: forall m a
-   . ServerC m
-  => User.UserName
-  -> (User.UserProfile -> [Legal.EntityAndRole] -> m a)
-  -> m a
-withUserFromUsernameResolved username f = withMaybeUserFromUsernameResolved
-  username
-  (noSuchUserErr . show)
-  f
- where
-  noSuchUserErr = Errs.throwError' . User.UserNotFound . mappend
-    "The given username was not found: "
-
--- | Similar to `withMaybeUserFromUsername`, but also returns the related entities.
-withMaybeUserFromUsernameResolved
-  :: forall m a
-   . ServerC m
-  => User.UserName
-  -> (User.UserName -> m a)
-  -> (User.UserProfile -> [Legal.EntityAndRole] -> m a)
-  -> m a
-withMaybeUserFromUsernameResolved username a f = do
-  mprofile <- Rt.withRuntimeAtomically
-    (Rt.selectUserByUsernameResolved . Rt._rDb)
-    username
-  maybe (a username) (uncurry f) mprofile
 
 -- | Run a handler, ensuring a quotation can be obtained from the given id, or
 -- throw an error.

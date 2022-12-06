@@ -540,14 +540,6 @@ parserBusinessUnitLinkUser = do
     )
   pure $ LinkBusinessUnitToUser slug uid role
 
-argumentUnitId = Legal.EntityId <$> A.argument A.str metavarUnitId
-
-metavarUnitId = A.metavar "BENT-ID" <> A.completer complete <> A.help
-  "A business unit ID"
-  where complete = A.mkCompleter . const $ pure ["LENT-", "LENT-1", "LENT-2"]
-        -- TODO I'd like to lookup IDs in the state, but here we don't know
-        -- where the state is (it depends on other command-line options).
-
 argumentUnitSlug = A.argument A.str metavarUnitSlug
 
 metavarUnitSlug = A.metavar "SLUG" <> A.completer complete <> A.help
@@ -636,14 +628,6 @@ parserUpdateLegalEntityIsHost :: Bool -> A.Parser Command
 parserUpdateLegalEntityIsHost b = do
   slug <- argumentEntitySlug
   pure $ UpdateLegalEntityIsHost slug b
-
-argumentEntityId = Legal.EntityId <$> A.argument A.str metavarEntityId
-
-metavarEntityId = A.metavar "LENT-ID" <> A.completer complete <> A.help
-  "A legal entity ID"
-  where complete = A.mkCompleter . const $ pure ["LENT-", "LENT-1", "LENT-2"]
-        -- TODO I'd like to lookup IDs in the state, but here we don't know
-        -- where the state is (it depends on other command-line options).
 
 argumentEntitySlug = A.argument A.str metavarEntitySlug
 

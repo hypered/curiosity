@@ -8,15 +8,11 @@ module Curiosity.Runtime.IO.AppM
 
 import qualified Commence.Multilogging         as ML
 import qualified Commence.Runtime.Errors       as Errs
-import qualified Control.Concurrent.STM        as STM
 import           Control.Lens                  as Lens
 import "exceptions" Control.Monad.Catch         ( MonadCatch
                                                 , MonadMask
                                                 , MonadThrow
                                                 )
-import qualified Curiosity.Core                as Core
-import qualified Curiosity.Data                as Data
-import qualified Curiosity.Data.User           as User
 import           Curiosity.Runtime.Type        as RType
 import           Prelude                 hiding ( state )
 

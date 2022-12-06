@@ -1167,18 +1167,6 @@ removeExpenseFromContractForm db (profile, key, idx) = do
     (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
--- | Fetch the contract form from the staging area, then attempt to validate
--- and create it.
-submitCreateContractForm
-  :: Core.StmDb
-  -> (User.UserProfile, Employment.SubmitContract)
-  -> STM (Either Employment.Err Employment.ContractId)
-submitCreateContractForm db (profile, Employment.SubmitContract key) = do
-  minput <- readCreateContractForm db (profile, key)
-  case minput of
-    Right input -> submitCreateContractForm' db (profile, input)
-    Left  err   -> pure . Left $ Employment.Err (show err)
-
 -- | Attempt to validate a contract form and create it.
 submitCreateContractForm'
   :: Core.StmDb
@@ -1440,7 +1428,7 @@ setQuotationAsRejectedFull
   -> Quotation.QuotationId
   -> Maybe Text
   -> STM (Either Quotation.Err ())
-setQuotationAsRejectedFull db user input mcomment = STM.catchSTM
+setQuotationAsRejectedFull db _ input mcomment = STM.catchSTM
   (Right <$> transaction)
   (pure . Left)
  where
@@ -1920,13 +1908,13 @@ handler runtime conn = do
 
 repl runtime conn = do
   msg <- recv conn 1024
-  let command = map B.unpack $ B.words msg -- TODO decodeUtf8
-  case command of
+  let input = map B.unpack $ B.words msg -- TODO decodeUtf8
+  case input of
     _ | B.null msg -> return () -- Connection lost.
     ["quit"]       -> return ()
     []             -> repl runtime conn
     _              -> do
-      let result = A.execParserPure A.defaultPrefs Command.parserInfo command
+      let result = A.execParserPure A.defaultPrefs Command.parserInfo input
       case result of
         A.Success command -> do
           case command of
@@ -1935,8 +1923,8 @@ repl runtime conn = do
               mapM_ (\x -> sendAll conn (T.encodeUtf8 x <> "\n")) output
         A.Failure err -> case err of
           A.ParserFailure execFailure -> do
-            let (msg, _, _) = execFailure "cty"
-            sendAll conn (B.pack $ show msg <> "\n")
+            let (errMsg, _, _) = execFailure "cty"
+            sendAll conn (B.pack $ show errMsg <> "\n")
         A.CompletionInvoked _ -> print @IO @Text "Shouldn't happen"
 
       repl runtime conn
