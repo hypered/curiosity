@@ -23,9 +23,7 @@ let
   haskell-tooling = with hp; [ cabal-install ghcid hlint hasktags ];
 
   # Add more as we need them.
-  formatters =
-    let brittany = hp.callCabal2nix "brittany" sources.brittany { };
-    in [ brittany ];
+  formatters = [ nixpkgs.ormolu nixpkgs.treefmt ] ;
 
   system-tooling = with nixpkgs; [
     inotify-tools # needed for HotExe.sh (filesystem notifs.)
