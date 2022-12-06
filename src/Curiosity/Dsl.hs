@@ -15,7 +15,7 @@ module Curiosity.Dsl
   , user
   , signup
   , can
-  , example
+  , example0
   ) where
 
 import qualified Control.Concurrent.STM        as STM
@@ -70,9 +70,9 @@ can profile name = ask >>= (Run . lift . flip (Core.canPerform name) profile)
 
 --------------------------------------------------------------------------------
 -- In a GHCi session, e.g. obtained with scripts/ghci-dsl.sh:
---     ghci> run db0 example
-example :: Run (Bool, Bool)
-example = do
+--     ghci> run db0 example0
+example0 :: Run (Bool, Bool)
+example0 = do
   signup "alice" "a" "alice@example.com"
   signup "bob"   "b" "bob@example.com"
 

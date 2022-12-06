@@ -192,6 +192,7 @@ test-suite curiosity-tests
     , Curiosity.CommandSpec
     , Curiosity.CoreSpec
     , Curiosity.DataSpec
+    , Curiosity.DslSpec
     , Curiosity.RunSpec
     , Curiosity.RuntimeSpec
   type: exitcode-stdio-1.0
