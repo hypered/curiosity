@@ -25,7 +25,7 @@ module Curiosity.Runtime
   , selectUserByUsernameResolved
   , filterUsers
   , filterUsers'
-  , signupUser
+  , signup
   -- * High-level entity operations
   , selectEntityBySlug
   , selectEntityBySlugResolved
@@ -494,7 +494,7 @@ handleCommand runtime@Runtime {..} user command = do
           pure (ExitSuccess, ["Legal entity updated: " <> slug])
         Left err -> pure (ExitFailure 1, [show err])
     Command.Signup input -> do
-      muid <- stepRunM runtime $ signupUser input
+      muid <- stepRunM runtime $ signup input
       case muid of
         Right (User.UserId uid, Email.EmailId eid) -> pure
           ( ExitSuccess
@@ -1724,12 +1724,12 @@ filterUsers' predicate = do
   db <- asks _rDb
   atomicallyM $ filterUsers db predicate
 
-signupUser
+signup
   :: User.Signup -> RunM (Either User.Err (User.UserId, Email.EmailId))
-signupUser input = ML.localEnv (<> "Command" <> "Signup") $ do
+signup input = ML.localEnv (<> "Command" <> "Signup") $ do
   ML.info "Signing up new user..."
   db   <- asks _rDb
-  muid <- atomicallyM $ Core.signupUser db input
+  muid <- atomicallyM $ Core.signup db input
   case muid of
     Right (User.UserId uid, Email.EmailId eid) -> do
       ML.info $ "User created: " <> uid

@@ -9,7 +9,7 @@ module Curiosity.Core
   , instantiateStmDb
   , reset
   , readFullStmDbInHask'
-  , signupUser
+  , signup
   , inviteUser
   , createUserFull
   , modifyUsers
@@ -292,16 +292,16 @@ generateEmailId Db {..} =
 
 
 --------------------------------------------------------------------------------
-signupUser
+signup
   :: StmDb -> User.Signup -> STM (Either User.Err (User.UserId, Email.EmailId))
-signupUser db signup@User.Signup {..} = do
+signup db input@User.Signup {..} = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
     now        <- readTime db
     newId      <- generateUserId db
     newProfile <-
-      pure (User.validateSignup now newId signup)
+      pure (User.validateSignup now newId input)
         >>= either (STM.throwSTM . User.ValidationErrs) pure
     emailId <-
       createEmail db Email.SignupConfirmationEmail Email.systemEmailAddr email

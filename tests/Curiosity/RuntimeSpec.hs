@@ -37,7 +37,7 @@ spec = do
       runtime <- bootDbAndLogFile emptyHask "/tmp/curiosity-test-xxx-3.log"
       let db = _rDb runtime
           input = Signup "alice" "secret" "alice@example.com" True
-      Right (uid, eid) <- atomically $ signupUser db input
+      Right (uid, eid) <- atomically $ signup db input
       Just profile <- atomically $ selectUserById db uid
 
       uid `shouldBe` "USER-1"
@@ -49,6 +49,6 @@ spec = do
       runtime <- bootDbAndLogFile emptyHask "/tmp/curiosity-test-xxx-4.log"
       let db = _rDb runtime
           input = Signup "smartcoop" "secret" "smartcoop@example.com" True
-      muser <- atomically $ signupUser db input
+      muser <- atomically $ signup db input
 
       muser `shouldBe` Left (ValidationErrs [UsernameBlocked])
