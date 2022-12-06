@@ -1,10 +1,4 @@
 {
-    "brittany": {
-        "branch": "master",
-        "repo": "https://github.com/lspitzner/brittany",
-        "rev": "0aa04af4eba499b81fdfb401d98414e7731583cc",
-        "type": "git"
-    },
     "commence": {
         "branch": "main",
         "description": "Building blocks to prototype classical three-tier web applications with Servant and STM",
