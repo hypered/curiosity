@@ -20,6 +20,7 @@ module Curiosity.Core
   , selectUserByInviteToken
   , modifyQuotations
   , selectQuotationById
+  , checkCredentials
   -- * ID generation
   , generateUserId
   , generateBusinessId
@@ -437,6 +438,22 @@ selectUserByInviteToken db token = do
   records <- STM.readTVar tvar
   pure $ find ((== Just token) . User.getInviteToken . User._userProfileCreds)
               records
+
+
+--------------------------------------------------------------------------------
+checkCredentials
+  :: StmDb -> User.Credentials -> STM (Maybe User.UserProfile)
+checkCredentials db User.Credentials {..} = do
+  mprofile <- selectUserByUsername db _userCredsName
+  case mprofile of
+    Just profile | User.checkPassword profile _userCredsPassword ->
+      pure $ Just profile
+    _ -> pure Nothing
+checkCredentials db User.InviteToken {..} = do
+  mprofile <- selectUserByInviteToken db _inviteToken
+  case mprofile of
+    Just profile -> pure $ Just profile
+    _ -> pure Nothing
 
 
 --------------------------------------------------------------------------------

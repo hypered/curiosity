@@ -4,12 +4,10 @@
 module Curiosity.Runtime.IO.AppM
   ( AppM(..)
   , runAppMSafe
-  , checkCredentials
   ) where
 
 import qualified Commence.Multilogging         as ML
 import qualified Commence.Runtime.Errors       as Errs
-import           Commence.Types.Secret          ( (=:=) )
 import qualified Control.Concurrent.STM        as STM
 import           Control.Lens                  as Lens
 import "exceptions" Control.Monad.Catch         ( MonadCatch
@@ -57,29 +55,3 @@ instance ML.MonadAppNameLogMulti AppM where
   askLoggers = asks _rLoggers
   localLoggers modLogger =
     local (over rLoggers . over ML.appNameLoggers $ fmap modLogger)
-
-
---------------------------------------------------------------------------------
-modifyUserProfiles id f userProfiles = STM.modifyTVar userProfiles f $> [id]
-
-checkCredentials
-  :: Core.StmDb -> User.Credentials -> STM (Maybe User.UserProfile)
-checkCredentials db User.Credentials {..} = do
-  mprofile <- Core.selectUserByUsername db _userCredsName
-  case mprofile of
-    Just profile | checkPassword profile _userCredsPassword ->
-      pure $ Just profile
-    _ -> pure Nothing
-checkCredentials db User.InviteToken {..} = do
-  mprofile <- Core.selectUserByInviteToken db _inviteToken
-  case mprofile of
-    Just profile -> pure $ Just profile
-    _ -> pure Nothing
-
--- TODO Use constant-time string comparison.
-checkPassword :: User.UserProfile -> User.Password -> Bool
-checkPassword profile (User.Password passInput) = case User._userProfileCreds profile of
-  User.Credentials {..} ->
-    let User.Password storedPass = _userCredsPassword
-    in storedPass =:= passInput
-  User.InviteToken _ -> False

@@ -103,7 +103,8 @@ import qualified Curiosity.Data.SimpleContract as SimpleContract
 import qualified Curiosity.Data.User           as User
 import           Curiosity.Runtime.Error       as RErr
 import           Curiosity.Runtime.IO          as RIO
-import           Curiosity.Runtime.IO.AppM     as AppM
+import           Curiosity.Runtime.IO.AppM      ( AppM, runAppM, runAppMSafe )
+import qualified Curiosity.Runtime.IO.AppM     as AppM
 import           Curiosity.Runtime.Type        as RType
 import           Curiosity.STM.Helpers          ( atomicallyM )
 import qualified Data.Aeson.Text               as Aeson

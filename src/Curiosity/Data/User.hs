@@ -61,9 +61,11 @@ module Curiosity.Data.User
   , Err(..)
   , userNotFound
   , usernameBlocklist
+  , checkPassword
   ) where
 
 import qualified Commence.Runtime.Errors       as Errs
+import           Commence.Types.Secret          ( (=:=) )
 import qualified Commence.Types.Secret         as Secret
 import qualified Commence.Types.Wrapped        as W
 import           Control.Lens
@@ -73,11 +75,8 @@ import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
 import qualified Network.HTTP.Types            as HTTP
 import qualified Servant.Auth.Server           as SAuth
-import qualified Smart.Server.Page.Navbar      as Nav
 import           System.PosixCompat.Types       ( EpochTime )
 import qualified Text.Blaze.Html5              as H
-import           Text.Blaze.Html5               ( (!) )
-import qualified Text.Blaze.Html5.Attributes   as A
 import           Text.Blaze.Renderer.Text       ( renderMarkup )
 import           Web.FormUrlEncoded             ( FromForm(..)
                                                 , parseMaybe
@@ -303,16 +302,6 @@ instance FromForm SetUserEmailAddrAsVerified where
 
 
 --------------------------------------------------------------------------------
-instance Nav.IsNavbarContent UserProfile where
-  navbarMarkup UserProfile {..} = do
-    greeting
-    editProfileLink
-    H.hr
-   where
-    greeting = H.div . H.text $ T.unwords
-      ["Hi", _userCredsName _userProfileCreds ^. coerced]
-    editProfileLink = H.a ! A.href "/settings/profile" $ "Edit profile"
-
 -- | Predicates to filter users.
 data Predicate = PredicateEmailAddrToVerify | PredicateHas AccessRight
   deriving (Eq, Show)
@@ -493,3 +482,13 @@ usernameBlocklist =
 -- | Convenient way to create a `UserNotFound` value on `Left.`
 userNotFound :: forall a . Text -> Either Err a
 userNotFound = Left . UserNotFound . mappend "User not found: "
+
+
+--------------------------------------------------------------------------------
+-- TODO Use constant-time string comparison.
+checkPassword :: UserProfile -> Password -> Bool
+checkPassword profile (Password passInput) = case _userProfileCreds profile of
+  Credentials {..} ->
+    let Password storedPass = _userCredsPassword
+    in storedPass =:= passInput
+  InviteToken _ -> False

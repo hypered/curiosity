@@ -971,7 +971,7 @@ handleLogin conf jwtSettings input =
                                              (User._loginPassword input)
           db <- asks Rt._rDb
           liftIO
-            . atomically $ Rt.checkCredentials db credentials
+            . atomically $ Core.checkCredentials db credentials
     >>= \case
           Just u -> do
             ML.info "Found user, applying authentication cookies..."
