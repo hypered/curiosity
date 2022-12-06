@@ -137,7 +137,8 @@ instance FromForm Login where
 
 -- | Represents the input data to update a user profile.
 data Update = Update
-  { _updateDisplayName     :: Maybe UserDisplayName
+  { _updateUserId          :: UserId
+  , _updateDisplayName     :: Maybe UserDisplayName
   , _updateBio             :: Maybe Text
   , _updateTwitterUsername :: Maybe Text
   }
@@ -146,9 +147,10 @@ data Update = Update
 instance FromForm Update where
   fromForm f =
     Update
-      <$> parseMaybe "display-name"     f
-      <*> parseMaybe "bio"              f
-      <*> parseMaybe "twitter-username" f
+      <$> parseUnique "user-id"          f
+      <*> parseMaybe  "display-name"     f
+      <*> parseMaybe  "bio"              f
+      <*> parseMaybe  "twitter-username" f
 
 
 --------------------------------------------------------------------------------
@@ -321,19 +323,12 @@ instance Storage.DBIdentity UserProfile where
 
 instance Storage.DBStorageOps UserProfile where
   data DBUpdate UserProfile =
-    UserCreate UserProfile
-    | UserDelete UserId
-    | UserUpdate UserId Update
+      UserDelete UserId
     deriving (Show, Eq)
   
   data DBSelect UserProfile =
-    -- | Attempt a user-login using the more ambiguous but more friendly
-    -- `UserName` and `Password.
-    UserLoginWithUserName Credentials
     -- | Select a user with a known `UserId`.
-    | SelectUserById UserId
-    -- | Select a user with `UserName`.
-    | SelectUserByUserName UserName
+      SelectUserById UserId
     deriving (Show, Eq)
 
 -- | Predicates to filter users.

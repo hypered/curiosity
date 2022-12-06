@@ -12,6 +12,8 @@ module Curiosity.Core
   , signup
   , inviteUser
   , createUserFull
+  , updateUser
+  , deleteUser
   , modifyUsers
   , selectUserById
   , selectUserByUsername
@@ -383,6 +385,36 @@ createUserFull' db newProfile = do
     modifyUsers db (<> [newProfile])
     pure $ Right newProfileId
   existsErr = pure . Left $ User.UserExists
+
+updateUser :: StmDb -> User.Update -> STM (Either User.Err ())
+updateUser db User.Update {..} = do
+  mrecord <- selectUserById db _updateUserId
+  case mrecord of
+    Just User.UserProfile{} -> do
+      let replaceOlder records =
+            [ if User._userProfileId r == _updateUserId
+                then r { User._userProfileDisplayName = _updateDisplayName
+                       , User._userProfileBio = _updateBio
+                       , User._userProfileTwitterUsername = _updateTwitterUsername
+                       }
+                else r
+            | r <- records
+            ]
+      modifyUsers db replaceOlder
+      pure $ Right ()
+    Nothing ->
+      pure . Left . User.UserNotFound $ User.unUserId _updateUserId
+
+deleteUser :: StmDb -> User.UserId -> STM (Either User.Err ())
+deleteUser db uid = do
+  mrecord <- selectUserById db uid
+  case mrecord of
+    Just User.UserProfile{} -> do
+      let replaceOlder = filter ((/= uid) . User._userProfileId)
+      modifyUsers db replaceOlder
+      pure $ Right ()
+    Nothing ->
+      pure . Left . User.UserNotFound $ User.unUserId uid
 
 modifyUsers :: StmDb -> ([User.UserProfile] -> [User.UserProfile]) -> STM ()
 modifyUsers db f = let tvar = _dbUserProfiles db in STM.modifyTVar tvar f

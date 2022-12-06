@@ -543,19 +543,26 @@ handleCommand runtime@Runtime {..} user command = do
             in  i <> " " <> n
       pure (ExitSuccess, map f profiles)
     Command.UpdateUser input -> do
-      output <-
-        runAppMSafe runtime . S.liftTxn @AppM @STM $ S.dbUpdate @AppM @STM
-          _rDb
-          input
+      output <- runAppMSafe runtime . atomicallyM $ Core.updateUser _rDb
+                                                                    input
       case output of
         Right mid -> do
           case mid of
-            Right storageResult -> do
-              case storageResult of
-                Right [uid] ->
-                  pure (ExitSuccess, ["User updated: " <> User.unUserId uid])
-                Right _   -> pure (ExitFailure 1, ["No record updated."])
-                Left  err -> pure (ExitFailure 1, [show err])
+            Right () -> do
+              pure
+                ( ExitSuccess
+                , ["User updated: " <> User.unUserId (User._updateUserId input)]
+                )
+            Left err -> pure (ExitFailure 1, [show err])
+        Left err -> pure (ExitFailure 1, [show err])
+    Command.DeleteUser input -> do
+      output <- runAppMSafe runtime . atomicallyM $ Core.deleteUser _rDb
+                                                                    input
+      case output of
+        Right mid -> do
+          case mid of
+            Right () -> do
+              pure (ExitSuccess, ["User updated: " <> User.unUserId input])
             Left err -> pure (ExitFailure 1, [show err])
         Left err -> pure (ExitFailure 1, [show err])
     Command.SetUserEmailAddrAsVerified username -> do

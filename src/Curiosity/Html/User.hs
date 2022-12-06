@@ -37,6 +37,11 @@ instance H.ToMarkup EditProfilePage where
   toMarkup (EditProfilePage profile submitUrl) =
     renderForm profile $ groupLayout $ do
       title "User profile"
+      H.input
+        ! A.type_ "hidden"
+        ! A.id "user-id"
+        ! A.name "user-id"
+        ! A.value (H.toValue $ User._userProfileId profile)
       disabledText
           "Username"
           "username"

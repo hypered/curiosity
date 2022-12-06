@@ -78,8 +78,6 @@ instance S.DBStorage AppM STM User.UserProfile where
 
   dbUpdate db@Data.Db {..} = \case
 
-    User.UserCreate input -> second pure <$> Core.createUserFull db input
-
     User.UserDelete id ->
       S.dbSelect @AppM @STM db (User.SelectUserById id) <&> headMay >>= maybe
         (pure . User.userNotFound $ show id)
@@ -88,26 +86,9 @@ instance S.DBStorage AppM STM User.UserProfile where
       deleteUser _ =
         modifyUserProfiles id (filter $ (/= id) . S.dbId) _dbUserProfiles
 
-    User.UserUpdate id (User.Update mname mbio mtwitter) ->
-      S.dbSelect @AppM @STM db (User.SelectUserById id) <&> headMay >>= maybe
-        (pure . User.userNotFound $ show id)
-        (fmap Right . updateUser)
-     where
-      updateUser _ = modifyUserProfiles id replaceOlder _dbUserProfiles
-      change =
-        set User.userProfileBio mbio . set User.userProfileDisplayName mname .
-          set User.userProfileTwitterUsername mtwitter
-      replaceOlder users =
-        [ if S.dbId u == id then change u else u | u <- users ]
-
   dbSelect db = \case
 
-    User.UserLoginWithUserName input -> toList <$> checkCredentials db input
-
     User.SelectUserById        id    -> toList <$> Core.selectUserById db id
-
-    User.SelectUserByUserName username ->
-      toList <$> Core.selectUserByUsername db username
 
 modifyUserProfiles id f userProfiles = STM.modifyTVar userProfiles f $> [id]
 

@@ -1182,12 +1182,10 @@ handleUserProfileUpdate
   -> User.UserProfile
   -> m (Headers '[Header "Location" Text] NoContent)
 handleUserProfileUpdate update profile = do
-  db   <- asks Rt._rDb
-  eIds <- S.liftTxn
-    (S.dbUpdate @m @STM db (User.UserUpdate (S.dbId profile) update))
-
-  case eIds of
-    Right (Right [_]) ->
+  db <- asks Rt._rDb
+  b  <- liftIO . atomically $ Core.updateUser db update
+  case b of
+    Right () ->
       pure $ addHeader @"Location" "/settings/profile" NoContent
     _ -> Errs.throwError' $ Rt.UnspecifiedErr "Cannot update the user."
 
@@ -2293,14 +2291,13 @@ withMaybeUser
 withMaybeUser authResult a f = case authResult of
   SAuth.Authenticated userId -> do
     db <- asks Rt._rDb
-    S.liftTxn (S.dbSelect @m @STM db (User.SelectUserById userId))
-      <&> (preview $ _Right . _head)
-      >>= \case
-            Nothing -> do
-              ML.warning
-                "Cookie-based authentication succeeded, but the user ID is not found."
-              authFailedErr $ "No user found with ID " <> show userId
-            Just userProfile -> f userProfile
+    b  <- liftIO . atomically $ Core.selectUserById db userId
+    case b of
+      Nothing -> do
+        ML.warning
+          "Cookie-based authentication succeeded, but the user ID is not found."
+        authFailedErr $ "No user found with ID " <> show userId
+      Just userProfile -> f userProfile
   authFailed -> a authFailed
   where authFailedErr = Errs.throwError' . User.UserNotFound
 

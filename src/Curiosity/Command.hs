@@ -85,7 +85,8 @@ data Command =
     -- ^ Show a given user. If True, use Haskell format instead of JSON. If
     -- True, show only the user ID and username.
   | FilterUsers User.Predicate
-  | UpdateUser (S.DBUpdate User.UserProfile)
+  | UpdateUser User.Update
+  | DeleteUser User.UserId
   | SetUserEmailAddrAsVerified User.UserName
     -- ^ High-level operations on users.
   | SignQuotation Quotation.QuotationId
@@ -662,11 +663,11 @@ parserUser = A.subparser
        "invite"
        (A.info (parserInvite <**> A.helper) $ A.progDesc "Invite a new user")
   <> A.command
-       "delete"
-       (A.info (parserDeleteUser <**> A.helper) $ A.progDesc "Delete a user")
-  <> A.command
        "update"
        (A.info (parserUpdateUser <**> A.helper) $ A.progDesc "Update a user")
+  <> A.command
+       "delete"
+       (A.info (parserDeleteUser <**> A.helper) $ A.progDesc "Delete a user")
   <> A.command
        "get"
        (A.info (parserGetUser <**> A.helper) $ A.progDesc "Select a user")
@@ -710,9 +711,6 @@ parserInvite = do
   email <- A.argument A.str (A.metavar "EMAIL" <> A.help "An email address")
   pure $ Invite $ User.Invite email
 
-parserDeleteUser :: A.Parser Command
-parserDeleteUser = UpdateUser . User.UserDelete <$> argumentUserId
-
 parserUpdateUser :: A.Parser Command
 parserUpdateUser = do
   uid      <- argumentUserId
@@ -725,9 +723,10 @@ parserUpdateUser = do
     <> A.help "Twitter username."
     <> A.metavar "USERNAME"
     )
-  pure $ UpdateUser . User.UserUpdate uid $ User.Update (Just name)
-                                                        (Just bio)
-                                                        mtwitter
+  pure $ UpdateUser $ User.Update uid (Just name) (Just bio) mtwitter
+
+parserDeleteUser :: A.Parser Command
+parserDeleteUser = DeleteUser <$> argumentUserId
 
 parserGetUser :: A.Parser Command
 parserGetUser =
