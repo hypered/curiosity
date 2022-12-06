@@ -9,7 +9,6 @@ module Curiosity.Runtime.IO.AppM
 
 import qualified Commence.Multilogging         as ML
 import qualified Commence.Runtime.Errors       as Errs
-import qualified Commence.Runtime.Storage      as S
 import           Commence.Types.Secret          ( (=:=) )
 import qualified Control.Concurrent.STM        as STM
 import           Control.Lens                  as Lens
@@ -59,37 +58,8 @@ instance ML.MonadAppNameLogMulti AppM where
   localLoggers modLogger =
     local (over rLoggers . over ML.appNameLoggers $ fmap modLogger)
 
-instance S.DBTransaction AppM STM where
-  liftTxn =
-    liftIO
-      . fmap (first Errs.RuntimeException)
-      . try @SomeException
-      . STM.atomically
-
 
 --------------------------------------------------------------------------------
--- | Definition of all operations for the UserProfiles (selects and updates)
--- The instance must reside here to avoid an Orphan instance. 
-instance S.DBStorage AppM STM User.UserProfile where
-
-  type Db AppM STM User.UserProfile = Core.StmDb
-
-  type DBError AppM STM User.UserProfile = User.Err
-
-  dbUpdate db@Data.Db {..} = \case
-
-    User.UserDelete id ->
-      S.dbSelect @AppM @STM db (User.SelectUserById id) <&> headMay >>= maybe
-        (pure . User.userNotFound $ show id)
-        (fmap Right . deleteUser)
-     where
-      deleteUser _ =
-        modifyUserProfiles id (filter $ (/= id) . S.dbId) _dbUserProfiles
-
-  dbSelect db = \case
-
-    User.SelectUserById        id    -> toList <$> Core.selectUserById db id
-
 modifyUserProfiles id f userProfiles = STM.modifyTVar userProfiles f $> [id]
 
 checkCredentials

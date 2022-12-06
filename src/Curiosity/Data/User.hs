@@ -57,9 +57,6 @@ module Curiosity.Data.User
   , firstUserRights
   , validateSignup
   , validateSignup'
-  -- * Export all DB ops.
-  , Storage.DBUpdate(..)
-  , Storage.DBSelect(..)
   -- * Errors
   , Err(..)
   , userNotFound
@@ -67,7 +64,6 @@ module Curiosity.Data.User
   ) where
 
 import qualified Commence.Runtime.Errors       as Errs
-import qualified Commence.Runtime.Storage      as Storage
 import qualified Commence.Types.Secret         as Secret
 import qualified Commence.Types.Wrapped        as W
 import           Control.Lens
@@ -316,20 +312,6 @@ instance Nav.IsNavbarContent UserProfile where
     greeting = H.div . H.text $ T.unwords
       ["Hi", _userCredsName _userProfileCreds ^. coerced]
     editProfileLink = H.a ! A.href "/settings/profile" $ "Edit profile"
-
-instance Storage.DBIdentity UserProfile where
-  type DBId UserProfile = UserId
-  dbId = _userProfileId
-
-instance Storage.DBStorageOps UserProfile where
-  data DBUpdate UserProfile =
-      UserDelete UserId
-    deriving (Show, Eq)
-  
-  data DBSelect UserProfile =
-    -- | Select a user with a known `UserId`.
-      SelectUserById UserId
-    deriving (Show, Eq)
 
 -- | Predicates to filter users.
 data Predicate = PredicateEmailAddrToVerify | PredicateHas AccessRight

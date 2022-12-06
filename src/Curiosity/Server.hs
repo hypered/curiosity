@@ -32,7 +32,6 @@ module Curiosity.Server
 import qualified Commence.JSON.Pretty          as JP
 import qualified Commence.Multilogging         as ML
 import qualified Commence.Runtime.Errors       as Errs
-import qualified Commence.Runtime.Storage      as S
 import qualified Commence.Server.Auth          as CAuth
 import           Control.Lens
 import "exceptions" Control.Monad.Catch         ( MonadMask )
@@ -661,12 +660,9 @@ serveScenario path = serveDirectoryWith settings
 type ServerC m
   = ( MonadMask m
     , ML.MonadAppNameLogMulti m
-    , S.DBStorage m STM User.UserProfile
-    , S.DBTransaction m STM
+    , MonadError Errs.RuntimeErr m
     , MonadReader Rt.Runtime m
     , MonadIO m
-    , Show (S.DBError m STM User.UserProfile)
-    , S.Db m STM User.UserProfile ~ Core.StmDb
     )
 
 
@@ -939,7 +935,7 @@ publicT conf jwtS = handleSignup :<|> handleLogin conf jwtS
 
 handleSignup
   :: forall m
-   . (ServerC m, Show (S.DBError m STM User.UserProfile))
+   . ServerC m
   => User.Signup
   -> m Signup.SignupResultPage
 handleSignup input@User.Signup {..} =
@@ -974,9 +970,10 @@ handleLogin conf jwtSettings input =
           let credentials = User.Credentials (User._loginUsername input)
                                              (User._loginPassword input)
           db <- asks Rt._rDb
-          S.liftTxn @m @STM (Rt.checkCredentials db credentials)
+          liftIO
+            . atomically $ Rt.checkCredentials db credentials
     >>= \case
-          Right (Just u) -> do
+          Just u -> do
             ML.info "Found user, applying authentication cookies..."
             -- TODO I think jwtSettings could be retrieved with
             -- Servant.Server.getContetEntry. This would avoid threading
@@ -997,8 +994,7 @@ handleLogin conf jwtSettings input =
               Just applyCookies -> do
                 ML.info "Cookies applied. Sending success result."
                 pure . addHeader @"Location" "/" $ applyCookies NoContent
-          Right Nothing -> reportErr User.IncorrectUsernameOrPassword
-          Left  err     -> reportErr err
+          Nothing -> reportErr User.IncorrectUsernameOrPassword
  where
   reportErr err = do
     ML.info

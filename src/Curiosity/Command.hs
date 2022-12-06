@@ -15,7 +15,6 @@ module Curiosity.Command
   , commandToString
   ) where
 
-import qualified Commence.Runtime.Storage      as S
 import qualified Curiosity.Data                as Data
 import qualified Curiosity.Data.Business       as Business
 import qualified Curiosity.Data.Email          as Email

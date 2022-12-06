@@ -82,7 +82,6 @@ module Curiosity.Runtime
 
 import qualified Commence.Multilogging         as ML
 import qualified Commence.Runtime.Errors       as Errs
-import qualified Commence.Runtime.Storage      as S
 import qualified Control.Concurrent.STM        as STM
 import           Control.Lens                  as Lens
 import "exceptions" Control.Monad.Catch         ( MonadCatch
@@ -1694,7 +1693,7 @@ createTwoRemittanceAdvs db = do
 selectUserByIdResolved db id = do
   let usersTVar = Data._dbUserProfiles db
   users' <- STM.readTVar usersTVar
-  case find ((== id) . S.dbId) users' of
+  case find ((== id) . User._userProfileId) users' of
     Just user -> do
       entities <- selectEntitiesWhereUserId db $ User._userProfileId user
       pure $ Just (user, entities)
