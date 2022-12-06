@@ -80,9 +80,6 @@ instance S.DBStorage AppM STM User.UserProfile where
 
     User.UserCreate input -> second pure <$> Core.createUserFull db input
 
-    User.UserCreateGeneratingUserId input ->
-      second (pure . fst) <$> Core.signupUser db input
-
     User.UserDelete id ->
       S.dbSelect @AppM @STM db (User.SelectUserById id) <&> headMay >>= maybe
         (pure . User.userNotFound $ show id)

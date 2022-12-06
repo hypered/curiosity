@@ -322,7 +322,6 @@ instance Storage.DBIdentity UserProfile where
 instance Storage.DBStorageOps UserProfile where
   data DBUpdate UserProfile =
     UserCreate UserProfile
-    | UserCreateGeneratingUserId Signup
     | UserDelete UserId
     | UserUpdate UserId Update
     deriving (Show, Eq)
