@@ -102,6 +102,7 @@ webAppLookup hashFunc prefix pieces = fileHelperLR hashFunc fp lastPiece
     , ".png"
     , ".ttf"
     , ".svg"
+    , ".st"
     , ".txt"
     , ".woff"
     , ".woff2"

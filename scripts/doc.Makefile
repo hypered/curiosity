@@ -13,7 +13,8 @@ all: $(HTML_TARGETS) \
 	_site/documentation/clis/curiosity.7.html \
 	_site/documentation/clis/cty.1.html \
 	_site/documentation/search.html \
-	_site/static/indexes/content.st
+	_site/static/indexes/content.st \
+	_site/static/indexes/stork.css
 
 man: curiosity.7.gz cty.1.gz
 
@@ -66,7 +67,12 @@ _site/.well-known/security.txt: content/.well-known/security.txt
 
 _site/static/indexes/content.st: $(TEXT_TARGETS) scripts/stork.toml
 	mkdir -p $(dir $@)
+	stork --version
 	stork build --input scripts/stork.toml --output $@
+
+_site/static/indexes/stork.css: scripts/stork.css
+	mkdir -p $(dir $@)
+	cp $< $@
 
 _index/%.txt: content/%.md
 	mkdir -p $(dir $@)

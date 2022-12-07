@@ -2,11 +2,13 @@
 let
   brotlify = pkgs.callPackage ./brotlify.nix { };
   static = (import ../.).static;
+  indexes = (import ../.).indexes;
   static-layered = pkgs.buildEnv {
     name = "static-layered";
     paths = [
       static
       (brotlify { src = static; })
+      indexes
     ];
   };
 in

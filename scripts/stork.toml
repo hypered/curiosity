@@ -1,6 +1,6 @@
 [input]
 base_directory = "_index/"
-url_prefix = "https://smartcoop.sh/"
+url_prefix = "/"
 files = [
   {path = "about.txt",                                  url = "about",                                  title = "About"},
   {path = "documentation.txt",                          url = "documentation",                          title = "Documentation"},
