@@ -23,6 +23,7 @@ title: Curiosity
 - [Man pages](/documentation/man-pages)
 - [Messages](/documentation/messages)
 - [Nix](/documentation/nix)
+  - [Attributes](/documentation/attributes)
 - [Objects](/documentation/objects)
 - [Permissions](/documentation/permissions)
 - [Processes](/documentation/processes)
