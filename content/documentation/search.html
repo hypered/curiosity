@@ -1,23 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Federalist Search</title>
-    <link
-      rel="stylesheet"
-      href="https://files.stork-search.net/releases/v1.5.0/basic.css"
-    />
-  </head>
+<html class="u-maximize-height" dir="ltr" lang="en">
 
-  <body>
-    <div class="stork-wrapper">
-      <input data-stork="content" class="stork-input" />
-      <div data-stork="content-output" class="stork-output"></div>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Search Curiosity documentation
+    </title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/indexes/stork.css">
+</head>
+
+<body class="u-maximize-height">
+    <!--# include virtual="/partials/nav" -->
+    <div class="o-container o-container--medium">
+        <div class="o-container-vertical">
+            <div class="c-display">
+                <div class="c-input-with-icon">
+                    <input class="c-input" type="text" placeholder="Search ..." data-stork="content">
+                </div>
+                <div class="stork-wrapper">
+                  <div data-stork="content-output" class="stork-output"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="https://files.stork-search.net/releases/v1.5.0/stork.js"></script>
     <script>
       stork.register('content', '/static/indexes/content.st')
     </script>
-  </body>
+    <script src="/static/js/bundle-client.js"></script>
+</body>
 </html>

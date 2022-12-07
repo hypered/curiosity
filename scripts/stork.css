@@ -1,0 +1,148 @@
+/* This is a crudely modified version of stork-search.net official basic.css
+   file. It would need to be re-written to match Smart's design system.
+ */
+.stork-wrapper {
+  --stork-blue-2: #a5d8ff;
+  --stork-blue-3: #74c0fc;
+  --stork-blue-4: #4dabf7;
+  --stork-blue-5: #339af0;
+  --stork-blue-7: #1c7ed6;
+  --stork-gray-8: rgb(51, 51, 51);
+  --stork-gray-9: #eeeeee;
+  --stork-yellow-2: #ffec99;
+
+  --stork-border-color: hsl(0, 0%, 65%);
+  --stork-background-color: hsla(0, 0%, 97%);
+
+  --stork-input-border-radius: 8px;
+}
+
+/* Disable the normal (from the design system) link borders. */
+.c-display a {
+  border-bottom: 0.1rem solid var(--stork-border-color);
+}
+
+/* Hide the search result close button. */
+.stork-close-button {
+  display: none;
+}
+
+.stork-wrapper .stork-progress {
+  display: block;
+  content: "";
+  bottom: 1px;
+  background-color: var(--stork-gray-9);
+  height: 1px;
+  transition: width 0.25s ease, opacity 0.4s ease 0.4s;
+  margin-left: var(--stork-input-border-radius);
+  max-width: calc(100% - 2 * var(--stork-input-border-radius));
+}
+
+.stork-wrapper .stork-output {
+  width: 100%;
+  margin-top: 0.5em;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+.stork-wrapper .stork-output-visible {
+  border: 0.1rem solid var(--stork-border-color);
+}
+
+.stork-wrapper .stork-message {
+  width: 100%;
+  padding: 0.5em 1em;
+}
+
+.stork-wrapper .stork-attribution {
+  font-size: 1em;
+  width: 100%;
+  padding: 0.5em 1em;
+  color: #cccccc;
+}
+
+.stork-wrapper .stork-results {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  list-style-type: none;
+  border-top: 0.1rem solid var(--stork-border-color);
+}
+
+.stork-wrapper .stork-result.selected {
+  background: var(--stork-gray-9);
+}
+
+.stork-wrapper .stork-result a:link {
+  padding: 1em;
+  display: block;
+  text-decoration: none;
+}
+
+.stork-wrapper .stork-result p {
+  margin: 0;
+}
+
+.stork-wrapper .stork-title {
+  margin: 0;
+  color: var(--stork-gray-8);
+
+  /* Flexbox container for the title and the score, when debugging */
+  display: flex;
+  justify-content: space-between;
+}
+
+.stork-wrapper .stork-excerpt-container {
+  margin-top: 0.75em;
+}
+
+.stork-wrapper .stork-excerpt {
+  line-height: 1;
+  margin: 0;
+  color: var(--stork-gray-8);
+
+  /* Flexbox container for the title and the score, when debugging */
+  display: flex;
+  justify-content: space-between;
+}
+
+.stork-wrapper .stork-excerpt:not(:last-of-type) {
+  margin-bottom: 0.6em;
+}
+
+.stork-wrapper .stork-highlight {
+  background-color: var(--stork-yellow-2);
+  padding: 0 0.1em;
+}
+
+.stork-wrapper .stork-error {
+  outline: 2px solid #c92a2a;
+}
+
+.stork-wrapper .stork-close-button {
+  right: 0;
+  margin: 0.7em 0.6em;
+  height: 1.2em;
+  width: 1.2em;
+  padding: 0px;
+  border: 0.1rem solid hsla(0, 0%, 50%, 0.3);
+  color: hsl(0, 0%, 50%);
+  border-radius: 15%;
+  line-height: 1;
+}
+
+.stork-wrapper .stork-close-button svg {
+  width: 0.8em;
+  top: 1px;
+}
+
+.stork-wrapper .stork-close-button:hover {
+  background: hsla(0, 0%, 78%);
+  cursor: pointer;
+}
+
+.stork-wrapper .stork-close-button:active {
+  background: hsla(0, 0%, 65%);
+}

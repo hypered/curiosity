@@ -23,6 +23,7 @@ let
     binaries = nixpkgs.haskellPackages.curiosity;
     content = (import ./content { inherit nixpkgs; }).html.all;
     data = (import ./content { inherit nixpkgs; }).data;
+    indexes = (import ./content { inherit nixpkgs; }).indexes;
     scenarios = (import ./content { inherit nixpkgs; }).scenarios;
     haddock = nixpkgs.haskellPackages.curiosity.doc;
     run = import ./scripts/integration-tests {
@@ -32,7 +33,7 @@ in rec
   {
     # Build with nix-build -A <attr>
     # binaries + haddock are also available as binaries.all.
-    inherit nixpkgs binaries content data scenarios haddock run;
+    inherit nixpkgs binaries content data indexes scenarios haddock run;
     inherit (run) run-vm-tests;
     static = (import "${sources.smart-design-hs}").static;
     man-pages = (import ./man { inherit nixpkgs; }).man-pages;
