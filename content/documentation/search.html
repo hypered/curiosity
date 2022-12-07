@@ -11,16 +11,13 @@
 
   <body>
     <div class="stork-wrapper">
-      <input data-stork="federalist" class="stork-input" />
-      <div data-stork="federalist-output" class="stork-output"></div>
+      <input data-stork="content" class="stork-input" />
+      <div data-stork="content-output" class="stork-output"></div>
     </div>
 
     <script src="https://files.stork-search.net/releases/v1.5.0/stork.js"></script>
     <script>
-      stork.register(
-        'federalist',
-        'https://files.stork-search.net/releases/v1.5.0/federalist.st'
-      )
+      stork.register('content', '/static/indexes/content.st')
     </script>
   </body>
 </html>

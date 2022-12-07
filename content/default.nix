@@ -15,10 +15,11 @@ in
         "content"
         "man"
         "scripts/doc.Makefile"
+        "scripts/stork.toml"
         "scripts/template.html"
       ];
     };
-    nativeBuildInputs = [ nixpkgs.mandoc nixpkgs.pandoc ];
+    nativeBuildInputs = [ nixpkgs.mandoc nixpkgs.pandoc nixpkgs.stork ];
     installPhase = ''
       # Make sure we don't use an already built _site/.
       rm -rf _site

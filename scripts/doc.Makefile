@@ -12,7 +12,8 @@ all: $(HTML_TARGETS) \
 	_site/robots.txt _site/humans.txt _site/.well-known/security.txt \
 	_site/documentation/clis/curiosity.7.html \
 	_site/documentation/clis/cty.1.html \
-	_site/documentation/search.html
+	_site/documentation/search.html \
+	_site/static/indexes/content.st
 
 man: curiosity.7.gz cty.1.gz
 
@@ -63,15 +64,16 @@ _site/.well-known/security.txt: content/.well-known/security.txt
 	mkdir -p $(dir $@)
 	cp $< $@
 
+_site/static/indexes/content.st: $(TEXT_TARGETS) scripts/stork.toml
+	mkdir -p $(dir $@)
+	stork build --input scripts/stork.toml --output $@
+
 _index/%.txt: content/%.md
 	mkdir -p $(dir $@)
 	pandoc \
 		--to plain \
 		--output $@ \
 		$<
-
-_index/content.st: $(TEXT_TARGETS) scripts/stork.toml
-	stork build --input scripts/stork.toml --output $@
 
 entr:
 	find content/ -name '*.md' \
