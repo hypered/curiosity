@@ -134,6 +134,9 @@ library
     Curiosity.Runtime
     Curiosity.Runtime.Type
     Curiosity.Runtime.Error
+    -- Split modules for datatype specific operations. 
+    Curiosity.Runtime.Quotation 
+    Curiosity.Runtime.Order 
     --- runtime: effectful operations that are run in IO. 
     Curiosity.Runtime.IO
     Curiosity.Runtime.IO.AppM
