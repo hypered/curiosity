@@ -1805,12 +1805,12 @@ deleteForm getTVar db (profile, key) =
 
 --------------------------------------------------------------------------------
 runWithRuntime runtime = do
-  putStrLn @Text "Creating curiosity.sock..."
+  putStrLn @Text "Creating curiosity.sock..." -- fixme: use logger?
   sock <- socket AF_UNIX Stream 0
   bind sock $ SockAddrUnix "curiosity.sock"
   listen sock maxListenQueue
 
-  putStrLn @Text "Listening on curiosity.sock..."
+  putStrLn @Text "Listening on curiosity.sock..." -- fixme: use logger?
   server runtime sock -- TODO bracket (or catch) and close
   close sock
 
@@ -1818,17 +1818,17 @@ server runtime sock = do
   (conn, _) <- accept sock -- TODO bracket (or catch) and close too
   void $ forkFinally
     (handler runtime conn)
-    (const $ putStrLn @Text "Closing connection." >> close conn)
+    (const $ putStrLn @Text "Closing connection." >> close conn) -- fixme: use logger?
   server runtime sock
 
 handler runtime conn = do
-  putStrLn @Text "New connection..."
+  putStrLn @Text "New connection..." -- fixme: use logger?
   sendAll conn "Curiosity UNIX-domain socket server.\n"
   repl runtime conn
 
 repl runtime conn = do
   msg <- recv conn 1024
-  let input = map B.unpack $ B.words msg -- TODO decodeUtf8
+  let input = B.unpack <$> B.words msg -- TODO decodeUtf8
   case input of
     _ | B.null msg -> return () -- Connection lost.
     ["quit"]       -> return ()
@@ -1843,6 +1843,6 @@ repl runtime conn = do
           A.ParserFailure execFailure -> do
             let (errMsg, _, _) = execFailure "cty"
             sendAll conn (B.pack $ show errMsg <> "\n")
-        A.CompletionInvoked _ -> print @IO @Text "Shouldn't happen"
+        A.CompletionInvoked _ -> print @IO @Text "Shouldn't happen" -- fixme: use logger?
 
       repl runtime conn
