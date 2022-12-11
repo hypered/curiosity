@@ -64,10 +64,6 @@ module Curiosity.Runtime
   , addExpenseToSimpleContractForm
   , writeExpenseToSimpleContractForm
   , removeExpenseFromSimpleContractForm
-  -- * Emails
-  , filterEmails
-  , filterEmails'
-  , selectEmailById
   -- * Servant compat
   , appMHandlerNatTrans
   -- * Re-exports for backwards compat: must be removed in the future.
@@ -77,6 +73,7 @@ module Curiosity.Runtime
   , module AppM
   , module Runtime.Q
   , module Runtime.Ord
+  , module Runtime.E
   ) where
 
 import qualified Commence.Multilogging         as ML
@@ -100,6 +97,7 @@ import qualified Curiosity.Data.Quotation      as Quotation
 import qualified Curiosity.Data.RemittanceAdv  as RemittanceAdv
 import qualified Curiosity.Data.SimpleContract as SimpleContract
 import qualified Curiosity.Data.User           as User
+import           Curiosity.Runtime.Email       as Runtime.E
 import           Curiosity.Runtime.Error       as RErr
 import           Curiosity.Runtime.IO          as RIO
 import           Curiosity.Runtime.IO.AppM      ( AppM
@@ -1734,37 +1732,6 @@ withRuntimeAtomically f a = ask >>= \rt -> atomicallyM $ f rt a
 
 
 --------------------------------------------------------------------------------
-filterEmails :: Core.StmDb -> Email.Predicate -> STM [Email.Email]
-filterEmails db predicate = do
-  let tvar = Data._dbEmails db
-  records <- STM.readTVar tvar
-  pure $ filter (Email.applyPredicate predicate) records
-
-filterEmails' :: Email.Predicate -> RunM [Email.Email]
-filterEmails' predicate = do
-  db <- asks _rDb
-  atomicallyM $ filterEmails db predicate
-
-setEmailDone :: Core.StmDb -> Email.Email -> STM (Either Email.Err ())
-setEmailDone db Email.Email {..} = do
-  mrecord <- Core.selectEmailById db _emailId
-  case mrecord of
-    Just Email.Email{} -> do
-      let replaceOlder records =
-            [ if Email._emailId e == _emailId
-                then e { Email._emailState = Email.EmailDone }
-                else e
-            | e <- records
-            ]
-      Core.modifyEmails db replaceOlder
-      pure $ Right ()
-    Nothing -> pure . Left $ Email.Err "Email not found" -- TODO
-
-selectEmailById :: Email.EmailId -> RunM (Maybe Email.Email)
-selectEmailById eid = do
-  db <- asks _rDb
-  atomicallyM $ Core.selectEmailById db eid
-
 --------------------------------------------------------------------------------
 readForm
   :: forall a

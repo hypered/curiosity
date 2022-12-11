@@ -137,6 +137,7 @@ library
     -- Split modules for datatype specific operations. 
     Curiosity.Runtime.Quotation 
     Curiosity.Runtime.Order 
+    Curiosity.Runtime.Email 
     --- runtime: effectful operations that are run in IO. 
     Curiosity.Runtime.IO
     Curiosity.Runtime.IO.AppM
