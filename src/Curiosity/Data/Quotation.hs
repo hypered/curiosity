@@ -61,7 +61,7 @@ import           Web.HttpApiData                ( FromHttpApiData(..) )
 -- invalid inputs. As it is filled, it is kept in a Map in "Curiosity.Data",
 -- where it is identified by a key. The form data are validated when they are
 -- "submitted", using the `SubmitQuotation` data type below, and the key.
-data CreateQuotationAll = CreateQuotationAll
+newtype CreateQuotationAll = CreateQuotationAll
   { _createQuotationClientUsername :: Maybe User.UserName
   }
   deriving (Generic, Eq, Show)
@@ -89,7 +89,7 @@ emptyCreateQuotationAll = CreateQuotationAll
 --------------------------------------------------------------------------------
 -- | This represents the submittal of a CreateQuotationAll, identified by its
 -- key.
-data SubmitQuotation = SubmitQuotation
+newtype SubmitQuotation = SubmitQuotation
   { _submitQuotationKey :: Text
   }
   deriving (Generic, Eq, Show)
@@ -116,14 +116,9 @@ validateCreateQuotation _ CreateQuotationAll {..} mresolvedClient = if null erro
      , _quotationState = QuotationSent
      }
   Just resolvedClient = mresolvedClient
-  errors = concat
-    [ if isJust _createQuotationClientUsername
-      then []
-      else [Err "Missing client username."]
-    , if isJust mresolvedClient
-      then []
-      else [Err "The client username does not exist."]
-    ]
+  errors = 
+    [Err "Missing client username." | isNothing _createQuotationClientUsername ]
+    <> [Err "The client username does not exist." | isNothing mresolvedClient ]
 
 -- | Similar to `validateCreateQuotation` but throw away the returned
 -- contract, i.e. keep only the errors.
@@ -174,7 +169,7 @@ displayQuotationState = \case
 
 
 --------------------------------------------------------------------------------
-data SetQuotationAsSigned = SetQuotationAsSigned QuotationId
+newtype SetQuotationAsSigned = SetQuotationAsSigned QuotationId
 
 instance FromForm SetQuotationAsSigned where
   fromForm f = SetQuotationAsSigned <$> parseUnique "quotation-id" f
@@ -190,7 +185,7 @@ applyPredicate AllQuotations _ = True
 
 
 --------------------------------------------------------------------------------
-data Err = Err
+newtype Err = Err
   { unErr :: Text
   }
   deriving (Eq, Exception, Show)
