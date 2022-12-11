@@ -55,7 +55,7 @@ createQuotationFull
   -> Quotation.Quotation
   -> STM (Either Quotation.Err Quotation.QuotationId)
 createQuotationFull db new = do
-  modifyQuotations db (++ [new])
+  modifyQuotations db (<> [new])
   pure . Right $ Quotation._quotationId new
 
 modifyQuotations

@@ -244,15 +244,10 @@ threads = do
   liftIO $ showThreads ts
 
 emptyReplThreads :: IO Threads
-emptyReplThreads = do
-  mvarEmails <- newEmptyMVar
-  pure $ ReplThreads mvarEmails
+emptyReplThreads = newEmptyMVar <&> ReplThreads
 
 emptyHttpThreads :: IO Threads
-emptyHttpThreads = do
-  mvarEmails <- newEmptyMVar
-  mvarUnix   <- newEmptyMVar
-  pure $ HttpThreads mvarEmails mvarUnix
+emptyHttpThreads = HttpThreads <$> newEmptyMVar <*> newEmptyMVar
 
 spawnEmailThread :: RunM Text
 spawnEmailThread = do
@@ -354,9 +349,8 @@ verifyEmailStep = do
 
 verifyEmailStepDryRun :: RunM [User.UserProfile]
 verifyEmailStepDryRun = do
-  db      <- asks _rDb
-  records <- atomicallyM $ filterUsers db User.PredicateEmailAddrToVerify
-  pure records
+  db <- asks _rDb
+  atomicallyM $ filterUsers db User.PredicateEmailAddrToVerify
 
 spawnUnixThread :: RunM Text
 spawnUnixThread = do
@@ -1597,9 +1591,8 @@ matchPayment
            Invoice.Err
            (RemittanceAdv.RemittanceAdvId, RemittanceAdv.RemittanceAdvId)
        )
-matchPayment db _ = do
-  mids <- STM.catchSTM (Right <$> createTwoRemittanceAdvs db) (pure . Left)
-  pure mids
+matchPayment db _ =
+  STM.catchSTM (Right <$> createTwoRemittanceAdvs db) (pure . Left)
 
 createTwoRemittanceAdvs db = do
   mid0 <- createRemittanceAdv db
@@ -1735,8 +1728,7 @@ selectEntitiesWhereUserId db uid = do
 readLegalEntities :: Core.StmDb -> STM [Legal.Entity]
 readLegalEntities db = do
   let tvar = Data._dbLegalEntities db
-  records <- STM.readTVar tvar
-  pure records
+  STM.readTVar tvar
 
 withRuntimeAtomically f a = ask >>= \rt -> atomicallyM $ f rt a
 
@@ -1845,10 +1837,8 @@ repl runtime conn = do
       let result = A.execParserPure A.defaultPrefs Command.parserInfo input
       case result of
         A.Success command -> do
-          case command of
-            _ -> do
-              (_, output) <- handleCommand runtime "TODO" command
-              mapM_ (\x -> sendAll conn (T.encodeUtf8 x <> "\n")) output
+          (_, output) <- handleCommand runtime "TODO" command
+          mapM_ (\x -> sendAll conn (T.encodeUtf8 x <> "\n")) output
         A.Failure err -> case err of
           A.ParserFailure execFailure -> do
             let (errMsg, _, _) = execFailure "cty"
