@@ -1,7 +1,6 @@
 {-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE DataKinds
-           , TypeOperators
-#-} -- Language extensions needed for servant.
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeOperators #-} 
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE TemplateHaskellQuotes #-}
 {- |
@@ -682,9 +681,9 @@ run conf@Parse.ServerConf {..} runtime = liftIO $ do
   jwk <- SAuth.generateKey
   -- FIXME: See if this can be customized via parsing.
   let jwtSettings = SAuth.defaultJWTSettings jwk
-  let warpSettings =
+      warpSettings =
         Warp.setPort _serverPort $
-        Warp.setBeforeMainLoop (SD.notifyReady >> pure ()) $
+        Warp.setBeforeMainLoop (SD.notifyReady >> pure ())
         Warp.defaultSettings
   Warp.runSettings warpSettings $ waiApp jwtSettings
  where
@@ -887,8 +886,7 @@ partialLegalEntities = do
 partialLegalEntitiesAsJson :: ServerC m => m [Legal.Entity]
 partialLegalEntitiesAsJson = do
   db       <- asks Rt._rDb
-  entities <- liftIO . atomically $ Rt.readLegalEntities db
-  pure entities
+  liftIO . atomically $ Rt.readLegalEntities db
 
 --------------------------------------------------------------------------------
 -- | render partial html with the main navigation bar. this is used within
@@ -898,7 +896,7 @@ partialNav :: ServerC m => SAuth.AuthResult User.UserId -> m Html
 partialNav authResult = withMaybeUser
   authResult
   (\_ -> pure $ Misc.header Nothing)
-  (\profile -> pure . Misc.header $ Just profile
+  (pure . Misc.header . Just 
   )
 
 
@@ -1080,7 +1078,7 @@ privateT conf authResult =
         :<|> (withUser' . showEditQuotationPage)
         :<|> (withUser' . showConfirmQuotationPage)
         :<|> (withUser' . handleUserProfileUpdate)
-        :<|> (withUser' $ const (handleLogout conf))
+        :<|> withUser' (const (handleLogout conf))
         :<|> (withUser' . handleSetUserEmailAddrAsVerified)
         :<|> (withUser' . handleSetQuotationAsSigned)
         :<|> (withUser' . handleNewQuotation)
@@ -1405,8 +1403,7 @@ echoNewQuotation'
   :: ServerC m => FilePath -> Quotation.CreateQuotationAll -> m Text
 echoNewQuotation' dataDir quotation = do
   profile <- readJson $ dataDir </> "alice.json"
-  key     <- withRuntime $ Rt.formNewQuotation' profile quotation
-  pure key
+  withRuntime $ Rt.formNewQuotation' profile quotation
 
 -- | Create a form, generating a new key.
 echoNewQuotation
@@ -1482,8 +1479,7 @@ echoNewContract'
 echoNewContract' dataDir contract = do
   profile <- readJson $ dataDir </> "alice.json"
   db <- asks Rt._rDb
-  key <- liftIO . atomically $ Rt.newCreateContractForm db (profile, contract)
-  pure key
+  liftIO . atomically $ Rt.newCreateContractForm db (profile, contract)
 
 -- | Create a form, generating a new key.
 echoNewContract
@@ -1628,10 +1624,9 @@ echoNewSimpleContract'
 echoNewSimpleContract' dataDir contract = do
   profile <- readJson $ dataDir </> "mila.json"
   db      <- asks Rt._rDb
-  key     <- liftIO . atomically $ Rt.newCreateSimpleContractForm
+  liftIO . atomically $ Rt.newCreateSimpleContractForm
     db
     (profile, contract)
-  pure key
 
 -- | Create a form, then move to the confirmation page.
 echoNewSimpleContract
@@ -2304,9 +2299,8 @@ withUserResolved
   => SAuth.AuthResult User.UserId
   -> (User.UserProfile -> [Legal.EntityAndRole] -> m a)
   -> m a
-withUserResolved authResult f = withMaybeUserResolved authResult
+withUserResolved authResult  = withMaybeUserResolved authResult
                                                       (authFailedErr . show)
-                                                      f
  where
   authFailedErr = Errs.throwError' . User.UserNotFound . mappend
     "Authentication failed, please login again. Error: "
@@ -2340,10 +2334,9 @@ withUserFromUsername
   => User.UserName
   -> (User.UserProfile -> m a)
   -> m a
-withUserFromUsername username f = withMaybeUserFromUsername
+withUserFromUsername username = withMaybeUserFromUsername
   username
   (noSuchUserErr . show)
-  f
  where
   noSuchUserErr = Errs.throwError' . User.UserNotFound . mappend
     "The given username was not found: "
@@ -2371,10 +2364,9 @@ withQuotationFromId
   => Quotation.QuotationId
   -> (Quotation.Quotation -> m a)
   -> m a
-withQuotationFromId id f = withMaybeQuotationFromId
+withQuotationFromId id = withMaybeQuotationFromId
   id
   (noSuchQuotationErr . show)
-  f
  where
   noSuchQuotationErr = Errs.throwError' . Quotation.Err . mappend
     "The given quotation was not found: "
@@ -2403,9 +2395,8 @@ withEntityFromName
   => Text
   -> (Legal.Entity -> [Legal.ActingUser] -> m a)
   -> m a
-withEntityFromName name f = withMaybeEntityFromName name
+withEntityFromName name = withMaybeEntityFromName name
                                                     (noSuchUserErr . show) -- TODO entity, not user
-                                                    f
  where
   noSuchUserErr = Errs.throwError' . User.UserNotFound . mappend
     "The given username was not found: "
@@ -2431,9 +2422,8 @@ withMaybeEntityFromName name a f = do
 -- ame, or throw an error.
 withUnitFromName
   :: forall m a . ServerC m => Text -> (Business.Unit -> m a) -> m a
-withUnitFromName name f = withMaybeUnitFromName name
+withUnitFromName name = withMaybeUnitFromName name
                                                 (noSuchUserErr . show) -- TODO unit, not user
-                                                f
  where
   noSuchUserErr = Errs.throwError' . User.UserNotFound . mappend
     "The given username was not found: "
@@ -2554,7 +2544,7 @@ partialScenario scenariosDir name = do
   displayTrace Inter.Trace {..} = do
     H.tr $ do
       H.td $ H.text $ Inter.pad traceNesting <> show traceLineNbr
-      H.td . H.code $ H.text $ traceCommand
+      H.td . H.code $ H.text traceCommand
       H.td
         $ H.a
         ! A.href

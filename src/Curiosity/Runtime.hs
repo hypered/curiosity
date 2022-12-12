@@ -42,9 +42,6 @@ module Curiosity.Runtime
   , writeCreateQuotationForm
   , submitCreateQuotationForm
   , setQuotationAsSignedFull
-  , filterQuotations
-  , filterQuotations'
-  , selectQuotationById
   -- ** Orders
   , filterOrders
   , filterOrders'
@@ -67,10 +64,6 @@ module Curiosity.Runtime
   , addExpenseToSimpleContractForm
   , writeExpenseToSimpleContractForm
   , removeExpenseFromSimpleContractForm
-  -- * Emails
-  , filterEmails
-  , filterEmails'
-  , selectEmailById
   -- * Servant compat
   , appMHandlerNatTrans
   -- * Re-exports for backwards compat: must be removed in the future.
@@ -78,6 +71,9 @@ module Curiosity.Runtime
   , module RErr
   , module RIO
   , module AppM
+  , module Runtime.Q
+  , module Runtime.Ord
+  , module Runtime.E
   ) where
 
 import qualified Commence.Multilogging         as ML
@@ -101,10 +97,16 @@ import qualified Curiosity.Data.Quotation      as Quotation
 import qualified Curiosity.Data.RemittanceAdv  as RemittanceAdv
 import qualified Curiosity.Data.SimpleContract as SimpleContract
 import qualified Curiosity.Data.User           as User
+import           Curiosity.Runtime.Email       as Runtime.E
 import           Curiosity.Runtime.Error       as RErr
 import           Curiosity.Runtime.IO          as RIO
-import           Curiosity.Runtime.IO.AppM      ( AppM, runAppM, runAppMSafe )
+import           Curiosity.Runtime.IO.AppM      ( AppM
+                                                , runAppM
+                                                , runAppMSafe
+                                                )
 import qualified Curiosity.Runtime.IO.AppM     as AppM
+import           Curiosity.Runtime.Order       as Runtime.Ord
+import           Curiosity.Runtime.Quotation   as Runtime.Q
 import           Curiosity.Runtime.Type        as RType
 import           Curiosity.STM.Helpers          ( atomicallyM )
 import qualified Data.Aeson.Text               as Aeson
@@ -132,9 +134,8 @@ import           System.PosixCompat.Types       ( EpochTime )
 --------------------------------------------------------------------------------
 showThreads :: Threads -> IO [Text]
 showThreads ts = case ts of
-  NoThreads        -> pure ["Threads are disabled."]
-  ReplThreads mvarEmails ->
-    showThreads' "Email" mvarEmails
+  NoThreads                       -> pure ["Threads are disabled."]
+  ReplThreads mvarEmails          -> showThreads' "Email" mvarEmails
   HttpThreads mvarEmails mvarUnix -> do
     t1 <- showThreads' "Email" mvarEmails
     t2 <- showThreads' "UNIX-domain socket" mvarUnix
@@ -143,7 +144,9 @@ showThreads ts = case ts of
 showThreads' :: Text -> MVar ThreadId -> IO [Text]
 showThreads' name mvar = do
   b <- isEmptyMVar mvar
-  if b then pure [name <> " thread: stopped."] else pure [name <> " thread: running."]
+  if b
+    then pure [name <> " thread: stopped."]
+    else pure [name <> " thread: running."]
 
 
 --------------------------------------------------------------------------------
@@ -239,23 +242,18 @@ threads = do
   liftIO $ showThreads ts
 
 emptyReplThreads :: IO Threads
-emptyReplThreads = do
-  mvarEmails <- newEmptyMVar
-  pure $ ReplThreads mvarEmails
+emptyReplThreads = newEmptyMVar <&> ReplThreads
 
 emptyHttpThreads :: IO Threads
-emptyHttpThreads = do
-  mvarEmails <- newEmptyMVar
-  mvarUnix <- newEmptyMVar
-  pure $ HttpThreads mvarEmails mvarUnix
+emptyHttpThreads = HttpThreads <$> newEmptyMVar <*> newEmptyMVar
 
 spawnEmailThread :: RunM Text
 spawnEmailThread = do
   runtime <- ask
   ts      <- asks _rThreads
   case ts of
-    NoThreads        -> pure "Threads are disabled."
-    ReplThreads mvarEmails -> spawnEmailThread' runtime mvarEmails
+    NoThreads                -> pure "Threads are disabled."
+    ReplThreads mvarEmails   -> spawnEmailThread' runtime mvarEmails
     HttpThreads mvarEmails _ -> spawnEmailThread' runtime mvarEmails
 
 spawnEmailThread' :: Runtime -> MVar ThreadId -> RunM Text
@@ -277,8 +275,8 @@ killEmailThread :: RunM Text
 killEmailThread = do
   ts <- asks _rThreads
   case ts of
-    NoThreads        -> pure "Threads are disabled."
-    ReplThreads mvarEmails -> killEmailThread' mvarEmails
+    NoThreads                -> pure "Threads are disabled."
+    ReplThreads mvarEmails   -> killEmailThread' mvarEmails
     HttpThreads mvarEmails _ -> killEmailThread' mvarEmails
 
 killEmailThread' :: MVar ThreadId -> RunM Text
@@ -349,17 +347,16 @@ verifyEmailStep = do
 
 verifyEmailStepDryRun :: RunM [User.UserProfile]
 verifyEmailStepDryRun = do
-  db      <- asks _rDb
-  records <- atomicallyM $ filterUsers db User.PredicateEmailAddrToVerify
-  pure records
+  db <- asks _rDb
+  atomicallyM $ filterUsers db User.PredicateEmailAddrToVerify
 
 spawnUnixThread :: RunM Text
 spawnUnixThread = do
   runtime <- ask
   ts      <- asks _rThreads
   case ts of
-    NoThreads        -> pure "Threads are disabled."
-    ReplThreads _ -> pure "No UNIX-domain socket thread in REPL." -- TODO
+    NoThreads              -> pure "Threads are disabled."
+    ReplThreads _          -> pure "No UNIX-domain socket thread in REPL." -- TODO
     HttpThreads _ mvarUnix -> spawnUnixThread' runtime mvarUnix
 
 spawnUnixThread' :: Runtime -> MVar ThreadId -> RunM Text
@@ -543,8 +540,7 @@ handleCommand runtime@Runtime {..} user command = do
             in  i <> " " <> n
       pure (ExitSuccess, map f profiles)
     Command.UpdateUser input -> do
-      output <- runAppMSafe runtime . atomicallyM $ Core.updateUser _rDb
-                                                                    input
+      output <- runAppMSafe runtime . atomicallyM $ Core.updateUser _rDb input
       case output of
         Right mid -> do
           case mid of
@@ -556,8 +552,7 @@ handleCommand runtime@Runtime {..} user command = do
             Left err -> pure (ExitFailure 1, [show err])
         Left err -> pure (ExitFailure 1, [show err])
     Command.DeleteUser input -> do
-      output <- runAppMSafe runtime . atomicallyM $ Core.deleteUser _rDb
-                                                                    input
+      output <- runAppMSafe runtime . atomicallyM $ Core.deleteUser _rDb input
       case output of
         Right mid -> do
           case mid of
@@ -940,64 +935,6 @@ linkBusinessUnitToUser'
 linkBusinessUnitToUser' slug uid role = do
   db <- asks _rDb
   atomicallyM $ Core.linkBusinessUnitToUser db slug uid role
-
-
---------------------------------------------------------------------------------
-createQuotation
-  :: Core.StmDb
-  -> Quotation.Quotation
-  -> STM (Either Quotation.Err Quotation.QuotationId)
-createQuotation db quotation = do
-  STM.catchSTM (Right <$> transaction) (pure . Left)
- where
-  transaction = do
-    newId <- Core.generateQuotationId db
-    let new = quotation { Quotation._quotationId = newId }
-    createQuotationFull db new >>= either STM.throwSTM pure
-
-createQuotationFull
-  :: Core.StmDb
-  -> Quotation.Quotation
-  -> STM (Either Quotation.Err Quotation.QuotationId)
-createQuotationFull db new = do
-  modifyQuotations db (++ [new])
-  pure . Right $ Quotation._quotationId new
-
-modifyQuotations
-  :: Core.StmDb -> ([Quotation.Quotation] -> [Quotation.Quotation]) -> STM ()
-modifyQuotations db f =
-  let tvar = Data._dbQuotations db in STM.modifyTVar tvar f
-
-createOrderForQuotation
-  :: Core.StmDb
-  -> (User.UserProfile, Quotation.QuotationId)
-     -- ^ TODO SignQuotation data type, including e.g. the signature data.
-  -> STM (Either Quotation.Err Order.OrderId)
-createOrderForQuotation db _ = do
-  mid <- createOrder db
-  case mid of
-    Right id              -> pure $ Right id
-    Left  (Order.Err err) -> pure $ Left $ Quotation.Err err
-
-
---------------------------------------------------------------------------------
-createOrder :: Core.StmDb -> STM (Either Order.Err Order.OrderId)
-createOrder db = do
-  STM.catchSTM (Right <$> transaction) (pure . Left)
- where
-  transaction = do
-    newId <- Core.generateOrderId db
-    let new = Order.Order newId
-    createOrderFull db new >>= either STM.throwSTM pure
-
-createOrderFull
-  :: Core.StmDb -> Order.Order -> STM (Either Order.Err Order.OrderId)
-createOrderFull db new = do
-  modifyOrders db (++ [new])
-  pure . Right $ Order._orderId new
-
-modifyOrders :: Core.StmDb -> ([Order.Order] -> [Order.Order]) -> STM ()
-modifyOrders db f = let tvar = Data._dbOrders db in STM.modifyTVar tvar f
 
 invoiceOrder
   :: Core.StmDb
@@ -1460,22 +1397,6 @@ setQuotationAsRejected db id mcomment = do
       _ -> pure . Left $ Quotation.Err "Quotation is not in the Sent state."
     Nothing -> pure . Left $ Quotation.Err "No such quotation."
 
-filterQuotations
-  :: Core.StmDb -> Quotation.Predicate -> STM [Quotation.Quotation]
-filterQuotations db predicate = do
-  let tvar = Data._dbQuotations db
-  records <- STM.readTVar tvar
-  pure $ filter (Quotation.applyPredicate predicate) records
-
-filterQuotations' :: Quotation.Predicate -> RunM [Quotation.Quotation]
-filterQuotations' predicate = do
-  db <- asks _rDb
-  atomicallyM $ filterQuotations db predicate
-
-selectQuotationById
-  :: Core.StmDb -> Quotation.QuotationId -> IO (Maybe Quotation.Quotation)
-selectQuotationById db id = STM.atomically $ Core.selectQuotationById db id
-
 
 --------------------------------------------------------------------------------
 filterOrders :: Core.StmDb -> Order.Predicate -> STM [Order.Order]
@@ -1668,9 +1589,8 @@ matchPayment
            Invoice.Err
            (RemittanceAdv.RemittanceAdvId, RemittanceAdv.RemittanceAdvId)
        )
-matchPayment db _ = do
-  mids <- STM.catchSTM (Right <$> createTwoRemittanceAdvs db) (pure . Left)
-  pure mids
+matchPayment db _ =
+  STM.catchSTM (Right <$> createTwoRemittanceAdvs db) (pure . Left)
 
 createTwoRemittanceAdvs db = do
   mid0 <- createRemittanceAdv db
@@ -1719,8 +1639,7 @@ filterUsers' predicate = do
   db <- asks _rDb
   atomicallyM $ filterUsers db predicate
 
-signup
-  :: User.Signup -> RunM (Either User.Err (User.UserId, Email.EmailId))
+signup :: User.Signup -> RunM (Either User.Err (User.UserId, Email.EmailId))
 signup input = ML.localEnv (<> "Command" <> "Signup") $ do
   ML.info "Signing up new user..."
   db   <- asks _rDb
@@ -1807,44 +1726,12 @@ selectEntitiesWhereUserId db uid = do
 readLegalEntities :: Core.StmDb -> STM [Legal.Entity]
 readLegalEntities db = do
   let tvar = Data._dbLegalEntities db
-  records <- STM.readTVar tvar
-  pure records
+  STM.readTVar tvar
 
 withRuntimeAtomically f a = ask >>= \rt -> atomicallyM $ f rt a
 
 
 --------------------------------------------------------------------------------
-filterEmails :: Core.StmDb -> Email.Predicate -> STM [Email.Email]
-filterEmails db predicate = do
-  let tvar = Data._dbEmails db
-  records <- STM.readTVar tvar
-  pure $ filter (Email.applyPredicate predicate) records
-
-filterEmails' :: Email.Predicate -> RunM [Email.Email]
-filterEmails' predicate = do
-  db <- asks _rDb
-  atomicallyM $ filterEmails db predicate
-
-setEmailDone :: Core.StmDb -> Email.Email -> STM (Either Email.Err ())
-setEmailDone db Email.Email {..} = do
-  mrecord <- Core.selectEmailById db _emailId
-  case mrecord of
-    Just Email.Email{} -> do
-      let replaceOlder records =
-            [ if Email._emailId e == _emailId
-                then e { Email._emailState = Email.EmailDone }
-                else e
-            | e <- records
-            ]
-      Core.modifyEmails db replaceOlder
-      pure $ Right ()
-    Nothing -> pure . Left $ Email.Err "Email not found" -- TODO
-
-selectEmailById :: Email.EmailId -> RunM (Maybe Email.Email)
-selectEmailById eid = do
-  db <- asks _rDb
-  atomicallyM $ Core.selectEmailById db eid
-
 --------------------------------------------------------------------------------
 readForm
   :: forall a
@@ -1885,12 +1772,12 @@ deleteForm getTVar db (profile, key) =
 
 --------------------------------------------------------------------------------
 runWithRuntime runtime = do
-  putStrLn @Text "Creating curiosity.sock..."
+  putStrLn @Text "Creating curiosity.sock..." -- fixme: use logger?
   sock <- socket AF_UNIX Stream 0
   bind sock $ SockAddrUnix "curiosity.sock"
   listen sock maxListenQueue
 
-  putStrLn @Text "Listening on curiosity.sock..."
+  putStrLn @Text "Listening on curiosity.sock..." -- fixme: use logger?
   server runtime sock -- TODO bracket (or catch) and close
   close sock
 
@@ -1898,17 +1785,17 @@ server runtime sock = do
   (conn, _) <- accept sock -- TODO bracket (or catch) and close too
   void $ forkFinally
     (handler runtime conn)
-    (const $ putStrLn @Text "Closing connection." >> close conn)
+    (const $ putStrLn @Text "Closing connection." >> close conn) -- fixme: use logger?
   server runtime sock
 
 handler runtime conn = do
-  putStrLn @Text "New connection..."
+  putStrLn @Text "New connection..." -- fixme: use logger?
   sendAll conn "Curiosity UNIX-domain socket server.\n"
   repl runtime conn
 
 repl runtime conn = do
   msg <- recv conn 1024
-  let input = map B.unpack $ B.words msg -- TODO decodeUtf8
+  let input = B.unpack <$> B.words msg -- TODO decodeUtf8
   case input of
     _ | B.null msg -> return () -- Connection lost.
     ["quit"]       -> return ()
@@ -1917,14 +1804,12 @@ repl runtime conn = do
       let result = A.execParserPure A.defaultPrefs Command.parserInfo input
       case result of
         A.Success command -> do
-          case command of
-            _ -> do
-              (_, output) <- handleCommand runtime "TODO" command
-              mapM_ (\x -> sendAll conn (T.encodeUtf8 x <> "\n")) output
+          (_, output) <- handleCommand runtime "TODO" command
+          mapM_ (\x -> sendAll conn (T.encodeUtf8 x <> "\n")) output
         A.Failure err -> case err of
           A.ParserFailure execFailure -> do
             let (errMsg, _, _) = execFailure "cty"
             sendAll conn (B.pack $ show errMsg <> "\n")
-        A.CompletionInvoked _ -> print @IO @Text "Shouldn't happen"
+        A.CompletionInvoked _ -> print @IO @Text "Shouldn't happen" -- fixme: use logger?
 
       repl runtime conn
