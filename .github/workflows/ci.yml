@@ -7,6 +7,9 @@ on:
       - 'ci-*'
   pull_request:
 
+env:
+  DEPLOY_HOST: smartcoop.sh
+
 jobs:
   build:
     strategy:
@@ -41,4 +44,22 @@ jobs:
         sudo cp .github/workflows/post-build-hook /etc/nix/post-build-hook
 
     - name: Build Curiosity
-      run: nix-build -A toplevel --show-trace
+      run: |
+        nix-build -A toplevel --show-trace
+        system_path=$(nix-build -A toplevel)
+        echo "SYSTEM_PATH=$system_path" > $GITHUB_OUTPUT
+      id: build_curiosity
+    - name: Setup NixOS deploy env
+      if: github.event_name == 'push' && github.ref_name == 'main'
+      run: |
+        ssh_key=$(mktemp)
+        chmod 600 $ssh_key
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > $ssh_key
+        echo "SSH_KEY_PATH=$ssh_key" > $GITHUB_OUTPUT
+      id: deploy_env
+    - name: Deploy closure to smartcoop.sh
+      if: github.event_name == 'push' && github.ref_name == 'main'
+      run: ./scripts/deploy.sh
+      env:
+        PROFILE_PATH: ${{ steps.build_curiosity.outputs.SYSTEM_PATH }}
+        NIX_SSHOPTS: "-o StrictHostKeyChecking=no -i ${{ steps.deploy_env.outputs.SSH_KEY_PATH }} -l root"
