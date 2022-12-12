@@ -9,15 +9,18 @@ module Curiosity.Core
   , instantiateStmDb
   , reset
   , readFullStmDbInHask'
-  , signupUser
+  , signup
   , inviteUser
   , createUserFull
+  , updateUser
+  , deleteUser
   , modifyUsers
   , selectUserById
   , selectUserByUsername
   , selectUserByInviteToken
   , modifyQuotations
   , selectQuotationById
+  , checkCredentials
   -- * ID generation
   , generateUserId
   , generateBusinessId
@@ -292,16 +295,16 @@ generateEmailId Db {..} =
 
 
 --------------------------------------------------------------------------------
-signupUser
+signup
   :: StmDb -> User.Signup -> STM (Either User.Err (User.UserId, Email.EmailId))
-signupUser db signup@User.Signup {..} = do
+signup db input@User.Signup {..} = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
     now        <- readTime db
     newId      <- generateUserId db
     newProfile <-
-      pure (User.validateSignup now newId signup)
+      pure (User.validateSignup now newId input)
         >>= either (STM.throwSTM . User.ValidationErrs) pure
     emailId <-
       createEmail db Email.SignupConfirmationEmail Email.systemEmailAddr email
@@ -384,6 +387,36 @@ createUserFull' db newProfile = do
     pure $ Right newProfileId
   existsErr = pure . Left $ User.UserExists
 
+updateUser :: StmDb -> User.Update -> STM (Either User.Err ())
+updateUser db User.Update {..} = do
+  mrecord <- selectUserById db _updateUserId
+  case mrecord of
+    Just User.UserProfile{} -> do
+      let replaceOlder records =
+            [ if User._userProfileId r == _updateUserId
+                then r { User._userProfileDisplayName = _updateDisplayName
+                       , User._userProfileBio = _updateBio
+                       , User._userProfileTwitterUsername = _updateTwitterUsername
+                       }
+                else r
+            | r <- records
+            ]
+      modifyUsers db replaceOlder
+      pure $ Right ()
+    Nothing ->
+      pure . Left . User.UserNotFound $ User.unUserId _updateUserId
+
+deleteUser :: StmDb -> User.UserId -> STM (Either User.Err ())
+deleteUser db uid = do
+  mrecord <- selectUserById db uid
+  case mrecord of
+    Just User.UserProfile{} -> do
+      let replaceOlder = filter ((/= uid) . User._userProfileId)
+      modifyUsers db replaceOlder
+      pure $ Right ()
+    Nothing ->
+      pure . Left . User.UserNotFound $ User.unUserId uid
+
 modifyUsers :: StmDb -> ([User.UserProfile] -> [User.UserProfile]) -> STM ()
 modifyUsers db f = let tvar = _dbUserProfiles db in STM.modifyTVar tvar f
 
@@ -405,6 +438,22 @@ selectUserByInviteToken db token = do
   records <- STM.readTVar tvar
   pure $ find ((== Just token) . User.getInviteToken . User._userProfileCreds)
               records
+
+
+--------------------------------------------------------------------------------
+checkCredentials
+  :: StmDb -> User.Credentials -> STM (Maybe User.UserProfile)
+checkCredentials db User.Credentials {..} = do
+  mprofile <- selectUserByUsername db _userCredsName
+  case mprofile of
+    Just profile | User.checkPassword profile _userCredsPassword ->
+      pure $ Just profile
+    _ -> pure Nothing
+checkCredentials db User.InviteToken {..} = do
+  mprofile <- selectUserByInviteToken db _inviteToken
+  case mprofile of
+    Just profile -> pure $ Just profile
+    _ -> pure Nothing
 
 
 --------------------------------------------------------------------------------

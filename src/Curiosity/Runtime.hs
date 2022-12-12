@@ -25,7 +25,7 @@ module Curiosity.Runtime
   , selectUserByUsernameResolved
   , filterUsers
   , filterUsers'
-  , signupUser
+  , signup
   -- * High-level entity operations
   , selectEntityBySlug
   , selectEntityBySlugResolved
@@ -82,7 +82,6 @@ module Curiosity.Runtime
 
 import qualified Commence.Multilogging         as ML
 import qualified Commence.Runtime.Errors       as Errs
-import qualified Commence.Runtime.Storage      as S
 import qualified Control.Concurrent.STM        as STM
 import           Control.Lens                  as Lens
 import "exceptions" Control.Monad.Catch         ( MonadCatch
@@ -104,7 +103,8 @@ import qualified Curiosity.Data.SimpleContract as SimpleContract
 import qualified Curiosity.Data.User           as User
 import           Curiosity.Runtime.Error       as RErr
 import           Curiosity.Runtime.IO          as RIO
-import           Curiosity.Runtime.IO.AppM     as AppM
+import           Curiosity.Runtime.IO.AppM      ( AppM, runAppM, runAppMSafe )
+import qualified Curiosity.Runtime.IO.AppM     as AppM
 import           Curiosity.Runtime.Type        as RType
 import           Curiosity.STM.Helpers          ( atomicallyM )
 import qualified Data.Aeson.Text               as Aeson
@@ -494,7 +494,7 @@ handleCommand runtime@Runtime {..} user command = do
           pure (ExitSuccess, ["Legal entity updated: " <> slug])
         Left err -> pure (ExitFailure 1, [show err])
     Command.Signup input -> do
-      muid <- stepRunM runtime $ signupUser input
+      muid <- stepRunM runtime $ signup input
       case muid of
         Right (User.UserId uid, Email.EmailId eid) -> pure
           ( ExitSuccess
@@ -543,19 +543,26 @@ handleCommand runtime@Runtime {..} user command = do
             in  i <> " " <> n
       pure (ExitSuccess, map f profiles)
     Command.UpdateUser input -> do
-      output <-
-        runAppMSafe runtime . S.liftTxn @AppM @STM $ S.dbUpdate @AppM @STM
-          _rDb
-          input
+      output <- runAppMSafe runtime . atomicallyM $ Core.updateUser _rDb
+                                                                    input
       case output of
         Right mid -> do
           case mid of
-            Right storageResult -> do
-              case storageResult of
-                Right [uid] ->
-                  pure (ExitSuccess, ["User updated: " <> User.unUserId uid])
-                Right _   -> pure (ExitFailure 1, ["No record updated."])
-                Left  err -> pure (ExitFailure 1, [show err])
+            Right () -> do
+              pure
+                ( ExitSuccess
+                , ["User updated: " <> User.unUserId (User._updateUserId input)]
+                )
+            Left err -> pure (ExitFailure 1, [show err])
+        Left err -> pure (ExitFailure 1, [show err])
+    Command.DeleteUser input -> do
+      output <- runAppMSafe runtime . atomicallyM $ Core.deleteUser _rDb
+                                                                    input
+      case output of
+        Right mid -> do
+          case mid of
+            Right () -> do
+              pure (ExitSuccess, ["User updated: " <> User.unUserId input])
             Left err -> pure (ExitFailure 1, [show err])
         Left err -> pure (ExitFailure 1, [show err])
     Command.SetUserEmailAddrAsVerified username -> do
@@ -1160,18 +1167,6 @@ removeExpenseFromContractForm db (profile, key, idx) = do
     (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
--- | Fetch the contract form from the staging area, then attempt to validate
--- and create it.
-submitCreateContractForm
-  :: Core.StmDb
-  -> (User.UserProfile, Employment.SubmitContract)
-  -> STM (Either Employment.Err Employment.ContractId)
-submitCreateContractForm db (profile, Employment.SubmitContract key) = do
-  minput <- readCreateContractForm db (profile, key)
-  case minput of
-    Right input -> submitCreateContractForm' db (profile, input)
-    Left  err   -> pure . Left $ Employment.Err (show err)
-
 -- | Attempt to validate a contract form and create it.
 submitCreateContractForm'
   :: Core.StmDb
@@ -1433,7 +1428,7 @@ setQuotationAsRejectedFull
   -> Quotation.QuotationId
   -> Maybe Text
   -> STM (Either Quotation.Err ())
-setQuotationAsRejectedFull db user input mcomment = STM.catchSTM
+setQuotationAsRejectedFull db _ input mcomment = STM.catchSTM
   (Right <$> transaction)
   (pure . Left)
  where
@@ -1687,7 +1682,7 @@ createTwoRemittanceAdvs db = do
 selectUserByIdResolved db id = do
   let usersTVar = Data._dbUserProfiles db
   users' <- STM.readTVar usersTVar
-  case find ((== id) . S.dbId) users' of
+  case find ((== id) . User._userProfileId) users' of
     Just user -> do
       entities <- selectEntitiesWhereUserId db $ User._userProfileId user
       pure $ Just (user, entities)
@@ -1724,12 +1719,12 @@ filterUsers' predicate = do
   db <- asks _rDb
   atomicallyM $ filterUsers db predicate
 
-signupUser
+signup
   :: User.Signup -> RunM (Either User.Err (User.UserId, Email.EmailId))
-signupUser input = ML.localEnv (<> "Command" <> "Signup") $ do
+signup input = ML.localEnv (<> "Command" <> "Signup") $ do
   ML.info "Signing up new user..."
   db   <- asks _rDb
-  muid <- atomicallyM $ Core.signupUser db input
+  muid <- atomicallyM $ Core.signup db input
   case muid of
     Right (User.UserId uid, Email.EmailId eid) -> do
       ML.info $ "User created: " <> uid
@@ -1913,13 +1908,13 @@ handler runtime conn = do
 
 repl runtime conn = do
   msg <- recv conn 1024
-  let command = map B.unpack $ B.words msg -- TODO decodeUtf8
-  case command of
+  let input = map B.unpack $ B.words msg -- TODO decodeUtf8
+  case input of
     _ | B.null msg -> return () -- Connection lost.
     ["quit"]       -> return ()
     []             -> repl runtime conn
     _              -> do
-      let result = A.execParserPure A.defaultPrefs Command.parserInfo command
+      let result = A.execParserPure A.defaultPrefs Command.parserInfo input
       case result of
         A.Success command -> do
           case command of
@@ -1928,8 +1923,8 @@ repl runtime conn = do
               mapM_ (\x -> sendAll conn (T.encodeUtf8 x <> "\n")) output
         A.Failure err -> case err of
           A.ParserFailure execFailure -> do
-            let (msg, _, _) = execFailure "cty"
-            sendAll conn (B.pack $ show msg <> "\n")
+            let (errMsg, _, _) = execFailure "cty"
+            sendAll conn (B.pack $ show errMsg <> "\n")
         A.CompletionInvoked _ -> print @IO @Text "Shouldn't happen"
 
       repl runtime conn

@@ -123,14 +123,6 @@ instance H.ToMarkup EchoPage where
       panelWrapper
         $ H.div ! A.class_ "c-display" $
           H.pre . H.code $ H.text _echoPageContent
-   where
-    withText msg =
-      Render.renderCanvas
-        $ Dsl.SingletonCanvas
-        $ H.div
-        ! A.class_ "c-display"
-        $ H.code
-        $ H.toMarkup msg
 
 -- | Similar to `EchoPage` but also shows validation errors
 data EchoPage' = EchoPage'
@@ -152,11 +144,3 @@ instance H.ToMarkup EchoPage' where
               H.pre . H.code $ "Valid."
             else
               H.pre . H.code . H.text $ unlines _echoPage'Errors
-   where
-    withText msg =
-      Render.renderCanvas
-        $ Dsl.SingletonCanvas
-        $ H.div
-        ! A.class_ "c-display"
-        $ H.code
-        $ H.toMarkup msg

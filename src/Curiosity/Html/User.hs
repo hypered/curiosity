@@ -37,6 +37,11 @@ instance H.ToMarkup EditProfilePage where
   toMarkup (EditProfilePage profile submitUrl) =
     renderForm profile $ groupLayout $ do
       title "User profile"
+      H.input
+        ! A.type_ "hidden"
+        ! A.id "user-id"
+        ! A.name "user-id"
+        ! A.value (H.toValue $ User._userProfileId profile)
       disabledText
           "Username"
           "username"
@@ -212,9 +217,9 @@ displayAdvisors (Just (User.Advisors {..})) = do
   H.text . User.unUserId $ _userAdvisorsCurrent
   "Past advisors:"
   H.ul $ mapM_
-    (\(from, to, id) -> H.li
+    (\(since, till, id) -> H.li
       (  H.text (User.unUserId id)
-      >> H.text (" (From " <> show from <> ", to " <> show to <> ")")
+      >> H.text (" (From " <> show since <> ", to " <> show till <> ")")
       )
     )
     _userAdvisorsPast

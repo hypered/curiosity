@@ -95,6 +95,7 @@ spec = do
 
     malice <- runIO $ parseFile "data/alice.json"
     case malice of
+      Left err -> runIO $ "x" `shouldBe` err -- TODO How to make it fail ?
       Right alice -> do
         let aliceState = Data.emptyHask
               { Data._dbNextUserId   = C.CounterValue 2

@@ -57,17 +57,15 @@ module Curiosity.Data.User
   , firstUserRights
   , validateSignup
   , validateSignup'
-  -- * Export all DB ops.
-  , Storage.DBUpdate(..)
-  , Storage.DBSelect(..)
   -- * Errors
   , Err(..)
   , userNotFound
   , usernameBlocklist
+  , checkPassword
   ) where
 
 import qualified Commence.Runtime.Errors       as Errs
-import qualified Commence.Runtime.Storage      as Storage
+import           Commence.Types.Secret          ( (=:=) )
 import qualified Commence.Types.Secret         as Secret
 import qualified Commence.Types.Wrapped        as W
 import           Control.Lens
@@ -77,11 +75,8 @@ import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
 import qualified Network.HTTP.Types            as HTTP
 import qualified Servant.Auth.Server           as SAuth
-import qualified Smart.Server.Page.Navbar      as Nav
 import           System.PosixCompat.Types       ( EpochTime )
 import qualified Text.Blaze.Html5              as H
-import           Text.Blaze.Html5               ( (!) )
-import qualified Text.Blaze.Html5.Attributes   as A
 import           Text.Blaze.Renderer.Text       ( renderMarkup )
 import           Web.FormUrlEncoded             ( FromForm(..)
                                                 , parseMaybe
@@ -137,7 +132,8 @@ instance FromForm Login where
 
 -- | Represents the input data to update a user profile.
 data Update = Update
-  { _updateDisplayName     :: Maybe UserDisplayName
+  { _updateUserId          :: UserId
+  , _updateDisplayName     :: Maybe UserDisplayName
   , _updateBio             :: Maybe Text
   , _updateTwitterUsername :: Maybe Text
   }
@@ -146,9 +142,10 @@ data Update = Update
 instance FromForm Update where
   fromForm f =
     Update
-      <$> parseMaybe "display-name"     f
-      <*> parseMaybe "bio"              f
-      <*> parseMaybe "twitter-username" f
+      <$> parseUnique "user-id"          f
+      <*> parseMaybe  "display-name"     f
+      <*> parseMaybe  "bio"              f
+      <*> parseMaybe  "twitter-username" f
 
 
 --------------------------------------------------------------------------------
@@ -305,38 +302,6 @@ instance FromForm SetUserEmailAddrAsVerified where
 
 
 --------------------------------------------------------------------------------
-instance Nav.IsNavbarContent UserProfile where
-  navbarMarkup UserProfile {..} = do
-    greeting
-    editProfileLink
-    H.hr
-   where
-    greeting = H.div . H.text $ T.unwords
-      ["Hi", _userCredsName _userProfileCreds ^. coerced]
-    editProfileLink = H.a ! A.href "/settings/profile" $ "Edit profile"
-
-instance Storage.DBIdentity UserProfile where
-  type DBId UserProfile = UserId
-  dbId = _userProfileId
-
-instance Storage.DBStorageOps UserProfile where
-  data DBUpdate UserProfile =
-    UserCreate UserProfile
-    | UserCreateGeneratingUserId Signup
-    | UserDelete UserId
-    | UserUpdate UserId Update
-    deriving (Show, Eq)
-  
-  data DBSelect UserProfile =
-    -- | Attempt a user-login using the more ambiguous but more friendly
-    -- `UserName` and `Password.
-    UserLoginWithUserName Credentials
-    -- | Select a user with a known `UserId`.
-    | SelectUserById UserId
-    -- | Select a user with `UserName`.
-    | SelectUserByUserName UserName
-    deriving (Show, Eq)
-
 -- | Predicates to filter users.
 data Predicate = PredicateEmailAddrToVerify | PredicateHas AccessRight
   deriving (Eq, Show)
@@ -517,3 +482,13 @@ usernameBlocklist =
 -- | Convenient way to create a `UserNotFound` value on `Left.`
 userNotFound :: forall a . Text -> Either Err a
 userNotFound = Left . UserNotFound . mappend "User not found: "
+
+
+--------------------------------------------------------------------------------
+-- TODO Use constant-time string comparison.
+checkPassword :: UserProfile -> Password -> Bool
+checkPassword profile (Password passInput) = case _userProfileCreds profile of
+  Credentials {..} ->
+    let Password storedPass = _userCredsPassword
+    in storedPass =:= passInput
+  InviteToken _ -> False

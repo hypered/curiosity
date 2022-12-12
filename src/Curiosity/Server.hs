@@ -32,7 +32,6 @@ module Curiosity.Server
 import qualified Commence.JSON.Pretty          as JP
 import qualified Commence.Multilogging         as ML
 import qualified Commence.Runtime.Errors       as Errs
-import qualified Commence.Runtime.Storage      as S
 import qualified Commence.Server.Auth          as CAuth
 import           Control.Lens
 import "exceptions" Control.Monad.Catch         ( MonadMask )
@@ -661,12 +660,9 @@ serveScenario path = serveDirectoryWith settings
 type ServerC m
   = ( MonadMask m
     , ML.MonadAppNameLogMulti m
-    , S.DBStorage m STM User.UserProfile
-    , S.DBTransaction m STM
+    , MonadError Errs.RuntimeErr m
     , MonadReader Rt.Runtime m
     , MonadIO m
-    , Show (S.DBError m STM User.UserProfile)
-    , S.Db m STM User.UserProfile ~ Core.StmDb
     )
 
 
@@ -939,20 +935,17 @@ publicT conf jwtS = handleSignup :<|> handleLogin conf jwtS
 
 handleSignup
   :: forall m
-   . (ServerC m, Show (S.DBError m STM User.UserProfile))
+   . ServerC m
   => User.Signup
   -> m Signup.SignupResultPage
 handleSignup input@User.Signup {..} =
   ML.localEnv (<> "HTTP" <> "Signup")
     $   do
           ML.info $ "Signing up new user: " <> show username <> "..."
-          withRuntime $ Rt.signupUser input
+          withRuntime $ Rt.signup input
     >>= \case
-          Right uid -> do
-            ML.info
-              $  "User created: "
-              <> show uid
-              <> ". Sending success result."
+          Right _ -> do
+            ML.info "Sending success result."
             pure Signup.SignupSuccess
           Left err -> do
             ML.info
@@ -977,9 +970,10 @@ handleLogin conf jwtSettings input =
           let credentials = User.Credentials (User._loginUsername input)
                                              (User._loginPassword input)
           db <- asks Rt._rDb
-          S.liftTxn @m @STM (Rt.checkCredentials db credentials)
+          liftIO
+            . atomically $ Core.checkCredentials db credentials
     >>= \case
-          Right (Just u) -> do
+          Just u -> do
             ML.info "Found user, applying authentication cookies..."
             -- TODO I think jwtSettings could be retrieved with
             -- Servant.Server.getContetEntry. This would avoid threading
@@ -1000,8 +994,7 @@ handleLogin conf jwtSettings input =
               Just applyCookies -> do
                 ML.info "Cookies applied. Sending success result."
                 pure . addHeader @"Location" "/" $ applyCookies NoContent
-          Right Nothing -> reportErr User.IncorrectUsernameOrPassword
-          Left  err     -> reportErr err
+          Nothing -> reportErr User.IncorrectUsernameOrPassword
  where
   reportErr err = do
     ML.info
@@ -1184,13 +1177,11 @@ handleUserProfileUpdate
   => User.Update
   -> User.UserProfile
   -> m (Headers '[Header "Location" Text] NoContent)
-handleUserProfileUpdate update profile = do
-  db   <- asks Rt._rDb
-  eIds <- S.liftTxn
-    (S.dbUpdate @m @STM db (User.UserUpdate (S.dbId profile) update))
-
-  case eIds of
-    Right (Right [_]) ->
+handleUserProfileUpdate update _ = do
+  db <- asks Rt._rDb
+  b  <- liftIO . atomically $ Core.updateUser db update
+  case b of
+    Right () ->
       pure $ addHeader @"Location" "/settings/profile" NoContent
     _ -> Errs.throwError' $ Rt.UnspecifiedErr "Cannot update the user."
 
@@ -2296,14 +2287,13 @@ withMaybeUser
 withMaybeUser authResult a f = case authResult of
   SAuth.Authenticated userId -> do
     db <- asks Rt._rDb
-    S.liftTxn (S.dbSelect @m @STM db (User.SelectUserById userId))
-      <&> (preview $ _Right . _head)
-      >>= \case
-            Nothing -> do
-              ML.warning
-                "Cookie-based authentication succeeded, but the user ID is not found."
-              authFailedErr $ "No user found with ID " <> show userId
-            Just userProfile -> f userProfile
+    b  <- liftIO . atomically $ Core.selectUserById db userId
+    case b of
+      Nothing -> do
+        ML.warning
+          "Cookie-based authentication succeeded, but the user ID is not found."
+        authFailedErr $ "No user found with ID " <> show userId
+      Just userProfile -> f userProfile
   authFailed -> a authFailed
   where authFailedErr = Errs.throwError' . User.UserNotFound
 
@@ -2372,35 +2362,6 @@ withMaybeUserFromUsername username a f = do
   db       <- asks Rt._rDb
   mprofile <- liftIO $ Rt.selectUserByUsername db username
   maybe (a username) f mprofile
-
--- | Similar to `withUserFromUsername`, but also returns the related entities.
-withUserFromUsernameResolved
-  :: forall m a
-   . ServerC m
-  => User.UserName
-  -> (User.UserProfile -> [Legal.EntityAndRole] -> m a)
-  -> m a
-withUserFromUsernameResolved username f = withMaybeUserFromUsernameResolved
-  username
-  (noSuchUserErr . show)
-  f
- where
-  noSuchUserErr = Errs.throwError' . User.UserNotFound . mappend
-    "The given username was not found: "
-
--- | Similar to `withMaybeUserFromUsername`, but also returns the related entities.
-withMaybeUserFromUsernameResolved
-  :: forall m a
-   . ServerC m
-  => User.UserName
-  -> (User.UserName -> m a)
-  -> (User.UserProfile -> [Legal.EntityAndRole] -> m a)
-  -> m a
-withMaybeUserFromUsernameResolved username a f = do
-  mprofile <- Rt.withRuntimeAtomically
-    (Rt.selectUserByUsernameResolved . Rt._rDb)
-    username
-  maybe (a username) (uncurry f) mprofile
 
 -- | Run a handler, ensuring a quotation can be obtained from the given id, or
 -- throw an error.
