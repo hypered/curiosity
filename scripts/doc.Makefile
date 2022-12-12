@@ -1,17 +1,26 @@
 SOURCES=$(shell find content/ -name '*.md')
 HTML_FILES := $(patsubst %.md,%.html,$(SOURCES))
-TARGETS := $(addprefix _site/, $(HTML_FILES:content/%=%))
+HTML_TARGETS := $(addprefix _site/, $(HTML_FILES:content/%=%))
+TEXT_FILES := $(patsubst %.md,%.txt,$(SOURCES))
+TEXT_TARGETS := $(addprefix _index/, $(TEXT_FILES:content/%=%))
 
 
 .PHONY: all
-all: $(TARGETS) \
+all: $(HTML_TARGETS) \
 	man \
 	_site/favicon.ico \
 	_site/robots.txt _site/humans.txt _site/.well-known/security.txt \
 	_site/documentation/clis/curiosity.7.html \
-	_site/documentation/clis/cty.1.html
+	_site/documentation/clis/cty.1.html \
+	_site/documentation/search.html \
+	_site/static/indexes/content.st \
+	_site/static/indexes/stork.css
 
 man: curiosity.7.gz cty.1.gz
+
+_site/documentation/search.html: content/documentation/search.html
+	mkdir -p $(dir $@)
+	cp $< $@
 
 _site/%.html: content/%.md scripts/template.html
 	mkdir -p $(dir $@)
@@ -55,6 +64,22 @@ _site/humans.txt: content/humans.txt
 _site/.well-known/security.txt: content/.well-known/security.txt
 	mkdir -p $(dir $@)
 	cp $< $@
+
+_site/static/indexes/content.st: $(TEXT_TARGETS) scripts/stork.toml
+	mkdir -p $(dir $@)
+	stork --version
+	stork build --input scripts/stork.toml --output $@
+
+_site/static/indexes/stork.css: scripts/stork.css
+	mkdir -p $(dir $@)
+	cp $< $@
+
+_index/%.txt: content/%.md
+	mkdir -p $(dir $@)
+	pandoc \
+		--to plain \
+		--output $@ \
+		$<
 
 entr:
 	find content/ -name '*.md' \

@@ -28,6 +28,7 @@ title: Curiosity
   - [Sign up](/documentation/processes/signup)
 - [Queues](/documentation/queues)
 - [Scenarios](/documentation/scenarios)
+- [Search](/documentation/search)
 - [Sitemap](/documentation/sitemap)
 - [Smart](/documentation/smart)
 - [Source code](/documentation/source)

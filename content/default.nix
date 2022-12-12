@@ -7,6 +7,28 @@ let
 
 in
 {
+  indexes = nixpkgs.stdenv.mkDerivation {
+    name = "indexes";
+    src = nix-filter {
+      root = ../.;
+      include = [
+        "content"
+        "scripts/doc.Makefile"
+        "scripts/stork.css"
+        "scripts/stork.toml"
+      ];
+    };
+    nativeBuildInputs = [ nixpkgs.mandoc nixpkgs.pandoc nixpkgs.stork ];
+    installPhase = ''
+      # Make sure we don't use an already built _site/.
+      rm -rf _site
+
+      make -f scripts/doc.Makefile _site/static/indexes/content.st
+      make -f scripts/doc.Makefile _site/static/indexes/stork.css
+      mv _site/static $out
+    '';
+  };
+
   html.all = nixpkgs.stdenv.mkDerivation {
     name = "content";
     src = nix-filter {
@@ -15,10 +37,12 @@ in
         "content"
         "man"
         "scripts/doc.Makefile"
+        "scripts/stork.css"
+        "scripts/stork.toml"
         "scripts/template.html"
       ];
     };
-    nativeBuildInputs = [ nixpkgs.mandoc nixpkgs.pandoc ];
+    nativeBuildInputs = [ nixpkgs.mandoc nixpkgs.pandoc nixpkgs.stork ];
     installPhase = ''
       # Make sure we don't use an already built _site/.
       rm -rf _site
@@ -26,7 +50,7 @@ in
       make -f scripts/doc.Makefile
       mv _site $out
 
-      cp -r ${(import ../.).static} $out/static
+      cp -r ${(import ../.).static}/* $out/static/
     '';
   };
 
