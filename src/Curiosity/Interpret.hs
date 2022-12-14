@@ -39,7 +39,7 @@ import qualified Curiosity.Data                as Data
 import qualified Curiosity.Data.User           as User
 import qualified Curiosity.Parse               as P
 import qualified Curiosity.Runtime             as Rt
-import           Data.List                      ( last )
+import           Data.List                      ( isInfixOf, last )
 import qualified Data.Text                     as T
 import qualified Options.Applicative           as A
 import           System.FilePath                ( (</>)
@@ -175,14 +175,25 @@ interpretLines runtime user dir content nesting acc0 accumulate = go user acc0 0
           A.Success command -> do
             case command of
               Command.Run _ scriptPath _ -> do
-                output' <- liftIO $ interpretFile runtime
-                                                  user
-                                                  (dir </> scriptPath)
-                                                  (succ nesting)
-                st <- Rt.runRunM runtime Rt.state
-                let t    = trace' [] ExitSuccess output' st
-                    acc' = accumulate t acc
-                go user' acc' nbr' rest
+                let scriptPath' = dir </> scriptPath
+                if dir `isPrefixOf` scriptPath' &&
+                   (not $ ".." `isInfixOf` scriptPath')
+                then do
+                  output' <- liftIO $ interpretFile runtime
+                                                    user
+                                                    scriptPath'
+                                                    (succ nesting)
+                  st <- Rt.runRunM runtime Rt.state
+                  let t    = trace' [] ExitSuccess output' st
+                      acc' = accumulate t acc
+                  go user' acc' nbr' rest
+                else do
+                  st <- Rt.runRunM runtime Rt.state
+                  let t    = trace'
+                               ["Script path can't be outside initial directory."]
+                               (ExitFailure 1) [] st
+                      acc' = accumulate t acc
+                  go user' acc' nbr' rest
               _ -> do
                 (_, output) <- Rt.handleCommand runtime user' command
                 st <- Rt.runRunM runtime Rt.state

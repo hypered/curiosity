@@ -552,7 +552,7 @@ serverT natTrans ctx conf jwtS root dataDir scenariosDir =
     :<|> messageSignupSuccess
 
     :<|> showRun
-    :<|> handleRun
+    :<|> handleRun scenariosDir
     :<|> serveScenario scenariosDir
 
     :<|> showState
@@ -2451,10 +2451,11 @@ showRun authResult = withMaybeUser
 
 handleRun
   :: ServerC m
-  => SAuth.AuthResult User.UserId
+  => FilePath
+  -> SAuth.AuthResult User.UserId
   -> Data.Command
   -> m Pages.EchoPage
-handleRun authResult (Data.Command cmd) = withMaybeUser
+handleRun path authResult (Data.Command cmd) = withMaybeUser
   authResult
   (\_ -> run' Nothing <&> Pages.EchoPage Nothing)
   (\profile -> run' (Just profile) <&> Pages.EchoPage (Just profile))
@@ -2463,7 +2464,7 @@ handleRun authResult (Data.Command cmd) = withMaybeUser
     runtime <- ask
     output  <- liftIO $ Inter.interpretLines runtime
                                              username
-                                             "/tmp/nowhere"
+                                             path
                                              [cmd]
                                              0
                                              []
