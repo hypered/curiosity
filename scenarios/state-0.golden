@@ -4,7 +4,7 @@ State is now empty.
 > 2: user signup alice a alice@example.com --accept-tos
 > User created: USER-1
 > Signup confirmation email enqueued: EMAIL-1
-> 3: user update USER-1 Alice Hi ! I'm the first advisor registered on this prototype. I know and have access to everything... Let me know if you need anything !
+> 3: user update USER-1 Alice "Hi ! I'm the first advisor registered on this prototype. I know and have access to everything... Let me know if you need anything !"
 > User updated: USER-1
 > 5: user signup bob b bob@example.com --accept-tos
 > User created: USER-2
@@ -15,15 +15,15 @@ State is now empty.
 > 8: user signup mila m mila@example.com --accept-tos
 > User created: USER-4
 > Signup confirmation email enqueued: EMAIL-4
-> 9: user update USER-4 Mila I'm Mila, the first member to join this prototype. My advisor is @alice and I've created @alpha.
+> 9: user update USER-4 Mila "I'm Mila, the first member to join this prototype. My advisor is @alice and I've created @alpha."
 > User updated: USER-4
 > 11: user signup chloe c chloe@example.com --accept-tos
 > User created: USER-5
 > Signup confirmation email enqueued: EMAIL-5
 3: run init-entities.txt
-> 1: entity create one One S.A. 100200300 BE0100200300
+> 1: entity create one "One S.A." 100200300 BE0100200300
 > Legal entity created: LENT-1
-> 2: entity update one One S.A. is the main legal entity of the prototype. Unless required for fiscal or legal reasons, new contracts are hosted in One.
+> 2: entity update one "One S.A. is the main legal entity of the prototype. Unless required for fiscal or legal reasons, new contracts are hosted in One."
 > Legal entity updated: one
 > 3: entity link-user one USER-1 --validator
 > Legal entity updated: one
@@ -31,9 +31,9 @@ State is now empty.
 > Legal entity updated: one
 > 5: entity set-host one
 > Legal entity updated: one
-> 7: entity create two Two S.A. 100200400 BE0100200400
+> 7: entity create two "Two S.A." 100200400 BE0100200400
 > Legal entity created: LENT-2
-> 8: entity update two Two S.A. is the second legal entity of the prototype.
+> 8: entity update two "Two S.A. is the second legal entity of the prototype."
 > Legal entity updated: two
 > 9: entity link-user two USER-1 --validator
 > Legal entity updated: two
@@ -41,22 +41,22 @@ State is now empty.
 > Legal entity updated: two
 > 11: entity set-host two
 > Legal entity updated: two
-> 13: entity create three Three S.R.L. 100200500 BE0100200500
+> 13: entity create three "Three S.R.L." 100200500 BE0100200500
 > Legal entity created: LENT-3
-> 14: entity update three Three S.R.L. is the first un-supervised legal entity of the prototype.
+> 14: entity update three "Three S.R.L. is the first un-supervised legal entity of the prototype."
 > Legal entity updated: three
 > 15: entity link-user three USER-3 --validator
 > Legal entity updated: three
-> 17: entity create four Four S.R.L. 100200600 BE0100200600
+> 17: entity create four "Four S.R.L." 100200600 BE0100200600
 > Legal entity created: LENT-4
-> 18: entity update four Four S.R.L. is the second un-supervised legal entity of the prototype.
+> 18: entity update four "Four S.R.L. is the second un-supervised legal entity of the prototype."
 > Legal entity updated: four
 > 19: entity link-user four USER-5 --validator
 > Legal entity updated: four
 4: run init-units.txt
 > 1: unit create alpha Alpha
 > Business entity created: BENT-1
-> 2: unit update alpha The first business unit of the prototype, Alpha is run by @mila.
+> 2: unit update alpha "The first business unit of the prototype, Alpha is run by @mila."
 > Business unit updated: alpha
 > 3: unit link-user alpha USER-4 --holder
 > Business unit updated: alpha

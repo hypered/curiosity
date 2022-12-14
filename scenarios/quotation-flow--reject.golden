@@ -6,12 +6,12 @@ Signup confirmation email enqueued: EMAIL-1
 4: user signup susie s susie@example.com --accept-tos
 User created: USER-2
 Signup confirmation email enqueued: EMAIL-2
-5: user update USER-2 Susie I'm Susie, the Seller in the quotation-flow scenario.
+5: user update USER-2 Susie "I'm Susie, the Seller in the quotation-flow scenario."
 User updated: USER-2
 7: user signup charlie c charlie@example.com --accept-tos
 User created: USER-3
 Signup confirmation email enqueued: EMAIL-3
-8: user update USER-3 Charlie I'm Charlie, a Client in the quotation-flow scenario.
+8: user update USER-3 Charlie "I'm Charlie, a Client in the quotation-flow scenario."
 User updated: USER-3
 10: as susie
 Modifying default user.
@@ -23,5 +23,5 @@ Quotation created: QUOT-1
 Quotation sent to client: QUOT-1
 15: as charlie
 Modifying default user.
-16: quotation reject QUOT-1 --comment Rejecting, for some reason.
+16: quotation reject QUOT-1 --comment "Rejecting, for some reason."
 Quotation rejected.

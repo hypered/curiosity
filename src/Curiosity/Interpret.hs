@@ -146,7 +146,8 @@ interpretLines runtime user dir content nesting acc0 accumulate = go user acc0 0
   go user' acc nbr ((ln, line) : rest) = do
     let (prefix, comment) = T.breakOn "#" line
         separated         = map T.pack . wordsq $ T.unpack prefix
-        grouped           = T.unwords separated
+        quote s           = if " " `T.isInfixOf` s then "\"" <> s <> "\"" else s
+        grouped           = T.unwords $ map quote separated
         nbr'  = succ nbr
         trace' = Trace nbr
                        ln
