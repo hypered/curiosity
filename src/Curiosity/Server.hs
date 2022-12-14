@@ -441,6 +441,9 @@ type App = H.UserAuthentication :> Get '[HTML] (PageEither
              :<|> "action" :> "set-quotation-as-signed"
                   :> Capture "quotation-id" Quotation.QuotationId
                   :> Get '[HTML] Pages.SetQuotationAsSignedPage
+             :<|> "action" :> "set-quotation-as-rejected"
+                  :> Capture "quotation-id" Quotation.QuotationId
+                  :> Get '[HTML] Pages.SetQuotationAsRejectedPage
 
              :<|> Public
              :<|> Private
@@ -608,7 +611,8 @@ serverT natTrans ctx conf jwtS root dataDir scenariosDir =
     :<|> showSignupPage
 
     :<|> showSetUserEmailAddrAsVerifiedPage
-    :<|> showSetQuotationAsignedPage
+    :<|> showSetQuotationAsSignedPage
+    :<|> showSetQuotationAsRejectedPage
 
     :<|> publicT conf jwtS
     :<|> privateT conf
@@ -802,10 +806,15 @@ showSetUserEmailAddrAsVerifiedPage
 showSetUserEmailAddrAsVerifiedPage username =
   withUserFromUsername username (pure . Pages.SetUserEmailAddrAsVerifiedPage)
 
-showSetQuotationAsignedPage
+showSetQuotationAsSignedPage
   :: ServerC m => Quotation.QuotationId -> m Pages.SetQuotationAsSignedPage
-showSetQuotationAsignedPage id =
+showSetQuotationAsSignedPage id =
   withQuotationFromId id (pure . Pages.SetQuotationAsSignedPage)
+
+showSetQuotationAsRejectedPage
+  :: ServerC m => Quotation.QuotationId -> m Pages.SetQuotationAsRejectedPage
+showSetQuotationAsRejectedPage id =
+  withQuotationFromId id (pure . Pages.SetQuotationAsRejectedPage)
 
 
 --------------------------------------------------------------------------------
@@ -1039,6 +1048,9 @@ type Private = H.UserAuthentication :> (
              :<|> "a" :> "set-quotation-as-signed"
                    :> ReqBody '[FormUrlEncoded] Quotation.SetQuotationAsSigned
                    :> Post '[HTML] Pages.ActionResult
+             :<|> "a" :> "set-quotation-as-rejected"
+                   :> ReqBody '[FormUrlEncoded] Quotation.SetQuotationAsRejected
+                   :> Post '[HTML] Pages.ActionResult
 
              :<|> "a" :> "new-quotation"
                   :> ReqBody '[FormUrlEncoded] Quotation.CreateQuotationAll
@@ -1081,6 +1093,7 @@ privateT conf authResult =
         :<|> withUser' (const (handleLogout conf))
         :<|> (withUser' . handleSetUserEmailAddrAsVerified)
         :<|> (withUser' . handleSetQuotationAsSigned)
+        :<|> (withUser' . handleSetQuotationAsRejected)
         :<|> (withUser' . handleNewQuotation)
         :<|> (\a b -> withUser' $ handleSaveQuotation a b)
         :<|> (withUser' . handleSubmitQuotation)
@@ -1212,6 +1225,19 @@ handleSetQuotationAsSigned (Quotation.SetQuotationAsSigned qid) profile = do
   output <- liftIO . atomically $ Rt.setQuotationAsSignedFull db (profile, qid)
   pure $ Pages.ActionResult "Set quotation as signed" $ case output of
     Right id  -> "Success. Order created: " <> Order.unOrderId id
+    Left  err -> "Failure: " <> show err
+
+handleSetQuotationAsRejected
+  :: forall m
+   . ServerC m
+  => Quotation.SetQuotationAsRejected
+  -> User.UserProfile
+  -> m Pages.ActionResult
+handleSetQuotationAsRejected (Quotation.SetQuotationAsRejected qid mcomment) profile = do
+  db     <- asks Rt._rDb
+  output <- liftIO . atomically $ Rt.setQuotationAsRejectedFull db profile qid mcomment
+  pure $ Pages.ActionResult "Set quotation as rejected" $ case output of
+    Right _   -> "Success."
     Left  err -> "Failure: " <> show err
 
 

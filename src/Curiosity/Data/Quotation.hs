@@ -28,6 +28,7 @@ module Curiosity.Data.Quotation
   , QuotationState(..)
   , displayQuotationState
   , SetQuotationAsSigned(..)
+  , SetQuotationAsRejected(..)
   , Predicate(..)
   , applyPredicate
   , Err(..)
@@ -173,6 +174,12 @@ newtype SetQuotationAsSigned = SetQuotationAsSigned QuotationId
 
 instance FromForm SetQuotationAsSigned where
   fromForm f = SetQuotationAsSigned <$> parseUnique "quotation-id" f
+
+data SetQuotationAsRejected = SetQuotationAsRejected QuotationId (Maybe Text)
+
+instance FromForm SetQuotationAsRejected where
+  fromForm f = SetQuotationAsRejected <$> parseUnique "quotation-id" f
+                                      <*> parseMaybe "comment"       f
 
 
 --------------------------------------------------------------------------------
