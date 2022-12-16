@@ -62,15 +62,20 @@ import           Web.HttpApiData                ( FromHttpApiData(..) )
 -- invalid inputs. As it is filled, it is kept in a Map in "Curiosity.Data",
 -- where it is identified by a key. The form data are validated when they are
 -- "submitted", using the `SubmitQuotation` data type below, and the key.
-newtype CreateQuotationAll = CreateQuotationAll
+data CreateQuotationAll = CreateQuotationAll
   { _createQuotationClientUsername :: Maybe User.UserName
+  , _createQuotationSellerUnit     :: Maybe Text
+  , _createQuotationSellerEntity   :: Maybe Text
   }
   deriving (Generic, Eq, Show)
   deriving anyclass (ToJSON, FromJSON)
 
 instance FromForm CreateQuotationAll where
-  fromForm f = CreateQuotationAll <$> parseMaybe "client-username" f
-    -- TODO Make it Nothing if empty string.
+  fromForm f = CreateQuotationAll
+    <$> parseMaybe "client-username" f
+    <*> parseMaybe "seller-unit"     f
+    <*> parseMaybe "seller-entity"   f
+    -- TODO Make them Nothing if empty strings.
 
 
 --------------------------------------------------------------------------------
@@ -84,6 +89,8 @@ instance FromForm CreateQuotationAll where
 emptyCreateQuotationAll :: CreateQuotationAll
 emptyCreateQuotationAll = CreateQuotationAll
   { _createQuotationClientUsername = Nothing
+  , _createQuotationSellerUnit     = Nothing
+  , _createQuotationSellerEntity   = Nothing
   }
 
 

@@ -15,13 +15,13 @@ Signup confirmation email enqueued: EMAIL-3
 User updated: USER-3
 10: as mila
 Modifying default user.
-11: forms quotation new --client charlie
+11: forms quotation new --client charlie --seller-entity one --seller-unit alpha
 Quotation form created: TBPJLIUG
-13: forms quotation submit TBPJLIUG
+12: forms quotation submit TBPJLIUG
 Quotation form validated.
 Quotation created: QUOT-1
 Quotation sent to client: QUOT-1
-15: as charlie
+14: as charlie
 Modifying default user.
-16: quotation reject QUOT-1 --comment "Rejecting, for some reason."
+15: quotation reject QUOT-1 --comment "Rejecting, for some reason."
 Quotation rejected.

@@ -8,7 +8,7 @@ user signup charlie c charlie@example.com --accept-tos
 user update USER-3 Charlie "I'm Charlie, a Client in the quotation-flow scenario."
 
 as mila
-forms quotation new --client charlie
+forms quotation new --client charlie --seller-entity one --seller-unit alpha
 forms quotation validate TBPJLIUG
 # forms quotation edit
 forms quotation submit TBPJLIUG
