@@ -43,12 +43,15 @@ jobs:
         sudo bash -c "echo ${AWS_SECRET_ACCESS_KEY} > /run/keys/AWS_SECRET_ACCESS_KEY"
         sudo cp .github/workflows/post-build-hook /etc/nix/post-build-hook
 
-    - name: Build Curiosity
+#   - name: Build Curiosity
+#     run: |
+#       nix-build -A toplevel --show-trace
+#       system_path=$(nix-build -A toplevel)
+#       echo "SYSTEM_PATH=$system_path" > $GITHUB_OUTPUT
+#     id: build_curiosity
+    - name: Copy closure
       run: |
-        nix-build -A toplevel --show-trace
-        system_path=$(nix-build -A toplevel)
-        echo "SYSTEM_PATH=$system_path" > $GITHUB_OUTPUT
-      id: build_curiosity
+        nix copy --from "https://s3.eu-central-003.backblazeb2.com/curiosity-store" /nix/store/hgji2ilq6xsmz8a51yd2b64hh7ynsr3p-nixos-system-unnamed-22.05pre-git
     - name: Setup NixOS deploy env
       if: github.event_name == 'pull_request' && github.ref_name == '124/merge'
       run: |
@@ -61,5 +64,5 @@ jobs:
       if: github.event_name == 'pull_request' && github.ref_name == '124/merge'
       run: ./scripts/deploy.sh
       env:
-        PROFILE_PATH: ${{ steps.build_curiosity.outputs.SYSTEM_PATH }}
+        PROFILE_PATH: "/nix/store/hgji2ilq6xsmz8a51yd2b64hh7ynsr3p-nixos-system-unnamed-22.05pre-git"
         NIX_SSHOPTS: "-o StrictHostKeyChecking=no -i ${{ steps.deploy_env.outputs.SSH_KEY_PATH }} -l root"

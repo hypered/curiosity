@@ -18,7 +18,7 @@ nix_args=(
 TARGET="root@smartcoop.sh"
 
 PROFILE_PATH="${PROFILE_PATH:-}"
-PROFILE_PATH="${NIX_SSHOPTS:-}"
+NIX_SSHOPTS="${NIX_SSHOPTS:-}"
 # The profile path could be injected by the CD.
 if [ -z "${PROFILE_PATH}" ]; then
     echo Building toplevel...
