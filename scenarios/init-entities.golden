@@ -1,6 +1,6 @@
-1: entity create one One S.A. 100200300 BE0100200300
+1: entity create one "One S.A." 100200300 BE0100200300
 Legal entity created: LENT-1
-2: entity update one One S.A. is the main legal entity of the prototype. Unless required for fiscal or legal reasons, new contracts are hosted in One.
+2: entity update one "One S.A. is the main legal entity of the prototype. Unless required for fiscal or legal reasons, new contracts are hosted in One."
 Legal entity updated: one
 3: entity link-user one USER-1 --validator
 Legal entity updated: one
@@ -8,9 +8,9 @@ Legal entity updated: one
 Legal entity updated: one
 5: entity set-host one
 Legal entity updated: one
-7: entity create two Two S.A. 100200400 BE0100200400
+7: entity create two "Two S.A." 100200400 BE0100200400
 Legal entity created: LENT-2
-8: entity update two Two S.A. is the second legal entity of the prototype.
+8: entity update two "Two S.A. is the second legal entity of the prototype."
 Legal entity updated: two
 9: entity link-user two USER-1 --validator
 Legal entity updated: two
@@ -18,15 +18,15 @@ Legal entity updated: two
 Legal entity updated: two
 11: entity set-host two
 Legal entity updated: two
-13: entity create three Three S.R.L. 100200500 BE0100200500
+13: entity create three "Three S.R.L." 100200500 BE0100200500
 Legal entity created: LENT-3
-14: entity update three Three S.R.L. is the first un-supervised legal entity of the prototype.
+14: entity update three "Three S.R.L. is the first un-supervised legal entity of the prototype."
 Legal entity updated: three
 15: entity link-user three USER-3 --validator
 Legal entity updated: three
-17: entity create four Four S.R.L. 100200600 BE0100200600
+17: entity create four "Four S.R.L." 100200600 BE0100200600
 Legal entity created: LENT-4
-18: entity update four Four S.R.L. is the second un-supervised legal entity of the prototype.
+18: entity update four "Four S.R.L. is the second un-supervised legal entity of the prototype."
 Legal entity updated: four
 19: entity link-user four USER-5 --validator
 Legal entity updated: four

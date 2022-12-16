@@ -1,6 +1,6 @@
 1: unit create alpha Alpha
 Business entity created: BENT-1
-2: unit update alpha The first business unit of the prototype, Alpha is run by @mila.
+2: unit update alpha "The first business unit of the prototype, Alpha is run by @mila."
 Business unit updated: alpha
 3: unit link-user alpha USER-4 --holder
 Business unit updated: alpha

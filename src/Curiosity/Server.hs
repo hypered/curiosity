@@ -552,7 +552,7 @@ serverT natTrans ctx conf jwtS root dataDir scenariosDir =
     :<|> messageSignupSuccess
 
     :<|> showRun
-    :<|> handleRun
+    :<|> handleRun scenariosDir
     :<|> serveScenario scenariosDir
 
     :<|> showState
@@ -2451,10 +2451,11 @@ showRun authResult = withMaybeUser
 
 handleRun
   :: ServerC m
-  => SAuth.AuthResult User.UserId
+  => FilePath
+  -> SAuth.AuthResult User.UserId
   -> Data.Command
   -> m Pages.EchoPage
-handleRun authResult (Data.Command cmd) = withMaybeUser
+handleRun path authResult (Data.Command cmd) = withMaybeUser
   authResult
   (\_ -> run' Nothing <&> Pages.EchoPage Nothing)
   (\profile -> run' (Just profile) <&> Pages.EchoPage (Just profile))
@@ -2463,7 +2464,7 @@ handleRun authResult (Data.Command cmd) = withMaybeUser
     runtime <- ask
     output  <- liftIO $ Inter.interpretLines runtime
                                              username
-                                             "/tmp/nowhere"
+                                             path
                                              [cmd]
                                              0
                                              []
@@ -2488,7 +2489,8 @@ partialScenarioState scenariosDir name nbr = do
   let path = scenariosDir </> name <> ".txt"
   ts <- liftIO $ Inter.handleRun' path
   let ts' = Inter.flatten ts
-  pure . H.code . H.pre $ H.text $ show . Inter.traceState $ ts' !! nbr
+      db  = Inter.traceState $ ts' !! nbr -- TODO Proper input validation
+  pure . H.code . H.pre . H.text $ show db
 
 partialScenarioStateAsJson
   :: ServerC m
@@ -2521,6 +2523,7 @@ partialScenario :: ServerC m => FilePath -> FilePath -> m Html
 partialScenario scenariosDir name = do
   let path = scenariosDir </> name <> ".txt"
   ts <- liftIO $ Inter.handleRun' path
+  let ts' = Inter.flatten ts
   pure $ do
     H.style
       ".c-display table code {\n\
@@ -2539,9 +2542,10 @@ partialScenario scenariosDir name = do
         H.th "Line"
         H.th "Command"
         H.th "State"
-      H.tbody $ mapM_ displayTrace ts
+      H.tbody $ mapM_ displayTrace $ zip ts' [0..]
  where
-  displayTrace Inter.Trace {..} = do
+  displayTrace :: (Inter.Trace, Int) -> Html
+  displayTrace (Inter.Trace {..}, n) = do
     H.tr $ do
       H.td $ H.text $ Inter.pad traceNesting <> show traceLineNbr
       H.td . H.code $ H.text traceCommand
@@ -2552,7 +2556,7 @@ partialScenario scenariosDir name = do
             $  "/partials/scenarios/"
             <> name
             <> "/"
-            <> show traceNumber
+            <> show n
             <> "/state.json"
             )
         $ "View"
@@ -2565,7 +2569,6 @@ partialScenario scenariosDir name = do
           >> H.text o
       )
       traceOutput
-    mapM_ displayTrace traceNested
   -- CSS improvements: remove whitespace: pre
   --                   remove background: F2F2F2
   --                   remove padding on td
