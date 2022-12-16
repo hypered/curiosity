@@ -36,6 +36,8 @@ module Curiosity.Data.Quotation
 
 import qualified Commence.Runtime.Errors       as Errs
 import qualified Commence.Types.Wrapped        as W
+import qualified Curiosity.Data.Business       as Business
+import qualified Curiosity.Data.Legal          as Legal
 import qualified Curiosity.Data.Order          as Order
 import qualified Curiosity.Data.User           as User
 import qualified Curiosity.Html.Errors         as Pages
@@ -114,9 +116,12 @@ instance FromForm SubmitQuotation where
 validateCreateQuotation
   :: User.UserProfile -> CreateQuotationAll
   -> Maybe User.UserProfile -- ^ The user profile matching the quotation client.
-  -> Either [Err] (Quotation, User.UserProfile)
-validateCreateQuotation _ CreateQuotationAll {..} mresolvedClient = if null errors
-  then Right (quotation, resolvedClient)
+  -> Maybe Legal.Entity -- ^ The legal entity matching the quotation seller entity.
+  -> Maybe Business.Unit -- ^ The business unit matching the quotation seller unit.
+  -> Either [Err] (Quotation, User.UserProfile, Legal.Entity, Business.Unit)
+validateCreateQuotation _ CreateQuotationAll {..} mresolvedClient mresolvedSellerEntity mresolvedSellerUnit =
+  if null errors
+  then Right (quotation, resolvedClient, resolvedSellerEntity, resolvedSellerUnit)
   else Left errors
  where
   quotation = Quotation
@@ -124,15 +129,21 @@ validateCreateQuotation _ CreateQuotationAll {..} mresolvedClient = if null erro
      , _quotationState = QuotationSent
      }
   Just resolvedClient = mresolvedClient
+  Just resolvedSellerEntity = mresolvedSellerEntity
+  Just resolvedSellerUnit = mresolvedSellerUnit
   errors = 
     [Err "Missing client username." | isNothing _createQuotationClientUsername ]
     <> [Err "The client username does not exist." | isNothing mresolvedClient ]
+    <> [Err "Missing selling entity." | isNothing _createQuotationSellerEntity ]
+    <> [Err "The selling entity does not exist." | isNothing mresolvedSellerEntity ]
+    <> [Err "Missing selling unit." | isNothing _createQuotationSellerUnit ]
+    <> [Err "The selling unit does not exist." | isNothing mresolvedSellerUnit ]
 
 -- | Similar to `validateCreateQuotation` but throw away the returned
 -- contract, i.e. keep only the errors.
-validateCreateQuotation' :: User.UserProfile -> CreateQuotationAll -> Maybe User.UserProfile -> [Err]
-validateCreateQuotation' profile quotation resolvedClient =
-  either identity (const []) $ validateCreateQuotation profile quotation resolvedClient
+validateCreateQuotation' :: User.UserProfile -> CreateQuotationAll -> Maybe User.UserProfile -> Maybe Legal.Entity -> Maybe Business.Unit -> [Err]
+validateCreateQuotation' profile quotation resolvedClient resolvedSellerEntity resolvedSellerUnit =
+  either identity (const []) $ validateCreateQuotation profile quotation resolvedClient resolvedSellerEntity resolvedSellerUnit
 
 
 --------------------------------------------------------------------------------

@@ -13,34 +13,46 @@ User created: USER-3
 Signup confirmation email enqueued: EMAIL-3
 8: user update USER-3 Charlie "I'm Charlie, a Client in the quotation-flow scenario."
 User updated: USER-3
-10: as mila
+10: entity create one "One S.A." 100200300 BE0100200300
+Legal entity created: LENT-1
+11: entity set-supervised one
+Legal entity updated: one
+12: entity set-host one
+Legal entity updated: one
+14: unit create alpha Alpha
+Business entity created: BENT-1
+15: unit update alpha "The first business unit of the prototype, Alpha is run by @mila."
+Business unit updated: alpha
+16: unit link-user alpha USER-2 --holder
+Business unit updated: alpha
+18: as mila
 Modifying default user.
-11: forms quotation new --client charlie --seller-entity one --seller-unit alpha
+19: forms quotation new --client charlie --seller-entity one --seller-unit alpha
 Quotation form created: TBPJLIUG
-12: forms quotation validate TBPJLIUG
+20: forms quotation validate TBPJLIUG
 Quotation form is valid.
-14: forms quotation submit TBPJLIUG
+22: forms quotation submit TBPJLIUG
 Quotation form validated.
 Quotation created: QUOT-1
 Quotation sent to client: QUOT-1
-16: as charlie
+24: as charlie
 Modifying default user.
-17: quotation sign QUOT-1
+25: quotation sign QUOT-1
 Order created: ORD-1
-19: as mila
+27: as mila
 Modifying default user.
-20: invoice emit --from ORD-1
+28: invoice emit --from ORD-1
 Invoice created: INV-1
 Internal (proxy) invoice created: INV-2
 Generating payment for INV-2...
 Remittance advice (using proxy bank account) created: REM-1
 Remittance advice (using business unit bank account) created: REM-2
 Invoice sent to client: INV-1
-22: as system
+30: as system
 Modifying default user.
-23: reminder send INV-1
+31: reminder send INV-1
 Reminder for invoice sent: INV-1
-24: payment match INV-1
+32: payment match INV-1
 Generating payment for INV-1...
 Remittance advice (using client bank account) created: REM-3
 Remittance advice (using business unit bank account) created: REM-4
