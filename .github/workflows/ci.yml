@@ -50,7 +50,7 @@ jobs:
         echo "SYSTEM_PATH=$system_path" > $GITHUB_OUTPUT
       id: build_curiosity
     - name: Setup NixOS deploy env
-      if: github.event_name == 'push' && github.ref_name == 'main'
+      if: github.event_name == 'pull_request' && github.ref_name == '124/merge'
       run: |
         ssh_key=$(mktemp)
         chmod 600 $ssh_key
@@ -58,7 +58,7 @@ jobs:
         echo "SSH_KEY_PATH=$ssh_key" > $GITHUB_OUTPUT
       id: deploy_env
     - name: Deploy closure to smartcoop.sh
-      if: github.event_name == 'push' && github.ref_name == 'main'
+      if: github.event_name == 'pull_request' && github.ref_name == '124/merge'
       run: ./scripts/deploy.sh
       env:
         PROFILE_PATH: ${{ steps.build_curiosity.outputs.SYSTEM_PATH }}
