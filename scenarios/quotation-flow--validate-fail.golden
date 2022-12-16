@@ -1,0 +1,16 @@
+1: reset
+State is now empty.
+2: user signup alice a alice@example.com --accept-tos
+User created: USER-1
+Signup confirmation email enqueued: EMAIL-1
+4: user signup mila s mila@example.com --accept-tos
+User created: USER-2
+Signup confirmation email enqueued: EMAIL-2
+5: user update USER-2 Mila "I'm Mila, the Seller in the quotation-flow scenario."
+User updated: USER-2
+7: as mila
+Modifying default user.
+8: forms quotation new --client xochitl --seller-entity one --seller-unit alpha
+Quotation form created: TBPJLIUG
+9: forms quotation validate TBPJLIUG
+The client username does not exist.
