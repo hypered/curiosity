@@ -6,6 +6,7 @@ under e.g. `cty user do` and the action menu on table views.
 module Curiosity.Html.Action
   ( SetUserEmailAddrAsVerifiedPage(..)
   , SetQuotationAsSignedPage(..)
+  , SetQuotationAsRejectedPage(..)
   , ActionResult(..)
   , EchoPage(..)
   , EchoPage'(..)
@@ -96,6 +97,34 @@ setQuotationAsSignedForm id = H.form $ do
   H.input ! A.type_ "hidden" ! A.id "quotation-id" ! A.name "quotation-id" ! A.value
     (H.toValue id)
   button "/a/set-quotation-as-signed" "Set as signed"
+
+
+--------------------------------------------------------------------------------
+-- | A form to perform the SetQuotationAsRejected action.
+data SetQuotationAsRejectedPage = SetQuotationAsRejectedPage
+  { setQuotationAsRejectedQuotation :: Quotation.Quotation
+    -- ^ The quotation to be set as rejected.
+  }
+
+instance H.ToMarkup SetQuotationAsRejectedPage where
+  toMarkup SetQuotationAsRejectedPage {..} =
+    let id = Quotation._quotationId setQuotationAsRejectedQuotation
+    in  fullScrollWrapper . panelWrapper $ do
+          H.toMarkup $ setQuotationAsRejectedPanel id
+          setQuotationAsRejectedForm id
+
+setQuotationAsRejectedPanel id =
+  PanelHeaderAndBody "Set quotation as rejected"
+    $ H.dl
+    ! A.class_ "c-key-value c-key-value--horizontal c-key-value--short"
+    $ do
+        keyValuePair "ID" id
+
+setQuotationAsRejectedForm id = H.form $ do
+  H.input ! A.type_ "hidden" ! A.id "quotation-id" ! A.name "quotation-id" ! A.value
+    (H.toValue id)
+  H.input ! A.id "comment" ! A.name "comment"
+  button "/a/set-quotation-as-rejected" "Set as rejected"
 
 
 --------------------------------------------------------------------------------

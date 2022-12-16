@@ -53,6 +53,10 @@ panelQuotations quotations =
              , "Set as signed"
              , "/action/set-quotation-as-signed/" <> Quotation.unQuotationId _quotationId
              )
+           , ( Misc.divIconClose
+             , "Set as rejected"
+             , "/action/set-quotation-as-rejected/" <> Quotation.unQuotationId _quotationId
+             )
            ]
       else []
     , Nothing

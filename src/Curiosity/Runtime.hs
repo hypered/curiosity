@@ -42,6 +42,7 @@ module Curiosity.Runtime
   , writeCreateQuotationForm
   , submitCreateQuotationForm
   , setQuotationAsSignedFull
+  , setQuotationAsRejectedFull
   -- ** Orders
   , filterOrders
   , filterOrders'
