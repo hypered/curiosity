@@ -17,28 +17,30 @@ User updated: USER-3
 Modifying default user.
 11: forms quotation new --client charlie
 Quotation form created: TBPJLIUG
-13: forms quotation submit TBPJLIUG
+12: forms quotation validate TBPJLIUG
+Quotation form is valid.
+14: forms quotation submit TBPJLIUG
 Quotation form validated.
 Quotation created: QUOT-1
 Quotation sent to client: QUOT-1
-15: as charlie
+16: as charlie
 Modifying default user.
-16: quotation sign QUOT-1
+17: quotation sign QUOT-1
 Order created: ORD-1
-18: as susie
+19: as susie
 Modifying default user.
-19: invoice emit --from ORD-1
+20: invoice emit --from ORD-1
 Invoice created: INV-1
 Internal (proxy) invoice created: INV-2
 Generating payment for INV-2...
 Remittance advice (using proxy bank account) created: REM-1
 Remittance advice (using business unit bank account) created: REM-2
 Invoice sent to client: INV-1
-21: as system
+22: as system
 Modifying default user.
-22: reminder send INV-1
+23: reminder send INV-1
 Reminder for invoice sent: INV-1
-23: payment match INV-1
+24: payment match INV-1
 Generating payment for INV-1...
 Remittance advice (using client bank account) created: REM-3
 Remittance advice (using business unit bank account) created: REM-4

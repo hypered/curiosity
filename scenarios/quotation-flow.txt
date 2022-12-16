@@ -9,6 +9,7 @@ user update USER-3 Charlie "I'm Charlie, a Client in the quotation-flow scenario
 
 as susie
 forms quotation new --client charlie
+forms quotation validate TBPJLIUG
 # forms quotation edit
 forms quotation submit TBPJLIUG
 
