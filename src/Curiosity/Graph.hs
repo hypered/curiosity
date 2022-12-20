@@ -88,13 +88,24 @@ entityNode Legal.Entity {..} =
   , "  color=\"#ffffff\""
   , "  label=<<table border=\"0\" cellborder=\"1\" cellspacing=\"0\" cellpadding=\"4\">"
   , "    <tr> <td> <b>" <> slug <> "</b><br/>" <> id <> "</td> </tr>"
-  , "  </table>>"
+  ]
+  <> supervised
+  <> host <>
+  [ "  </table>>"
   , "  shape=plain"
   , "]"
   ]
  where
   id = Legal.unEntityId _entityId
   slug = _entitySlug
+  supervised =
+    if _entityIsSupervised
+    then [ "    <tr> <td align=\"left\">Supervised</td> </tr>" ]
+    else []
+  host =
+    if _entityIsHost
+    then [ "    <tr> <td align=\"left\">Host</td> </tr>" ]
+    else []
 
 
 --------------------------------------------------------------------------------
