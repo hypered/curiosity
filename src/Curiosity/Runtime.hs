@@ -111,9 +111,7 @@ import           Curiosity.Runtime.Type        as RType
 import           Curiosity.STM.Helpers          ( atomicallyM )
 import qualified Data.Aeson.Text               as Aeson
 import qualified Data.ByteString.Char8         as B
-import           Data.List                      ( lookup
-                                                , nub
-                                                )
+import           Data.List                      ( nub )
 import qualified Data.Map                      as M
 import qualified Data.Text.Encoding            as T
 import qualified Data.Text.Lazy                as LT

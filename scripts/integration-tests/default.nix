@@ -12,7 +12,7 @@
 let
   runCuriosity = nixpkgs.writers.writeBashBin "run-curiosity" ''
     set -euo pipefail
-    PATH=${lib.strings.makeBinPath [ binaries ]}:$PATH
+    PATH=${lib.strings.makeBinPath [ binaries nixpkgs.graphviz ]}:$PATH
     export CURIOSITY_STATIC_DIR=${content}
     export CURIOSITY_DATA_DIR=${data}
     export CURIOSITY_SCENARIOS_DIR=${scenarios}

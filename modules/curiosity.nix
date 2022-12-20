@@ -2,6 +2,8 @@
 {
   systemd.services.curiosity = {
     wantedBy = [ "multi-user.target" ];
+    # TODO Right way to depends on graphviz in curiosity.
+    path = [ pkgs.graphviz ];
     serviceConfig = {
       Type = "notify";
       ExecStartPre =

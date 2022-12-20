@@ -29,7 +29,7 @@ header :: [Text]
 header =
   [ "digraph hello {"
   , "  graph ["
-  , "    label = \"state-0\\n\\n\""
+  , "    label = \"state\\n\\n\""
   , "    labelloc = t"
   , "    fontname = \"Helvetica,Arial,sans-serif\""
   , "    fontsize = 20"
