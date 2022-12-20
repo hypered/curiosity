@@ -28,7 +28,6 @@ module Curiosity.Runtime
   , signup
   -- * High-level entity operations
   , selectEntityBySlugResolved
-  , selectEntitiesWhereUserId
   , readLegalEntities
   -- * High-level unit operations
   , selectUnitBySlug
@@ -1620,7 +1619,7 @@ selectUserByIdResolved db id = do
   users' <- STM.readTVar usersTVar
   case find ((== id) . User._userProfileId) users' of
     Just user -> do
-      entities <- selectEntitiesWhereUserId db $ User._userProfileId user
+      entities <- Core.selectEntitiesWhereUserId db $ User._userProfileId user
       pure $ Just (user, entities)
     Nothing -> pure Nothing
 
@@ -1632,17 +1631,9 @@ selectUserByUsername db username =
 selectUserByUsernameResolved
   :: Core.StmDb
   -> User.UserName
-  -> STM (Maybe (User.UserProfile, [Legal.EntityAndRole]))
+  -> IO (Maybe (User.UserProfile, [Legal.EntityAndRole]))
 selectUserByUsernameResolved db username = do
-  let usersTVar = Data._dbUserProfiles db
-  users' <- STM.readTVar usersTVar
-  case
-      find ((== username) . User._userCredsName . User._userProfileCreds) users'
-    of
-      Just user -> do
-        entities <- selectEntitiesWhereUserId db $ User._userProfileId user
-        pure $ Just (user, entities)
-      Nothing -> pure Nothing
+  STM.atomically $ Core.selectUserByUsernameResolved db username
 
 filterUsers :: Core.StmDb -> User.Predicate -> STM [User.UserProfile]
 filterUsers db predicate = do
@@ -1718,20 +1709,6 @@ selectEntityBySlugResolved db name = do
           (\(Just u, role) -> Legal.ActingUser u role)
           musers
     Nothing -> pure Nothing
-
--- | Select legal entities where the given user ID is "acting".
-selectEntitiesWhereUserId
-  :: Core.StmDb -> User.UserId -> STM [Legal.EntityAndRole]
-selectEntitiesWhereUserId db uid = do
-  let tvar = Data._dbLegalEntities db
-  records <- STM.readTVar tvar
-  pure $ mapMaybe getEntityAndRole records
- where
-  getRole =
-    lookup uid
-      . map (\(Legal.ActingUserId uid' role) -> (uid', role))
-      . Legal._entityUsersAndRoles
-  getEntityAndRole e = Legal.EntityAndRole e <$> getRole e
 
 readLegalEntities :: Core.StmDb -> STM [Legal.Entity]
 readLegalEntities db = do

@@ -2382,6 +2382,18 @@ withMaybeUserFromUsername username a f = do
   mprofile <- liftIO $ Rt.selectUserByUsername db username
   maybe (a username) f mprofile
 
+withMaybeUserFromUsernameResolved
+  :: forall m a
+   . ServerC m
+  => User.UserName
+  -> (User.UserName -> m a)
+  -> (User.UserProfile -> [Legal.EntityAndRole] -> m a)
+  -> m a
+withMaybeUserFromUsernameResolved username a f = do
+  db       <- asks Rt._rDb
+  mprofile <- liftIO $ Rt.selectUserByUsernameResolved db username
+  maybe (a username) (uncurry f) mprofile
+
 -- | Run a handler, ensuring a quotation can be obtained from the given id, or
 -- throw an error.
 withQuotationFromId
@@ -2735,18 +2747,18 @@ serveNamespace
   => Text
   -> SAuth.AuthResult User.UserId
   -> m (PageEither Pages.PublicProfileView Pages.UnitView)
-serveNamespace name authResult = withMaybeUserFromUsername
+serveNamespace name authResult = withMaybeUserFromUsernameResolved
   (User.UserName name)
   withName
   withTargetProfile
 
  where
   withName (User.UserName name') = SS.P.PageR <$> serveUnit authResult name'
-  withTargetProfile targetProfile = withMaybeUser
+  withTargetProfile targetProfile entities = withMaybeUser
     authResult
-    (const . pure . SS.P.PageL $ Pages.PublicProfileView Nothing targetProfile)
+    (const . pure . SS.P.PageL $ Pages.PublicProfileView Nothing targetProfile entities)
     (\profile ->
-      pure . SS.P.PageL $ Pages.PublicProfileView (Just profile) targetProfile
+      pure . SS.P.PageL $ Pages.PublicProfileView (Just profile) targetProfile entities
     )
 
 -- | This try to serve a namespace profile (i.e. a user profile or a business
