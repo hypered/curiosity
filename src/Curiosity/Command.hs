@@ -60,8 +60,8 @@ data Command =
     -- ^ Parse a single command.
   | State Bool
     -- ^ Show the full state. If True, use Haskell format instead of JSON.
-  | Graph GraphConf
-    -- ^ Show the main objects graphically.
+  | Graph GraphConf Bool
+    -- ^ Show the main objects graphically. If True, use Dot instead of SVG.
   | Threads
     -- ^ Show the state of the threads.
   | StartEmail
@@ -508,6 +508,8 @@ parserState = State <$> A.switch
 
 parserGraph :: A.Parser Command
 parserGraph = Graph <$> parserFileName'
+    <*> A.switch
+          (A.long "dot" <> A.help "Use the Dot format (default is SVG).")
 
 parserThreads :: A.Parser Command
 parserThreads = pure Threads
@@ -1066,7 +1068,10 @@ commandToString = \case
   Init _      -> Left "Can't send `init` to a server."
   Reset       -> Right "reset"
   State useHs -> Right $ "state" <> if useHs then " --hs" else ""
-  Graph _     -> Right "graph"
+  Graph GraphStdOut True         -> Right "graph - --dot"
+  Graph GraphStdOut False        -> Right "graph -"
+  Graph (GraphFileName fn) True  -> Right $ "graph " <> T.pack fn <> " --dot"
+  Graph (GraphFileName fn) False -> Right $ "graph " <> T.pack fn
   Signup User.Signup {..} ->
     Right $ "user signup " <> User.unUserName username
       <> " " <> {- TODO -} T.take 1 (User.unUserName username)

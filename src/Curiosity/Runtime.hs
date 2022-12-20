@@ -412,9 +412,11 @@ handleCommand runtime@Runtime {..} user command = do
             then show value
             else LT.toStrict (Aeson.encodeToLazyText value)
       pure (ExitSuccess, [value'])
-    Command.Graph out -> do
+    Command.Graph out format -> do
       value <- runRunM runtime state
-      let output = Graph.graph value
+      output <- case format of
+        True -> pure $ Graph.graphDot value
+        False -> lines <$> liftIO (Graph.graphSvg value)
       case out of
         Command.GraphStdOut -> pure (ExitSuccess, output)
         Command.GraphFileName fn -> do
