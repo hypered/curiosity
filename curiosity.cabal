@@ -110,6 +110,7 @@ library
     Curiosity.Dsl
     Curiosity.Form.Login
     Curiosity.Form.Signup
+    Curiosity.Graph
     Curiosity.Html.Action
     Curiosity.Html.Business
     Curiosity.Html.Email

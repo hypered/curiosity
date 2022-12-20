@@ -96,6 +96,7 @@ import qualified Curiosity.Data.Quotation      as Quotation
 import qualified Curiosity.Data.RemittanceAdv  as RemittanceAdv
 import qualified Curiosity.Data.SimpleContract as SimpleContract
 import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Graph               as Graph
 import           Curiosity.Runtime.Email       as Runtime.E
 import           Curiosity.Runtime.Error       as RErr
 import           Curiosity.Runtime.IO          as RIO
@@ -411,6 +412,14 @@ handleCommand runtime@Runtime {..} user command = do
             then show value
             else LT.toStrict (Aeson.encodeToLazyText value)
       pure (ExitSuccess, [value'])
+    Command.Graph out -> do
+      value <- runRunM runtime state
+      let output = Graph.graph value
+      case out of
+        Command.GraphStdOut -> pure (ExitSuccess, output)
+        Command.GraphFileName fn -> do
+          liftIO $ writeFile fn $ unlines output
+          pure (ExitSuccess, [])
     Command.Reset -> do
       runRunM runtime reset
       pure (ExitSuccess, ["State is now empty."])
