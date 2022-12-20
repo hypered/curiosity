@@ -27,7 +27,7 @@ Business unit updated: alpha
 Business unit updated: alpha
 18: as mila
 Modifying default user.
-19: forms quotation new --client charlie --seller-entity one --seller-unit alpha
+19: forms quotation new --client charlie --seller-entity one --seller-unit alpha --buyer-entity one --buyer-unit alpha
 Quotation form created: TBPJLIUG
 20: forms quotation validate TBPJLIUG
 Quotation form is valid.

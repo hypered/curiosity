@@ -617,13 +617,15 @@ handleCommand runtime@Runtime {..} user command = do
         Just profile -> do
           mcontract <- readCreateQuotationFormResolved _rDb profile input
           case mcontract of
-            Right (contract, resolvedClient, resolvedSellerEntity, resolvedSellerUnit) -> do
+            Right (contract, resolvedClient, resolvedSellerEntity, resolvedSellerUnit, resolvedBuyerEntity, resolvedBuyerUnit) -> do
               case
                   Quotation.validateCreateQuotation profile
                                                     contract
                                                     resolvedClient
                                                     resolvedSellerEntity
                                                     resolvedSellerUnit
+                                                    resolvedBuyerEntity
+                                                    resolvedBuyerUnit
                 of
                   Right _    -> pure (ExitSuccess, ["Quotation form is valid."])
                   Left  errs -> pure (ExitFailure 1, map Quotation.unErr errs)
@@ -1166,7 +1168,7 @@ readCreateQuotationFormResolved'
   :: User.UserProfile
   -> Text
   -> RunM
-       (Either () (Quotation.CreateQuotationAll, Maybe User.UserProfile, Maybe Legal.Entity, Maybe Business.Unit))
+       (Either () (Quotation.CreateQuotationAll, Maybe User.UserProfile, Maybe Legal.Entity, Maybe Business.Unit, Maybe Legal.Entity, Maybe Business.Unit))
 readCreateQuotationFormResolved' profile key = do
   db <- asks _rDb
   atomicallyM $ readCreateQuotationFormResolved db profile key
@@ -1180,7 +1182,7 @@ readCreateQuotationFormResolved
   -> STM
        ( Either
            ()
-           (Quotation.CreateQuotationAll, Maybe User.UserProfile, Maybe Legal.Entity, Maybe Business.Unit)
+           (Quotation.CreateQuotationAll, Maybe User.UserProfile, Maybe Legal.Entity, Maybe Business.Unit, Maybe Legal.Entity, Maybe Business.Unit)
        )
 readCreateQuotationFormResolved db profile key = do
   mform <- readCreateQuotationForm db (profile, key)
@@ -1188,11 +1190,15 @@ readCreateQuotationFormResolved db profile key = do
     Right form -> do
       mclient <- maybe (pure Nothing) (Core.selectUserByUsername db)
         $ Quotation._createQuotationClientUsername form
-      mentity <- maybe (pure Nothing) (Core.selectEntityBySlug db)
+      mSellerEntity <- maybe (pure Nothing) (Core.selectEntityBySlug db)
         $ Quotation._createQuotationSellerEntity form
-      munit <- maybe (pure Nothing) (Core.selectUnitBySlug db)
+      mSellerUnit <- maybe (pure Nothing) (Core.selectUnitBySlug db)
         $ Quotation._createQuotationSellerUnit form
-      pure $ Right (form, mclient, mentity, munit)
+      mBuyerEntity <- maybe (pure Nothing) (Core.selectEntityBySlug db)
+        $ Quotation._createQuotationBuyerEntity form
+      mBuyerUnit <- maybe (pure Nothing) (Core.selectUnitBySlug db)
+        $ Quotation._createQuotationBuyerUnit form
+      pure $ Right (form, mclient, mSellerEntity, mSellerUnit, mBuyerEntity, mBuyerUnit)
     Left err -> pure $ Left err
 
 readCreateQuotationForm'
@@ -1243,8 +1249,8 @@ submitCreateQuotationForm
 submitCreateQuotationForm db (profile, Quotation.SubmitQuotation key) = do
   minput <- readCreateQuotationFormResolved db profile key
   case minput of
-    Right (input, mresolvedClient, mresolvedSellerEntity, mresolvedSellerUnit) -> do
-      mid <- submitCreateQuotationForm' db (profile, input) mresolvedClient mresolvedSellerEntity mresolvedSellerUnit
+    Right (input, mresolvedClient, mresolvedSellerEntity, mresolvedSellerUnit, mresolvedBuyerEntity, mresolvedBuyerUnit) -> do
+      mid <- submitCreateQuotationForm' db (profile, input) mresolvedClient mresolvedSellerEntity mresolvedSellerUnit mresolvedBuyerEntity mresolvedBuyerUnit
       case mid of
         Right (id, resolvedClient) -> do
           -- Quotation created, do the rest of the atomic process.
@@ -1264,12 +1270,14 @@ submitCreateQuotationForm'
   -> Maybe User.UserProfile
   -> Maybe Legal.Entity
   -> Maybe Business.Unit
+  -> Maybe Legal.Entity
+  -> Maybe Business.Unit
   -> STM
        (Either Quotation.Err (Quotation.QuotationId, User.UserProfile))
-submitCreateQuotationForm' db (profile, input) mresolvedClient mresolvedSellerEntity mresolvedSellerUnit = do
-  let mc = Quotation.validateCreateQuotation profile input mresolvedClient mresolvedSellerEntity mresolvedSellerUnit
+submitCreateQuotationForm' db (profile, input) mresolvedClient mresolvedSellerEntity mresolvedSellerUnit mresolvedBuyerEntity mresolvedBuyerUnit = do
+  let mc = Quotation.validateCreateQuotation profile input mresolvedClient mresolvedSellerEntity mresolvedSellerUnit mresolvedBuyerEntity mresolvedBuyerUnit
   case mc of
-    Right (c, resolvedClient, _, _) -> do
+    Right (c, resolvedClient, _, _, _, _) -> do
       mid <- createQuotation db c
       case mid of
         Right id  -> pure $ Right (id, resolvedClient)

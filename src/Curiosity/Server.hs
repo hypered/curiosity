@@ -1167,10 +1167,10 @@ showConfirmQuotationPage
 showConfirmQuotationPage key profile = do
   output <- withRuntime $ Rt.readCreateQuotationFormResolved' profile key
   case output of
-    Right (quotationAll, clientProfile, sellerEntity, sellerUnit) -> do
+    Right (quotationAll, clientProfile, sellerEntity, sellerUnit, buyerEntity, buyerUnit) -> do
       let
         errors =
-          Quotation.validateCreateQuotation' profile quotationAll clientProfile sellerEntity sellerUnit
+          Quotation.validateCreateQuotation' profile quotationAll clientProfile sellerEntity sellerUnit buyerEntity buyerUnit
       pure $ Pages.ConfirmQuotationPage
         profile
         key
@@ -1473,10 +1473,10 @@ documentConfirmQuotationPage dataDir key = do
   profile <- readJson $ dataDir </> "alice.json"
   output  <- withRuntime $ Rt.readCreateQuotationFormResolved' profile key
   case output of
-    Right (quotationAll, clientProfile, sellerEntity, sellerUnit) -> do
+    Right (quotationAll, clientProfile, sellerEntity, sellerUnit, buyerEntity, buyerUnit) -> do
       let
         errors =
-          Quotation.validateCreateQuotation' profile quotationAll clientProfile sellerEntity sellerUnit
+          Quotation.validateCreateQuotation' profile quotationAll clientProfile sellerEntity sellerUnit buyerEntity buyerUnit
       pure $ Pages.ConfirmQuotationPage
         profile
         key
@@ -1492,9 +1492,9 @@ echoSubmitQuotation dataDir (Quotation.SubmitQuotation key) = do
   profile <- readJson $ dataDir </> "alice.json"
   output  <- withRuntime $ Rt.readCreateQuotationFormResolved' profile key
   case output of
-    Right (quotation, resovedClient, resolvedSellerEntity, resolvedSellerUnit) -> pure . Pages.EchoPage (Just profile) $ show
+    Right (quotation, resovedClient, resolvedSellerEntity, resolvedSellerUnit, resolvedBuyerEntity, resolvedBuyerUnit) -> pure . Pages.EchoPage (Just profile) $ show
       ( quotation
-      , Quotation.validateCreateQuotation profile quotation resovedClient resolvedSellerEntity resolvedSellerUnit
+      , Quotation.validateCreateQuotation profile quotation resovedClient resolvedSellerEntity resolvedSellerUnit resolvedBuyerEntity resolvedBuyerUnit
       )
     Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 

@@ -16,7 +16,7 @@ unit update alpha "The first business unit of the prototype, Alpha is run by @mi
 unit link-user alpha USER-2 --holder
 
 as mila
-forms quotation new --client charlie --seller-entity one --seller-unit alpha
+forms quotation new --client charlie --seller-entity one --seller-unit alpha --buyer-entity one --buyer-unit alpha
 forms quotation submit TBPJLIUG
 
 as charlie

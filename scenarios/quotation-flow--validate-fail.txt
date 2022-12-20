@@ -5,5 +5,5 @@ user signup mila s mila@example.com --accept-tos
 user update USER-2 Mila "I'm Mila, the Seller in the quotation-flow scenario."
 
 as mila
-forms quotation new --client xochitl --seller-entity one --seller-unit alpha
+forms quotation new --client xochitl --seller-entity one --seller-unit alpha --buyer-entity one --buyer-unit alpha
 forms quotation validate TBPJLIUG
