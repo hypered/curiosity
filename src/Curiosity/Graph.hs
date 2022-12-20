@@ -18,6 +18,7 @@ graph state =
   <> unitNodes state
   <> entityNodes state
   <> entityUsersNodes state
+  <> unitHoldersNodes state
   <> footer
 
 
@@ -150,3 +151,21 @@ unitNode Business.Unit {..} =
  where
   id = Business.unUnitId _entityId
   slug = _entitySlug
+
+unitHoldersNodes :: Data.HaskDb -> [Text]
+unitHoldersNodes state = 
+  concatMap unitHoldersNode units
+ where
+  Identity units = Data._dbBusinessUnits state
+
+unitHoldersNode :: Business.Unit -> [Text]
+unitHoldersNode unit@Business.Unit {..} =
+  concatMap (unitHolderNode unit) _entityHolders
+
+unitHolderNode :: Business.Unit -> User.UserId -> [Text]
+unitHolderNode Business.Unit {..} userId =
+  [ userId' <> " -> " <> slug <> " [label=\"" <> label <> "\" color=\"#bbbbbb\"]" ]
+ where
+  userId' = T.filter (/= '-') $ User.unUserId userId
+  slug = _entitySlug
+  label = "is holder of"
