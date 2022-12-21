@@ -29,6 +29,9 @@
         --data-dir ${(import ../.).data} \
         --scenarios-dir ${(import ../.).scenarios} \
         --stdout
+        --unix-socket-path /run/curiosity.sock
+        --user-name curiosity
+        --user-group curiosity
       '';
 
       # Hardening Options

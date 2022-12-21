@@ -22,7 +22,7 @@ let
       if [[ $2 =~ $regex ]]
       then
         username="''${BASH_REMATCH[1]}"
-        cty --user $username --socket /curiosity.sock $SSH_ORIGINAL_COMMAND
+        cty --user $username --socket /run/curiosity.sock $SSH_ORIGINAL_COMMAND
       else
         echo "Expecting 'cty --user <username>' command prefix."
         exit 1
