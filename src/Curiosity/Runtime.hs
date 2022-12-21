@@ -8,6 +8,7 @@ module Curiosity.Runtime
   ( emptyReplThreads
   , emptyHttpThreads
   , spawnEmailThread
+  , UnixSocket(..)
   , spawnUnixThread
   , runWithRuntime
   , RunM(..)
@@ -116,6 +117,7 @@ import           Data.List                      ( lookup
                                                 , nub
                                                 )
 import qualified Data.Map                      as M
+import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
 import qualified Data.Text.Lazy                as LT
 import           Data.UnixTime                  ( formatUnixTime
@@ -131,6 +133,9 @@ import qualified Options.Applicative           as A
 import           Prelude                 hiding ( state )
 import qualified Servant
 import           System.PosixCompat.Types       ( EpochTime )
+import qualified System.Posix.Files            as PF
+import qualified System.Posix.User             as PU
+import           System.Posix.Types             ( UserID, GroupID )
 
 --------------------------------------------------------------------------------
 showThreads :: Threads -> IO [Text]
@@ -351,34 +356,42 @@ verifyEmailStepDryRun = do
   db <- asks _rDb
   atomicallyM $ filterUsers db User.PredicateEmailAddrToVerify
 
-spawnUnixThread :: RunM Text
-spawnUnixThread = do
+data UnixSocket = UnixSocket {
+  _unixSocketPath :: Text,
+  _unixSocketUid  :: UserID,
+  -- ^ Let's align with the POSIX conventions here. -1 == Nothing. :P
+  _unixSocketGid  :: GroupID
+  -- ^ Let's align with the POSIX conventions here. -1 == Nothing. :P
+  } deriving (Eq, Show)
+
+spawnUnixThread :: UnixSocket -> RunM Text
+spawnUnixThread usocket = do
   runtime <- ask
   ts      <- asks _rThreads
   case ts of
     NoThreads              -> pure "Threads are disabled."
     ReplThreads _          -> pure "No UNIX-domain socket thread in REPL." -- TODO
-    HttpThreads _ mvarUnix -> spawnUnixThread' runtime mvarUnix
+    HttpThreads _ mvarUnix -> spawnUnixThread' runtime mvarUnix usocket
 
-spawnUnixThread' :: Runtime -> MVar ThreadId -> RunM Text
-spawnUnixThread' runtime mvar = do
+spawnUnixThread' :: Runtime -> MVar ThreadId -> UnixSocket -> RunM Text
+spawnUnixThread' runtime mvar usocket = do
   mthread <- liftIO $ tryTakeMVar mvar
   case mthread of
     Nothing -> do
       ML.localEnv (<> "Threads" <> "UNIX") $ do
         ML.info "Starting UNIX-domain socket thread."
       liftIO $ do
-        t <- forkIO $ runRunM runtime unixThread
+        t <- forkIO $ runRunM runtime $ unixThread usocket
         putMVar mvar t
         pure "UNIX-domain socket thread started."
     Just t -> do
       liftIO $ putMVar mvar t
       pure "UNIX-domain socket thread alread running."
 
-unixThread :: RunM ()
-unixThread = do
+unixThread :: UnixSocket -> RunM ()
+unixThread usocket = do
   runtime <- ask
-  liftIO $ runWithRuntime runtime
+  liftIO $ runWithRuntime runtime usocket
 
 -- | Natural transformation from some `AppM` in any given mode, to a servant
 -- Handler.
@@ -391,7 +404,7 @@ appMHandlerNatTrans rt appM =
       unwrapReaderT          = (`runReaderT` rt) . runAppM $ appM
       -- Map our errors to `ServantError`
       runtimeErrToServantErr = withExceptT Errs.asServantError
-  in 
+  in
       -- Re-wrap as servant `Handler`
       Servant.Handler $ runtimeErrToServantErr unwrapReaderT
 
@@ -1772,13 +1785,22 @@ deleteForm getTVar db (profile, key) =
 
 
 --------------------------------------------------------------------------------
-runWithRuntime runtime = do
-  putStrLn @Text "Creating curiosity.sock..." -- fixme: use logger?
+runWithRuntime runtime UnixSocket{..} = do
+  let usock = T.unpack _unixSocketPath
+  putStrLn @Text $ "Creating " <> _unixSocketPath <> "..." -- fixme: use logger?
   sock <- socket AF_UNIX Stream 0
-  bind sock $ SockAddrUnix "curiosity.sock"
+  bind sock $ SockAddrUnix usock
+  -- Setting the right socket permissions
+  PF.setOwnerAndGroup usock _unixSocketUid _unixSocketGid
   listen sock maxListenQueue
-
-  putStrLn @Text "Listening on curiosity.sock..." -- fixme: use logger?
+  -- Setting the process real UID/GID.
+  -- Implementation note: this has to happen *after* we created/chown
+  -- the socket but *before* we enter the server main loop.
+  when (_unixSocketUid /= -1) $
+    PU.setUserID _unixSocketUid
+  when (_unixSocketGid /= -1) $
+    PU.setGroupID _unixSocketGid
+  putStrLn @Text $ "Listening on " <> _unixSocketPath <> "..." -- fixme: use logger?
   server runtime sock -- TODO bracket (or catch) and close
   close sock
 

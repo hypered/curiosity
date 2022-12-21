@@ -18,7 +18,7 @@ import qualified Curiosity.Server              as Srv
 --------------------------------------------------------------------------------
 startServer :: Command.ServerConf -> Rt.Runtime -> IO Errs.RuntimeErr
 startServer conf runtime@Rt.Runtime {..} = do
-  let Command.ServerConf port _ _ _ _ _ = conf
+  let port = Command._serverPort conf
   startupLogInfo _rLoggers $ "Starting up server on port " <> show port <> "..."
   try @SomeException (Srv.run conf runtime) >>= pure . either
     Errs.RuntimeException

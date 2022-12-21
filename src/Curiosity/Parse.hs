@@ -37,14 +37,20 @@ makeLenses ''Conf
 
 -- | HTTP server config.
 data ServerConf = ServerConf
-  { _serverPort          :: Int
-  , _serverStaticDir     :: FilePath
-  , _serverDataDir       :: FilePath
-  , _serverScenariosDir  :: FilePath
-  , _serverCookie        :: SAuth.CookieSettings
+  { _serverPort           :: Int
+  , _serverStaticDir      :: FilePath
+  , _serverDataDir        :: FilePath
+  , _serverScenariosDir   :: FilePath
+  , _serverCookie         :: SAuth.CookieSettings
     -- ^ Settings for setting cookies as a server (for authentication etc.).
-  , _serverUnixDomain    :: Bool
+  , _serverUnixDomain     :: Bool
     -- ^ Enable (when True) the UNIX-domain socket server.
+  , _serverUnixSocketPath :: Text
+    -- ^ Path pointing to the Unix socket. Will defaults to $PWD/curiosity.sock.
+  , _serverUserName       :: Maybe Text
+    -- ^ User name used to run the server. Will default to the current one if Nothing.
+  , _serverGroupName      :: Maybe Text
+    -- ^ Group name used to run the server. Will default to the current one if Nothing.
   }
   deriving (Eq, Show)
 
@@ -101,6 +107,18 @@ serverParser = do
     )
   _serverUnixDomain <- not <$> A.switch
     (A.long "no-socket" <> A.help "Disable the UNIX-domain socket server.")
+  _serverUnixSocketPath <- A.strOption
+    (A.long "unix-socket-path" <> A.value "./curiosity.sock" <> A.metavar "UNIX-SOCK" <> A.help
+       "Path pointing to the Unix socket."
+    )
+  _serverUserName <- optional $ A.strOption
+    (A.long "user-name" <> A.metavar "USER-NAME" <> A.help
+       "User name used to run curiosity."
+    )
+  _serverGroupName <- optional $ A.strOption
+    (A.long "group-name" <> A.metavar "GROUP-NAME" <> A.help
+       "Group name to run curiosity."
+    )
 
   pure ServerConf
     {
@@ -115,16 +133,19 @@ serverParser = do
 
 defaultServerConf :: ServerConf
 defaultServerConf = ServerConf
-  { _serverCookie        = SAuth.defaultCookieSettings
-                             { SAuth.cookieIsSecure    = SAuth.NotSecure
-                             , SAuth.cookieXsrfSetting = Nothing
-                             , SAuth.cookieSameSite    = SAuth.SameSiteStrict
-                             }
-  , _serverPort          = 9000
-  , _serverStaticDir     = "./_site/"
-  , _serverDataDir       = "./data/"
-  , _serverScenariosDir  = "./scenarios/"
-  , _serverUnixDomain    = True
+  { _serverCookie         = SAuth.defaultCookieSettings
+                              { SAuth.cookieIsSecure    = SAuth.NotSecure
+                              , SAuth.cookieXsrfSetting = Nothing
+                              , SAuth.cookieSameSite    = SAuth.SameSiteStrict
+                              }
+  , _serverPort           = 9000
+  , _serverStaticDir      = "./_site/"
+  , _serverDataDir        = "./data/"
+  , _serverScenariosDir   = "./scenarios/"
+  , _serverUnixDomain     = True
+  , _serverUnixSocketPath = "./curiosity.sock"
+  , _serverUserName       = Nothing
+  , _serverGroupName      = Nothing
   }
 
 
