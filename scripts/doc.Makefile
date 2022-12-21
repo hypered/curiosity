@@ -14,11 +14,19 @@ all: $(HTML_TARGETS) \
 	_site/documentation/clis/cty.1.html \
 	_site/documentation/search.html \
 	_site/static/indexes/content.st \
-	_site/static/indexes/stork.css
+	_site/static/indexes/stork.css \
+	_site/documentation/asciinema.html \
+	_site/static/asciinema/demo.cast \
+	_site/static/asciinema/asciinema-player-3.0.1.css \
+	_site/static/asciinema/asciinema-player-3.0.1.min.js
 
 man: curiosity.7.gz cty.1.gz
 
 _site/documentation/search.html: content/documentation/search.html
+	mkdir -p $(dir $@)
+	cp $< $@
+
+_site/documentation/asciinema.html: content/documentation/asciinema.html
 	mkdir -p $(dir $@)
 	cp $< $@
 
@@ -80,6 +88,18 @@ _index/%.txt: content/%.md
 		--to plain \
 		--output $@ \
 		$<
+
+_site/static/asciinema/%.cast: scripts/%.cast
+	mkdir -p $(dir $@)
+	cp $< $@
+
+_site/static/asciinema/%.css: scripts/%.css
+	mkdir -p $(dir $@)
+	cp $< $@
+
+_site/static/asciinema/%.js: scripts/%.js
+	mkdir -p $(dir $@)
+	cp $< $@
 
 entr:
 	find content/ -name '*.md' \

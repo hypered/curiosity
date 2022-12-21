@@ -94,7 +94,8 @@ webAppLookup hashFunc prefix pieces = fileHelperLR hashFunc fp lastPiece
             s -> unsafeToPiece $ s <> ".html"
       in  (init pieces, lastP)
   extensions =
-    [ ".css"
+    [ ".cast"
+    , ".css"
     , ".ico"
     , ".jpg"
     , ".js"
