@@ -35,6 +35,7 @@ in rec
     # binaries + haddock are also available as binaries.all.
     inherit nixpkgs binaries content data indexes scenarios haddock run;
     inherit (run) run-vm-tests;
+    public = (import ./content { inherit nixpkgs; }).html.public;
     static = (import "${sources.smart-design-hs}").static;
     man-pages = (import ./man { inherit nixpkgs; }).man-pages;
     toplevel = os.config.system.build.toplevel;

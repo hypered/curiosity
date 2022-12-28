@@ -4,6 +4,7 @@
 
 cd _site/
 
-# Use a more recent nixpkgs, which contains browser-sync, than my host one.
-NIX_PATH="nixpkgs=/home/thu/projects/nixpkgs/" nix-shell -p nodePackages.browser-sync \
+echo "Visit http://127.0.0.1:3000/documentation.html"
+echo "Note that a link to e.g. /about should be /about.html"
+nix-shell -p nodePackages.browser-sync \
   --run 'browser-sync start --server --files "*.html" --watch --no-open'

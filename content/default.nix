@@ -5,7 +5,7 @@ let
   sources = import ../nix/sources.nix {};
   nix-filter = import sources.nix-filter;
 
-in
+in rec
 {
   indexes = nixpkgs.stdenv.mkDerivation {
     name = "indexes";
@@ -62,6 +62,7 @@ in
         "scripts/stork.css"
         "scripts/stork.toml"
         "scripts/template.html"
+        "scripts/template-public.html"
         "scripts/*.cast"
         "scripts/*.css"
         "scripts/*.js"
@@ -80,6 +81,15 @@ in
 
       cp -r ${(import ../.).static}/* $out/static/
     '';
+  };
+
+  html.public = nixpkgs.stdenv.mkDerivation {
+    name = "public";
+    inherit (html.all) src nativeBuildInputs;
+    installPhase = ''
+      # Use the template with a navigation bar, instead of the SSI feature.
+      mv scripts/template-public.html scripts/template.html
+    '' + html.all.installPhase;
   };
 
   # Define this here, instead of creating a .nix file in data/.
