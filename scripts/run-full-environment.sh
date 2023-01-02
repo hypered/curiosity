@@ -1,4 +1,3 @@
 #!/usr/bin/env bash
 
-scriptdir=$(dirname $0)
-$(nix-build "$scriptdir"/integration-tests --no-out-link -A run-full-environment)/bin/run-full-environment
+$(nix-build --no-out-link -A runenv)/bin/run-full-environment

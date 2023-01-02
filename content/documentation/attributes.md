@@ -223,3 +223,18 @@ Outside the VM, you can access the web application on the 8180 port.
 
 Note: use `Ctrl-a x` to cause QEMU to shutdown the virtual machine. You may
 also want to remove the disk image created at `./nixos.qcow2`.
+
+# Local environment
+
+```
+$ nix-build -A runenv
+result/bin/run-full-environment
+```
+
+Instead of running a virtual machine, it is possible to run the `cty serve`
+backend together with Nginx as reverse proxy with the `runenv` attribute and
+running the resulting script.
+
+Note: the `runenv` script uses [hivemind](https://github.com/DarthSim/hivemind)
+to execute a simple [procfile](https://devcenter.heroku.com/articles/procfile)
+containing two entries, one for `cty serve`, one for `nginx`.

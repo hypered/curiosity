@@ -41,6 +41,7 @@ in rec
     toplevel = os.config.system.build.toplevel;
     image = os.config.system.build.digitalOceanImage;
     runvm = qemu.config.system.build.vm;
+    runenv = run.run-full-environment;
     run-vm-tests-interactive = run-vm-tests.driverInteractive;
     docker = (import ./docker { inherit nixpkgs; });
 
