@@ -33,7 +33,6 @@ files = [
   {path = "documentation/quotations.txt",               url = "documentation/quotations",               title = "Quotations"},
   {path = "documentation/scenarios.txt",                url = "documentation/scenarios",                title = "Scenarios"},
   {path = "documentation/scenarios/quotation-flow.txt", url = "documentation/scenarios/quotation-flow", title = "Quotations flow"},
-  {path = "documentation/sitemap.txt",                  url = "documentation/sitemap",                  title = "Sitemap"},
   {path = "documentation/smart.txt",                    url = "documentation/smart",                    title = "Smart"},
   {path = "documentation/source.txt",                   url = "documentation/source",                   title = "Source code"},
   {path = "documentation/state-0.txt",                  url = "documentation/state-0",                  title = "State 0"},

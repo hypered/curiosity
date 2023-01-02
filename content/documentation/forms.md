@@ -33,7 +33,3 @@ title: Curiosity
 [New simple contract](/forms/new/simple-contract)
 
 :   The new simple contract form allows a user to ...
-
-# See also
-
-- [Sitemap](/documentation/sitemap)

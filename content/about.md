@@ -29,6 +29,9 @@ its behavior, but actually runs it or directly queries it.
 In particular, business features are demonstrated through [executable
 scenarios](/documentation/scenarios).
 
+It is possible to seach this documentation on the [search
+page](/documentation/search).
+
 ## Experimental
 
 Curiosity is being developed to inform further developments, and is not
