@@ -129,3 +129,44 @@ $ nix-shell -p busybox --run \
 
 Note: these files are also served directly by Nginx in the Curiosity virtual
 machine image.
+
+# Man pages
+
+```
+$ nix-build -A man-pages
+$ ls result/share/man/*
+result/share/man/man1:
+cty.1.gz
+
+result/share/man/man7:
+curiosity.7.gz
+```
+
+[Man pages](/documentation/man-pages) can be built with the `man-pages`
+attribute. The resulting files can be open with the `man` program.
+
+# Complete system
+
+```
+$ nix-build -A toplevel
+$ ls result
+activate               dry-activate        init                    kernel-modules  sw
+append-initrd-secrets  etc                 init-interface-version  kernel-params   system
+bin                    extra-dependencies  initrd                  nixos-version   systemd
+configuration-name     firmware            kernel                  specialisation
+```
+
+The complete system, as found in the virtual machine image or on the machine
+running [`smartcoop.sh`](https://smartcoop.sh), can be built with the
+`toplevel` attribute.
+
+Since NixOS is based on a Linux kernel, we can find in the results an
+[initrd](https://en.wikipedia.org/wiki/Initial_ramdisk), a kernel, some kernel
+modules, the kernel [command-line
+parameters](https://docs.kernel.org/admin-guide/kernel-parameters.html) and
+other files to construct a complete NixOS system.
+
+Such a "toplevel" can be copied into a virtual machine image or copied to an
+existing machine and then be "activated". (Using the `activate` script visible
+in the results.) Such a way to deploy a (possibly new) system to a live machine
+is used by the `scripts/deploy.sh` script found in the Curiosity repository.
