@@ -28,6 +28,7 @@ title: Curiosity
 - [Permissions](/documentation/permissions)
 - [Processes](/documentation/processes)
   - [Sign up](/documentation/processes/signup)
+  - [Quotation flow](/documentation/scenarios/quotation-flow)
 - [Queues](/documentation/queues)
 - [Scenarios](/documentation/scenarios)
 - [Search](/documentation/search)
