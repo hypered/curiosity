@@ -10,6 +10,7 @@ title: Curiosity
   - [Sent emails](/documentation/emails)
   - [Quotations](/documentation/quotations)
   - [Orders](/documentation/orders)
+- [Asciinema](/documentation/asciinema)
 - [Changelog](/documentation/changelog)
 - [Command-line interfaces](/documentation/clis)
 - [Continuous integration](/documentation/ci)

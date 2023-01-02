@@ -17,6 +17,12 @@ rendered as HTML pages:
 It is also possible to submit individual commands through a [web
 interface](/run).
 
+# Asciinema demo
+
+An interactive shell session where we show `cty` has been recorded with
+[asciinema](https://asciinema.org/). It is visible on [its own
+page](/documentation/asciinema).
+
 # Quick start
 
 This quick start section assumes you have SSH access to the Linux user `alice`
