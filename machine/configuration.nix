@@ -51,6 +51,7 @@ in
 
   imports = [
     ../modules/curiosity.nix
+    ../modules/matomo.nix
     ../modules/nginx.nix
   ];
 
