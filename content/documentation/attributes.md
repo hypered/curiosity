@@ -170,3 +170,56 @@ Such a "toplevel" can be copied into a virtual machine image or copied to an
 existing machine and then be "activated". (Using the `activate` script visible
 in the results.) Such a way to deploy a (possibly new) system to a live machine
 is used by the `scripts/deploy.sh` script found in the Curiosity repository.
+
+# Virtual machine image
+
+```
+$ nix-build -A image
+$ ls result/
+nixos.qcow2.gz
+```
+
+A virtual machine image suitable for DigitalOcean can be built using the
+`image` attribute. The result is an image in the
+[qcow2](https://en.wikipedia.org/wiki/Qcow) image format, and compressed with
+gzip.
+
+Such an image can be uploaded somwhere (e.g. to S3) from which it can then be
+imported in DigitalOcean as a custom image, then used to spin up a new virtual
+machine. Once created, such a virtual machine can be updated by using the
+`toplevel` attribute.
+
+Note: see the `scripts/upload-image.sh` and `scripts/import-image.sh` for
+commands to upload an image to S3 and importing it as a custom image.
+
+Note: in addition of DigitalOcean, it is possible to easily build images for
+other service providers or virtual machine managers. See a list in the [nixpkgs
+repository](https://github.com/NixOS/nixpkgs/tree/master/nixos/modules/virtualisation).
+
+# Local virtual machine
+
+```
+$ nix-build -A runvm
+result/bin/run-nixos-vm
+```
+
+The toplevel can be run with a local QEMU virtual machine by building the
+`runvm` attibute and running the resulting script.
+
+Within the VM, you're automatically logged in as root. You can then see the
+Curiosity systemd unit status with:
+
+```
+# systemctl status curiosity.service
+```
+
+Or you can query the `cty serve` backend through Nginx with:
+
+```
+# curl http://127.0.0.1
+```
+
+Outside the VM, you can access the web application on the 8180 port.
+
+Note: use `Ctrl-a x` to cause QEMU to shutdown the virtual machine. You may
+also want to remove the disk image created at `./nixos.qcow2`.
