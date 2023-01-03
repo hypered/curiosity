@@ -43,3 +43,8 @@ Smart Coop are.
 
 Curiosity is an open source project distributed under a 2-clause BSD license.
 It is available on [GitHub](https://github.com/hypered/curiosity).
+
+## Why
+
+Another document, titled [Why](/documentation/why), tries to explain where the
+Curiosity project came from, and where it was going.

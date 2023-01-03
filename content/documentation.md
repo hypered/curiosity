@@ -41,3 +41,4 @@ title: Curiosity
 - [Validation rules](/documentation/validation)
 - [Views](/documentation/views)
 - [Virtual machine image](/documentation/machine)
+- [Why](/documentation/why)
