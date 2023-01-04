@@ -31,6 +31,8 @@ module Curiosity.Core
   , generateEmploymentId
   , generateInvoiceId
   , generateEmailId
+  -- * Operations on legal entities
+  , selectEntityBySlug
   -- * Operations on business units
   , createBusiness
   , updateBusiness
@@ -467,6 +469,14 @@ selectQuotationById db id = do
   let tvar = _dbQuotations db
   records <- STM.readTVar tvar
   pure $ find ((== id) . Quotation._quotationId) records
+
+
+--------------------------------------------------------------------------------
+selectEntityBySlug :: StmDb -> Text -> STM (Maybe Legal.Entity)
+selectEntityBySlug db name = do
+  let tvar = _dbLegalEntities db
+  records <- STM.readTVar tvar
+  pure $ find ((== name) . Legal._entitySlug) records
 
 
 --------------------------------------------------------------------------------

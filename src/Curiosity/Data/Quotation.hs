@@ -36,6 +36,8 @@ module Curiosity.Data.Quotation
 
 import qualified Commence.Runtime.Errors       as Errs
 import qualified Commence.Types.Wrapped        as W
+import qualified Curiosity.Data.Business       as Business
+import qualified Curiosity.Data.Legal          as Legal
 import qualified Curiosity.Data.Order          as Order
 import qualified Curiosity.Data.User           as User
 import qualified Curiosity.Html.Errors         as Pages
@@ -62,15 +64,24 @@ import           Web.HttpApiData                ( FromHttpApiData(..) )
 -- invalid inputs. As it is filled, it is kept in a Map in "Curiosity.Data",
 -- where it is identified by a key. The form data are validated when they are
 -- "submitted", using the `SubmitQuotation` data type below, and the key.
-newtype CreateQuotationAll = CreateQuotationAll
+data CreateQuotationAll = CreateQuotationAll
   { _createQuotationClientUsername :: Maybe User.UserName
+  , _createQuotationSellerUnit     :: Maybe Text
+  , _createQuotationSellerEntity   :: Maybe Text
+  , _createQuotationBuyerUnit      :: Maybe Text
+  , _createQuotationBuyerEntity    :: Maybe Text
   }
   deriving (Generic, Eq, Show)
   deriving anyclass (ToJSON, FromJSON)
 
 instance FromForm CreateQuotationAll where
-  fromForm f = CreateQuotationAll <$> parseMaybe "client-username" f
-    -- TODO Make it Nothing if empty string.
+  fromForm f = CreateQuotationAll
+    <$> parseMaybe "client-username" f
+    <*> parseMaybe "seller-unit"     f
+    <*> parseMaybe "seller-entity"   f
+    <*> parseMaybe "buyer-unit"     f
+    <*> parseMaybe "buyer-entity"   f
+    -- TODO Make them Nothing if empty strings.
 
 
 --------------------------------------------------------------------------------
@@ -84,6 +95,10 @@ instance FromForm CreateQuotationAll where
 emptyCreateQuotationAll :: CreateQuotationAll
 emptyCreateQuotationAll = CreateQuotationAll
   { _createQuotationClientUsername = Nothing
+  , _createQuotationSellerUnit     = Nothing
+  , _createQuotationSellerEntity   = Nothing
+  , _createQuotationBuyerUnit      = Nothing
+  , _createQuotationBuyerEntity    = Nothing
   }
 
 
@@ -107,9 +122,14 @@ instance FromForm SubmitQuotation where
 validateCreateQuotation
   :: User.UserProfile -> CreateQuotationAll
   -> Maybe User.UserProfile -- ^ The user profile matching the quotation client.
-  -> Either [Err] (Quotation, User.UserProfile)
-validateCreateQuotation _ CreateQuotationAll {..} mresolvedClient = if null errors
-  then Right (quotation, resolvedClient)
+  -> Maybe Legal.Entity -- ^ The legal entity matching the quotation seller entity.
+  -> Maybe Business.Unit -- ^ The business unit matching the quotation seller unit.
+  -> Maybe Legal.Entity -- ^ The legal entity matching the quotation buyer entity.
+  -> Maybe Business.Unit -- ^ The business unit matching the quotation buyer unit.
+  -> Either [Err] (Quotation, User.UserProfile, Legal.Entity, Business.Unit, Legal.Entity, Business.Unit)
+validateCreateQuotation _ CreateQuotationAll {..} mresolvedClient mresolvedSellerEntity mresolvedSellerUnit mresolvedBuyerEntity mresolvedBuyerUnit =
+  if null errors
+  then Right (quotation, resolvedClient, resolvedSellerEntity, resolvedSellerUnit, resolvedBuyerEntity, resolvedBuyerUnit)
   else Left errors
  where
   quotation = Quotation
@@ -117,15 +137,29 @@ validateCreateQuotation _ CreateQuotationAll {..} mresolvedClient = if null erro
      , _quotationState = QuotationSent
      }
   Just resolvedClient = mresolvedClient
+  Just resolvedSellerEntity = mresolvedSellerEntity
+  Just resolvedSellerUnit = mresolvedSellerUnit
+  Just resolvedBuyerEntity = mresolvedBuyerEntity
+  Just resolvedBuyerUnit = mresolvedBuyerUnit
   errors = 
     [Err "Missing client username." | isNothing _createQuotationClientUsername ]
     <> [Err "The client username does not exist." | isNothing mresolvedClient ]
 
+    <> [Err "Missing selling entity." | isNothing _createQuotationSellerEntity ]
+    <> [Err "The selling entity does not exist." | isNothing mresolvedSellerEntity ]
+    <> [Err "Missing selling unit." | isNothing _createQuotationSellerUnit ]
+    <> [Err "The selling unit does not exist." | isNothing mresolvedSellerUnit ]
+
+    <> [Err "Missing buying entity." | isNothing _createQuotationBuyerEntity ]
+    <> [Err "The buying entity does not exist." | isNothing mresolvedBuyerEntity ]
+    <> [Err "Missing buying unit." | isNothing _createQuotationBuyerUnit ]
+    <> [Err "The buying unit does not exist." | isNothing mresolvedBuyerUnit ]
+
 -- | Similar to `validateCreateQuotation` but throw away the returned
 -- contract, i.e. keep only the errors.
-validateCreateQuotation' :: User.UserProfile -> CreateQuotationAll -> Maybe User.UserProfile -> [Err]
-validateCreateQuotation' profile quotation resolvedClient =
-  either identity (const []) $ validateCreateQuotation profile quotation resolvedClient
+validateCreateQuotation' :: User.UserProfile -> CreateQuotationAll -> Maybe User.UserProfile -> Maybe Legal.Entity -> Maybe Business.Unit -> Maybe Legal.Entity -> Maybe Business.Unit -> [Err]
+validateCreateQuotation' profile quotation resolvedClient resolvedSellerEntity resolvedSellerUnit resolvedBuyerEntity resolvedBuyerUnit =
+  either identity (const []) $ validateCreateQuotation profile quotation resolvedClient resolvedSellerEntity resolvedSellerUnit resolvedBuyerEntity resolvedBuyerUnit
 
 
 --------------------------------------------------------------------------------

@@ -3,25 +3,37 @@ State is now empty.
 2: user signup alice a alice@example.com --accept-tos
 User created: USER-1
 Signup confirmation email enqueued: EMAIL-1
-4: user signup susie s susie@example.com --accept-tos
+4: user signup mila s mila@example.com --accept-tos
 User created: USER-2
 Signup confirmation email enqueued: EMAIL-2
-5: user update USER-2 Susie "I'm Susie, the Seller in the quotation-flow scenario."
+5: user update USER-2 Mila "I'm Mila, the Seller in the quotation-flow scenario."
 User updated: USER-2
 7: user signup charlie c charlie@example.com --accept-tos
 User created: USER-3
 Signup confirmation email enqueued: EMAIL-3
 8: user update USER-3 Charlie "I'm Charlie, a Client in the quotation-flow scenario."
 User updated: USER-3
-10: as susie
+10: entity create one "One S.A." 100200300 BE0100200300
+Legal entity created: LENT-1
+11: entity set-supervised one
+Legal entity updated: one
+12: entity set-host one
+Legal entity updated: one
+14: unit create alpha Alpha
+Business entity created: BENT-1
+15: unit update alpha "The first business unit of the prototype, Alpha is run by @mila."
+Business unit updated: alpha
+16: unit link-user alpha USER-2 --holder
+Business unit updated: alpha
+18: as mila
 Modifying default user.
-11: forms quotation new --client charlie
+19: forms quotation new --client charlie --seller-entity one --seller-unit alpha --buyer-entity one --buyer-unit alpha
 Quotation form created: TBPJLIUG
-13: forms quotation submit TBPJLIUG
+20: forms quotation submit TBPJLIUG
 Quotation form validated.
 Quotation created: QUOT-1
 Quotation sent to client: QUOT-1
-15: as charlie
+22: as charlie
 Modifying default user.
-16: quotation reject QUOT-1 --comment "Rejecting, for some reason."
+23: quotation reject QUOT-1 --comment "Rejecting, for some reason."
 Quotation rejected.

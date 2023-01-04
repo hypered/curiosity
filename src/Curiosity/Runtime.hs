@@ -27,7 +27,6 @@ module Curiosity.Runtime
   , filterUsers'
   , signup
   -- * High-level entity operations
-  , selectEntityBySlug
   , selectEntityBySlugResolved
   , selectEntitiesWhereUserId
   , readLegalEntities
@@ -618,11 +617,15 @@ handleCommand runtime@Runtime {..} user command = do
         Just profile -> do
           mcontract <- readCreateQuotationFormResolved _rDb profile input
           case mcontract of
-            Right (contract, resolvedClient) -> do
+            Right (contract, resolvedClient, resolvedSellerEntity, resolvedSellerUnit, resolvedBuyerEntity, resolvedBuyerUnit) -> do
               case
                   Quotation.validateCreateQuotation profile
                                                     contract
                                                     resolvedClient
+                                                    resolvedSellerEntity
+                                                    resolvedSellerUnit
+                                                    resolvedBuyerEntity
+                                                    resolvedBuyerUnit
                 of
                   Right _    -> pure (ExitSuccess, ["Quotation form is valid."])
                   Left  errs -> pure (ExitFailure 1, map Quotation.unErr errs)
@@ -829,7 +832,7 @@ createLegalFull db new = do
 
 updateLegal :: Core.StmDb -> Legal.Update -> STM (Either User.Err ())
 updateLegal db Legal.Update {..} = do
-  mentity <- selectEntityBySlug db _updateSlug
+  mentity <- Core.selectEntityBySlug db _updateSlug
   case mentity of
     Just Legal.Entity{} -> do
       let replaceOlder entities =
@@ -854,7 +857,7 @@ linkLegalEntityToUser
   -> Legal.ActingRole
   -> STM (Either User.Err ())
 linkLegalEntityToUser db slug uid role = do
-  mentity <- selectEntityBySlug db slug
+  mentity <- Core.selectEntityBySlug db slug
   case mentity of
     Just Legal.Entity {..} -> do
       let replaceOlder entities =
@@ -880,7 +883,7 @@ linkLegalEntityToUser' slug uid role = do
 updateLegalEntityIsSupervised
   :: Core.StmDb -> Text -> Bool -> STM (Either User.Err ())
 updateLegalEntityIsSupervised db slug b = do
-  mentity <- selectEntityBySlug db slug
+  mentity <- Core.selectEntityBySlug db slug
   case mentity of
     Just Legal.Entity{} -> do
       let replaceOlder entities =
@@ -901,7 +904,7 @@ updateLegalEntityIsSupervised' slug b = do
 updateLegalEntityIsHost
   :: Core.StmDb -> Text -> Bool -> STM (Either User.Err ())
 updateLegalEntityIsHost db slug b = do
-  mentity <- selectEntityBySlug db slug
+  mentity <- Core.selectEntityBySlug db slug
   case mentity of
     Just Legal.Entity{} -> do
       let replaceOlder entities =
@@ -1165,7 +1168,7 @@ readCreateQuotationFormResolved'
   :: User.UserProfile
   -> Text
   -> RunM
-       (Either () (Quotation.CreateQuotationAll, Maybe User.UserProfile))
+       (Either () (Quotation.CreateQuotationAll, Maybe User.UserProfile, Maybe Legal.Entity, Maybe Business.Unit, Maybe Legal.Entity, Maybe Business.Unit))
 readCreateQuotationFormResolved' profile key = do
   db <- asks _rDb
   atomicallyM $ readCreateQuotationFormResolved db profile key
@@ -1179,7 +1182,7 @@ readCreateQuotationFormResolved
   -> STM
        ( Either
            ()
-           (Quotation.CreateQuotationAll, Maybe User.UserProfile)
+           (Quotation.CreateQuotationAll, Maybe User.UserProfile, Maybe Legal.Entity, Maybe Business.Unit, Maybe Legal.Entity, Maybe Business.Unit)
        )
 readCreateQuotationFormResolved db profile key = do
   mform <- readCreateQuotationForm db (profile, key)
@@ -1187,7 +1190,15 @@ readCreateQuotationFormResolved db profile key = do
     Right form -> do
       mclient <- maybe (pure Nothing) (Core.selectUserByUsername db)
         $ Quotation._createQuotationClientUsername form
-      pure $ Right (form, mclient)
+      mSellerEntity <- maybe (pure Nothing) (Core.selectEntityBySlug db)
+        $ Quotation._createQuotationSellerEntity form
+      mSellerUnit <- maybe (pure Nothing) (Core.selectUnitBySlug db)
+        $ Quotation._createQuotationSellerUnit form
+      mBuyerEntity <- maybe (pure Nothing) (Core.selectEntityBySlug db)
+        $ Quotation._createQuotationBuyerEntity form
+      mBuyerUnit <- maybe (pure Nothing) (Core.selectUnitBySlug db)
+        $ Quotation._createQuotationBuyerUnit form
+      pure $ Right (form, mclient, mSellerEntity, mSellerUnit, mBuyerEntity, mBuyerUnit)
     Left err -> pure $ Left err
 
 readCreateQuotationForm'
@@ -1238,8 +1249,8 @@ submitCreateQuotationForm
 submitCreateQuotationForm db (profile, Quotation.SubmitQuotation key) = do
   minput <- readCreateQuotationFormResolved db profile key
   case minput of
-    Right (input, mresolvedClient) -> do
-      mid <- submitCreateQuotationForm' db (profile, input) mresolvedClient
+    Right (input, mresolvedClient, mresolvedSellerEntity, mresolvedSellerUnit, mresolvedBuyerEntity, mresolvedBuyerUnit) -> do
+      mid <- submitCreateQuotationForm' db (profile, input) mresolvedClient mresolvedSellerEntity mresolvedSellerUnit mresolvedBuyerEntity mresolvedBuyerUnit
       case mid of
         Right (id, resolvedClient) -> do
           -- Quotation created, do the rest of the atomic process.
@@ -1257,12 +1268,16 @@ submitCreateQuotationForm'
   :: Core.StmDb
   -> (User.UserProfile, Quotation.CreateQuotationAll)
   -> Maybe User.UserProfile
+  -> Maybe Legal.Entity
+  -> Maybe Business.Unit
+  -> Maybe Legal.Entity
+  -> Maybe Business.Unit
   -> STM
        (Either Quotation.Err (Quotation.QuotationId, User.UserProfile))
-submitCreateQuotationForm' db (profile, input) mResolvedClient = do
-  let mc = Quotation.validateCreateQuotation profile input mResolvedClient
+submitCreateQuotationForm' db (profile, input) mresolvedClient mresolvedSellerEntity mresolvedSellerUnit mresolvedBuyerEntity mresolvedBuyerUnit = do
+  let mc = Quotation.validateCreateQuotation profile input mresolvedClient mresolvedSellerEntity mresolvedSellerUnit mresolvedBuyerEntity mresolvedBuyerUnit
   case mc of
-    Right (c, resolvedClient) -> do
+    Right (c, resolvedClient, _, _, _, _) -> do
       mid <- createQuotation db c
       case mid of
         Right id  -> pure $ Right (id, resolvedClient)
@@ -1685,12 +1700,6 @@ setUserEmailAddrAsVerified db username = do
         pure $ Right ()
       Just _ -> pure . Left $ User.EmailAddrAlreadyVerified
     Nothing -> pure . Left $ User.UserNotFound $ User.unUserName username
-
-selectEntityBySlug :: Core.StmDb -> Text -> STM (Maybe Legal.Entity)
-selectEntityBySlug db name = do
-  let tvar = Data._dbLegalEntities db
-  records <- STM.readTVar tvar
-  pure $ find ((== name) . Legal._entitySlug) records
 
 selectEntityBySlugResolved
   :: Core.StmDb -> Text -> STM (Maybe (Legal.Entity, [Legal.ActingUser]))

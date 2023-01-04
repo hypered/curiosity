@@ -850,7 +850,21 @@ parserFormNewQuotation = do
   client <- A.option
     (A.eitherReader (Right . User.UserName . T.pack))
     (A.long "client" <> A.help "Client username." <> A.metavar "USERNAME")
-  pure $ FormNewQuotation $ Quotation.CreateQuotationAll (Just client)
+  sellerUnit <- A.option
+    (A.eitherReader (Right . T.pack))
+    (A.long "seller-unit" <> A.help "Selling business unit." <> A.metavar "UNIT")
+  sellerEntity <- A.option
+    (A.eitherReader (Right . T.pack))
+    (A.long "seller-entity" <> A.help "Selling legal entity." <> A.metavar "ENTITY")
+  buyerUnit <- A.option
+    (A.eitherReader (Right . T.pack))
+    (A.long "buyer-unit" <> A.help "Buying business unit." <> A.metavar "UNIT")
+  buyerEntity <- A.option
+    (A.eitherReader (Right . T.pack))
+    (A.long "buyer-entity" <> A.help "Buying legal entity." <> A.metavar "ENTITY")
+  pure $ FormNewQuotation $ Quotation.CreateQuotationAll
+    (Just client) (Just sellerUnit) (Just sellerEntity)
+    (Just buyerUnit) (Just buyerEntity)
 
 parserFormValidateQuotation :: A.Parser Command
 parserFormValidateQuotation = do

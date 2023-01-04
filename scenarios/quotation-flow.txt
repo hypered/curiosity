@@ -1,21 +1,30 @@
 reset
 user signup alice a alice@example.com --accept-tos
 
-user signup susie s susie@example.com --accept-tos
-user update USER-2 Susie "I'm Susie, the Seller in the quotation-flow scenario."
+user signup mila s mila@example.com --accept-tos
+user update USER-2 Mila "I'm Mila, the Seller in the quotation-flow scenario."
 
 user signup charlie c charlie@example.com --accept-tos
 user update USER-3 Charlie "I'm Charlie, a Client in the quotation-flow scenario."
 
-as susie
-forms quotation new --client charlie
+entity create one "One S.A." 100200300 BE0100200300
+entity set-supervised one
+entity set-host one
+
+unit create alpha Alpha
+unit update alpha "The first business unit of the prototype, Alpha is run by @mila."
+unit link-user alpha USER-2 --holder
+
+as mila
+forms quotation new --client charlie --seller-entity one --seller-unit alpha --buyer-entity one --buyer-unit alpha
+forms quotation validate TBPJLIUG
 # forms quotation edit
 forms quotation submit TBPJLIUG
 
 as charlie
 quotation sign QUOT-1
 
-as susie
+as mila
 invoice emit --from ORD-1
 
 as system
