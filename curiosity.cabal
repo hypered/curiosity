@@ -150,18 +150,15 @@ library
 
     Curiosity.Server
     Curiosity.Server.Helpers
-    WaiAppStatic.Storage.Filesystem.Extended
   -- More dependencies only specific to the library
   build-depends:
       http-api-data
     , bytestring
-    , cryptonite
     , directory
     , fast-logger
     , filepath
     , Glob
     , haskeline
-    , memory
     , network
     , optparse-applicative
     , process

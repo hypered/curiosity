@@ -12,4 +12,3 @@ title: Curiosity
 # See also
 
 - [Forms](/documentation/forms)
-- [Sitemap](/documentation/sitemap)

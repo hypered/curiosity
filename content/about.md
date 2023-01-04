@@ -29,6 +29,9 @@ its behavior, but actually runs it or directly queries it.
 In particular, business features are demonstrated through [executable
 scenarios](/documentation/scenarios).
 
+It is possible to seach this documentation on the [search
+page](/documentation/search).
+
 ## Experimental
 
 Curiosity is being developed to inform further developments, and is not
@@ -40,3 +43,8 @@ Smart Coop are.
 
 Curiosity is an open source project distributed under a 2-clause BSD license.
 It is available on [GitHub](https://github.com/hypered/curiosity).
+
+## Why
+
+Another document, titled [Why](/documentation/why), tries to explain where the
+Curiosity project came from, and where it was going.

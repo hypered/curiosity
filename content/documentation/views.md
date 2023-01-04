@@ -18,4 +18,3 @@ User profile
 # See also
 
 - [Objects](/documentation/objects)
-- [Sitemap](/documentation/sitemap)

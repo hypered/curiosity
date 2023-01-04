@@ -242,6 +242,8 @@ type App = H.UserAuthentication :> Get '[HTML] (PageEither
                   :> Get '[JSON] (JP.PrettyJSON '[ 'JP.DropNulls] HaskDb)
              :<|> "state.svg"
                   :> Get '[SVG] Text
+             :<|> "help.txt"
+                  :> Get '[PlainText] Text
 
              :<|> "emails"
                   :> H.UserAuthentication :>  Get '[HTML] Pages.EmailsPage
@@ -580,6 +582,7 @@ serverT natTrans ctx conf jwtS root dataDir scenariosDir =
     :<|> showState
     :<|> showStateAsJson
     :<|> showStateAsSvg
+    :<|> showHelpTxt
     :<|> showEmails
     :<|> showEmailsAsJson
     :<|> showEmail
@@ -2685,6 +2688,11 @@ showStateAsSvg :: ServerC m => m Text
 showStateAsSvg = do
   db <- withRuntime Rt.state
   liftIO $ Graph.graphSvg db
+
+
+--------------------------------------------------------------------------------
+showHelpTxt :: ServerC m => m Text
+showHelpTxt = pure Inter.help
 
 
 --------------------------------------------------------------------------------

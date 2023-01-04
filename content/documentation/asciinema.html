@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html class="u-maximize-height" dir="ltr" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Search Curiosity documentation
+    </title>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/asciinema/asciinema-player-3.0.1.css">
+</head>
+
+<body class="u-maximize-height">
+    <!--# include virtual="/partials/nav" -->
+    <div class="o-container o-container--medium">
+        <div class="o-container-vertical">
+            <div class="c-display">
+<section id="asciinema" class="level1">
+<h1>Asciinema</h1>
+<div id="cast"></div>
+<p>In this <a href="https://asciinema.org/">asciicast</a>, we show how a
+specific shell (called <code>shell</code> and defined in
+<code>default.nix</code>) can be entered. In that shell, we have access
+to the <code>cty</code> <a href="/documentation/clis">command-line
+interface</a>.</p>
+<p>In particular, we show that most <code>cty</code> commands are used
+to alter a state file or to explore it. Although the web interface is
+the most common way for end users to interact with Curiosity’s state, it
+can be seen as “just” another command to interact with it.</p>
+<p>Note: an asciicast is not a video. You can pause it, just like a
+video, if it goes too fast and you want to take some time to read what’s
+on the screen, but you can also select text and copy it.</p>
+<p>Note: there are two <code>exit</code> commands displayed at the end;
+one is to quit the shell entered initially with <code>nix-shell</code>
+at the beginning of the asciicast, the other is to quit the asciinema
+recording session.</p>
+</section>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/asciinema/asciinema-player-3.0.1.min.js"></script>
+    <script>
+      AsciinemaPlayer.create(
+        '/static/asciinema/demo.cast',
+        document.getElementById('cast'),
+        { theme: 'solarized-light',
+          cols: 82,
+          rows: 21
+        });
+    </script>
+    <script src="/static/js/bundle-client.js"></script>
+</body>
+</html>

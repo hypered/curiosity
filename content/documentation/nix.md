@@ -74,3 +74,9 @@ environments. This can be a development environment (where development tools
 are present, e.g. a compiler, a code formatter, ...), a testing environment,
 and so on. You can read more on the [dedicated documentation
 page](/documentation/environments).
+
+# Nix attributes
+
+Names such as `binaries` or `toplevel` in the above sections are _attributes_
+in the main Nix expression file (`default.nix`). Those and others are
+documented a [dedicated page](/documentation/attributes).
