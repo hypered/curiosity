@@ -12,6 +12,161 @@ developers (or more generally, contributors) to apply changes to the [code
 base](/documentation/source).  PRs may contain additional details and
 discussions, or provide historical context.
 
+## 2023-01-04
+
+**Introduce a [GitHub actions](https://github.com/hypered/curiosity/actions)
+based CI job.** This job builds and tests Curiosity through its Nix build.
+
+- We had to alter some niv sources to simplify the CI setup. See the
+  [12956fe](https://github.com/hypered/curiosity/commit/12956fe85bf35aabbe56e05c17d7977490c2198f)
+  commit message for more details.
+- See [PR-108](https://github.com/hypered/curiosity/pull/108).
+
+**Introduce a NixOS VM integration test.**
+
+- The current test only only makes sure the production environment is able to
+  serve a page, the static assets are correctly brotli-compressed and the Nginx
+  SSI setup works as expected.
+- A startup race condition pushed us to use the systemd notification mechanism.
+  See the corresponding change in the
+[2a412f1](https://github.com/hypered/curiosity/commit/2a412f16c3b912ca3305914f02aacd7efdf560b7)
+  commit.
+- Add some hardening options to the Curiosity systemd service.
+- See [PR-107](https://github.com/hypered/curiosity/pull/107).
+
+**Complete `cty sock`.**
+
+- `cty-sock` was just echoing the received command (after parsing it).  Now it
+  actually runs it, similarly to `cty run` or `cty repl`
+- Make additional `cty <command>` work with the `--socket` option (`state`,
+  `user get`,  `user signup`)
+- The HTTP server opens the UNIX domain socket by default, and an option is
+  offered to disable that behavior
+- Some tests for commands serialisation/parsing are added
+- `cty-sock` is now a subcommand, i.e. `cty sock`
+- See [PR-111](https://github.com/hypered/curiosity/pull/111).
+
+**Sending `cty` commands through SSH now works.**
+
+- With this change, the user is now correctly set through SSH's ForceCommand,
+  and the command is used with the `--socket` option. This means that a remote
+  user with access to the server's `curiosity` user can now alter and look at the
+  HTTP server's state. The `/curiosity.sock` file within the VM must be readable
+  and writable by the curiosity user though .
+- See [PR-112](https://github.com/hypered/curiosity/pull/112).
+
+**Use a Nix binary cache.**
+
+- We add a Nix post-build hook to the GitHub action build pipeline that pushes
+  the produced store paths to a Backblaze object storage.
+- We configure the object storage as a binary cache for the builder to speed up
+  the build phase by caching the dependencies builds. The VM image is also
+  configured to use the cache.
+- See [PR-115](https://github.com/hypered/curiosity/pull/115).
+
+**Code cleaning.**
+
+- Rename some functions to be more consistent, remove unused code, and make
+  compilation warning-free.
+- No longer use `Commence.Runtime.Storage`. It was seldom used (i.e. only by
+  some `UserProfile` operations, and in only some routes in `Server.hs`). This
+  allows to move `checkCredentials` and `checkPassword` in the right modules
+  (pure code in `Data` and STM-based code in `Core`).
+- Split out `Runtime` modules.
+- Apply HLint recommendations.
+- See [PR-109](https://github.com/hypered/curiosity/pull/109),
+  [PR-117](https://github.com/hypered/curiosity/pull/117), and
+  [PR-121](https://github.com/hypered/curiosity/pull/121).
+
+**Add a search feature to the documentation.** This adds a new page to query
+the static documentation part of the site.
+
+- This is based on [Stork](https://stork-search.net): the search index is a
+  static file (`content.st`) built ahead of time, and it is queried by a
+  companion JS library.
+- The search results are currently not very precise but this uses an old
+  version of Stork. The current one is 1.5 (which is also the JS library
+  version we use, which could cause potential compatibility issues).
+- The CSS are currently very crude and should probably be provided by the Smart
+  design system.
+- See [PR-118](https://github.com/hypered/curiosity/pull/118).
+
+**Add Ormolu, together with treefmt.**
+
+- This adds Ormolu as the Haskell source code formatter, replacing Brittany.
+  Brittany is unmaintained since 2022-11-11. This also adds a `treefmt`
+  configuration file to drive Ormolu. That configuration could be extended in
+  the future to e.g. also format Nix expressions.
+- See [PR-119](https://github.com/hypered/curiosity/pull/119).
+
+**Add an automatic deployment step to the GH action.**
+
+- This calls
+  [`scripts/deploy.sh`](https://github.com/hypered/curiosity/blob/main/scripts/deploy.sh)
+  after a succesful build when the impacted branch is `main`, so that
+  [`smartcoop.sh`](https://smartcoop.sh) is deployed automatically.
+- See [PR-125](https://github.com/hypered/curiosity/pull/125).
+
+**Improve the run command.**
+
+- The [`/run`](/run) page can access scenarios when using the `run` command.
+- The output was not showing quotes around multi-word arguments. This is now
+  fixed.
+- In the HTML representation of a scenario output, links to individual states
+  were broken when the scenario was calling another scenario (using the `run`
+  command). This is now fixed.
+
+See [PR-126](https://github.com/hypered/curiosity/pull/126).
+
+**Link the reject command in the web interface.**
+
+- A `reject` command was aleady present in the command-line interface. It is
+  now visible behind the "3 dots" action button on the list of quotations.
+- See [PR-127](https://github.com/hypered/curiosity/pull/127).
+
+**Continue the quotation flow.**
+
+- Call the "dry run" validation in the quotation flow. This simply calls the
+  validation code, without impacting the system state.
+- In the setup code, we rename Susie (the seller) to Mila for consistency, as
+  Mila is defined to be within Alpha and One in state-0.
+- `forms quotation new` can now requires a seller entity and a seller unit, and
+  a buyer entity and a buyer unit. The quotation flow is updated to setup Alpha
+  and One so they can be used later in the scenario.
+- See [PR-123](https://github.com/hypered/curiosity/pull/123).
+
+**Add an SVG representation of the state.** The SVG representation is a graph
+that shows users, legal entities and business units as nodes. It also shows
+some roles as edges.
+
+- That representation is available at [`/state.svg`](/state.svg) (remember that
+  there is already [`/state`](/state) and [`/state.json`](/state.json)).
+- Similarly for executed scenarios, it is possible to see the SVG
+  representation of the state after each step, e.g. in the [quotation
+flow](https://smartcoop.sh/documentation/scenarios/quotation-flow).
+- See [PR-128](https://github.com/hypered/curiosity/pull/128).
+
+**Improve documentation.** This adds some improvements to the documentation and
+README.
+
+- In the README, re-organise some sections, adding some details, or fixing some
+  non-up-to-date examples.
+- An asciicast is added. This is mostly to show how asciicasts can be added in
+  the future, but the example is a short introduction to the `cty` command-line
+  interface.
+- For local rendering of the static documentation (from Markdown files), it is
+  now possible to get a static navigation bar (instead of the Nginx SSI-based
+  one).
+- Still fro local rendering, there is an automatic rebuild available with
+  `entr`. It had not the static files (CSS, ...). This is now fixed.
+- A [`/documentation/attributes`](/documentation/attributes) page is added. It
+  documents all the interesting Nix attributes available in the `default.nix`
+  file.
+- A [`/documentation/why`](/documentation/why) page is added. It gives context
+  and reasons to create Curiosity
+- See [PR-110](https://github.com/hypered/curiosity/pull/110), and
+  [PR-130](https://github.com/hypered/curiosity/pull/130).
+
 ## 2022-11-17
 
 **Make profiles more complete.** This PR enriches user profiles, legal
