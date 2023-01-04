@@ -16,6 +16,8 @@ memory](https://en.wikipedia.org/wiki/Software_transactional_memory).
 From the web interface, the complete application state can be browsed at
 [`/state`](/state) and [`/state.json`](/state.json). The first link uses the
 internal state representation to format the data and the second link uses JSON.
+A graphical, albeit partial, representation is also available at
+[`/state.svg`](/state.svg).
 
 From the command-line, the complete state can be viewed with the `cty state`
 command, and from the REPL, it is available with `state`. Further drilling down

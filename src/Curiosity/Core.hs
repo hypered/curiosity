@@ -17,6 +17,7 @@ module Curiosity.Core
   , modifyUsers
   , selectUserById
   , selectUserByUsername
+  , selectUserByUsernameResolved
   , selectUserByInviteToken
   , modifyQuotations
   , selectQuotationById
@@ -33,6 +34,7 @@ module Curiosity.Core
   , generateEmailId
   -- * Operations on legal entities
   , selectEntityBySlug
+  , selectEntitiesWhereUserId
   -- * Operations on business units
   , createBusiness
   , updateBusiness
@@ -67,7 +69,7 @@ import qualified Curiosity.Data.Order          as Order
 import qualified Curiosity.Data.Quotation      as Quotation
 import qualified Curiosity.Data.RemittanceAdv  as RemittanceAdv
 import qualified Curiosity.Data.User           as User
-import           Data.List                      ( nub )
+import           Data.List                      ( lookup, nub )
 import qualified Data.List                     as L
 import qualified Data.Text                     as T
 import           Foreign.C.Types                ( CTime(..) )
@@ -434,6 +436,21 @@ selectUserByUsername db username = do
   pure $ find ((== Just username) . User.getUsername . User._userProfileCreds)
               records
 
+selectUserByUsernameResolved
+  :: StmDb
+  -> User.UserName
+  -> STM (Maybe (User.UserProfile, [Legal.EntityAndRole]))
+selectUserByUsernameResolved db username = do
+  let usersTVar = _dbUserProfiles db
+  users' <- STM.readTVar usersTVar
+  case
+      find ((== username) . User._userCredsName . User._userProfileCreds) users'
+    of
+      Just user -> do
+        entities <- selectEntitiesWhereUserId db $ User._userProfileId user
+        pure $ Just (user, entities)
+      Nothing -> pure Nothing
+
 selectUserByInviteToken :: StmDb -> Text -> STM (Maybe User.UserProfile)
 selectUserByInviteToken db token = do
   let tvar = _dbUserProfiles db
@@ -477,6 +494,20 @@ selectEntityBySlug db name = do
   let tvar = _dbLegalEntities db
   records <- STM.readTVar tvar
   pure $ find ((== name) . Legal._entitySlug) records
+
+-- | Select legal entities where the given user ID is "acting".
+selectEntitiesWhereUserId
+  :: StmDb -> User.UserId -> STM [Legal.EntityAndRole]
+selectEntitiesWhereUserId db uid = do
+  let tvar = _dbLegalEntities db
+  records <- STM.readTVar tvar
+  pure $ mapMaybe getEntityAndRole records
+ where
+  getRole =
+    lookup uid
+      . map (\(Legal.ActingUserId uid' role) -> (uid', role))
+      . Legal._entityUsersAndRoles
+  getEntityAndRole e = Legal.EntityAndRole e <$> getRole e
 
 
 --------------------------------------------------------------------------------

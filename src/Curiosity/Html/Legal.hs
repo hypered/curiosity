@@ -52,9 +52,8 @@ displayAuthorization auth =
     H.code . H.text $ show auth
 
 displayActingUser (Legal.ActingUser u role) =
-  H.li $ do
-    H.a ! A.href (H.toValue $ "/" <> username) $ H.text username
-    H.code . H.text $ show role
+  H.dl ! A.class_ "c-key-value c-key-value--horizontal c-key-value--short" $ do
+    keyValuePair (show role) (H.a ! A.href (H.toValue $ "/" <> username) $ H.text username)
 
   where username = User.unUserName . User._userCredsName . User._userProfileCreds $ u
 

@@ -48,6 +48,7 @@ import qualified Curiosity.Data.SimpleContract as SimpleContract
 import qualified Curiosity.Data.User           as User
 import qualified Curiosity.Form.Login          as Login
 import qualified Curiosity.Form.Signup         as Signup
+import qualified Curiosity.Graph               as Graph
 import qualified Curiosity.Html.Action         as Pages
 import qualified Curiosity.Html.Business       as Pages
 import qualified Curiosity.Html.Email          as Pages
@@ -75,6 +76,7 @@ import qualified Data.ByteString.Lazy          as BS
 import           Data.List                      ( (!!) )
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
+import qualified Data.Text.Lazy.Encoding       as LT
 import qualified Network.HTTP.Types            as HTTP
 import qualified Network.Wai                   as Wai
 import qualified Network.Wai.Handler.Warp      as Warp
@@ -110,6 +112,16 @@ import           WaiAppStatic.Types             ( ss404Handler
                                                 , ssMaxAge
                                                 , MaxAge(NoMaxAge)
                                                 )
+
+
+--------------------------------------------------------------------------------
+data SVG
+
+instance Accept SVG where
+    contentType _ = "image/svg+xml"
+
+instance MimeRender SVG Text where
+  mimeRender _ = LT.encodeUtf8 . LT.fromStrict
 
 
 --------------------------------------------------------------------------------
@@ -228,6 +240,8 @@ type App = H.UserAuthentication :> Get '[HTML] (PageEither
              :<|> "state" :> H.UserAuthentication :> Get '[HTML] Pages.EchoPage
              :<|> "state.json"
                   :> Get '[JSON] (JP.PrettyJSON '[ 'JP.DropNulls] HaskDb)
+             :<|> "state.svg"
+                  :> Get '[SVG] Text
 
              :<|> "emails"
                   :> H.UserAuthentication :>  Get '[HTML] Pages.EmailsPage
@@ -497,6 +511,11 @@ type Partials =
        :> Capture "nbr" Int
        :> "state.json"
        :> Get '[JSON] (JP.PrettyJSON '[ 'JP.DropNulls] HaskDb)
+  :<|> "partials" :> "scenarios"
+       :> Capture "name" FilePath
+       :> Capture "nbr" Int
+       :> "state.svg"
+       :> Get '[SVG] Text
 
   :<|> "partials" :> "nav" :> H.UserAuthentication :> Get '[HTML] Html
 
@@ -560,6 +579,7 @@ serverT natTrans ctx conf jwtS root dataDir scenariosDir =
 
     :<|> showState
     :<|> showStateAsJson
+    :<|> showStateAsSvg
     :<|> showEmails
     :<|> showEmailsAsJson
     :<|> showEmail
@@ -642,6 +662,7 @@ partials scenariosDir =
     :<|> partialScenario scenariosDir
     :<|> partialScenarioState scenariosDir
     :<|> partialScenarioStateAsJson scenariosDir
+    :<|> partialScenarioStateAsSvg scenariosDir
 
     :<|> partialNav
 
@@ -2382,6 +2403,18 @@ withMaybeUserFromUsername username a f = do
   mprofile <- liftIO $ Rt.selectUserByUsername db username
   maybe (a username) f mprofile
 
+withMaybeUserFromUsernameResolved
+  :: forall m a
+   . ServerC m
+  => User.UserName
+  -> (User.UserName -> m a)
+  -> (User.UserProfile -> [Legal.EntityAndRole] -> m a)
+  -> m a
+withMaybeUserFromUsernameResolved username a f = do
+  db       <- asks Rt._rDb
+  mprofile <- liftIO $ Rt.selectUserByUsernameResolved db username
+  maybe (a username) (uncurry f) mprofile
+
 -- | Run a handler, ensuring a quotation can be obtained from the given id, or
 -- throw an error.
 withQuotationFromId
@@ -2531,6 +2564,19 @@ partialScenarioStateAsJson scenariosDir name nbr = do
       db  = Inter.traceState $ ts' !! nbr -- TODO Proper input validation
   pure $ JP.PrettyJSON db
 
+partialScenarioStateAsSvg
+  :: ServerC m
+  => FilePath
+  -> FilePath
+  -> Int
+  -> m Text
+partialScenarioStateAsSvg scenariosDir name nbr = do
+  let path = scenariosDir </> name <> ".txt"
+  ts <- liftIO $ Inter.handleRun' path
+  let ts' = Inter.flatten ts
+      db  = Inter.traceState $ ts' !! nbr -- TODO Proper input validation
+  liftIO $ Graph.graphSvg db
+
 partialScenarios :: ServerC m => FilePath -> m Html
 partialScenarios scenariosDir = do
   names <- listScenarioNames scenariosDir
@@ -2568,6 +2614,7 @@ partialScenario scenariosDir name = do
         H.th "Line"
         H.th "Command"
         H.th "State"
+        H.th ""
       H.tbody $ mapM_ displayTrace $ zip ts' [0..]
  where
   displayTrace :: (Inter.Trace, Int) -> Html
@@ -2586,6 +2633,17 @@ partialScenario scenariosDir name = do
             <> "/state.json"
             )
         $ "View"
+      H.td
+        $ H.a
+        ! A.href
+            (  H.toValue
+            $  "/partials/scenarios/"
+            <> name
+            <> "/"
+            <> show n
+            <> "/state.svg"
+            )
+        $ "SVG"
     mapM_
       (\o -> H.tr $ do
         H.td ""
@@ -2620,6 +2678,13 @@ showStateAsJson :: ServerC m => m (JP.PrettyJSON '[ 'JP.DropNulls] HaskDb)
 showStateAsJson = do
   db <- withRuntime Rt.state
   pure $ JP.PrettyJSON db
+
+-- TODO This calls `dot` each time. Maybe this could be cached depending on a
+-- hash of the state.
+showStateAsSvg :: ServerC m => m Text
+showStateAsSvg = do
+  db <- withRuntime Rt.state
+  liftIO $ Graph.graphSvg db
 
 
 --------------------------------------------------------------------------------
@@ -2735,18 +2800,18 @@ serveNamespace
   => Text
   -> SAuth.AuthResult User.UserId
   -> m (PageEither Pages.PublicProfileView Pages.UnitView)
-serveNamespace name authResult = withMaybeUserFromUsername
+serveNamespace name authResult = withMaybeUserFromUsernameResolved
   (User.UserName name)
   withName
   withTargetProfile
 
  where
   withName (User.UserName name') = SS.P.PageR <$> serveUnit authResult name'
-  withTargetProfile targetProfile = withMaybeUser
+  withTargetProfile targetProfile entities = withMaybeUser
     authResult
-    (const . pure . SS.P.PageL $ Pages.PublicProfileView Nothing targetProfile)
+    (const . pure . SS.P.PageL $ Pages.PublicProfileView Nothing targetProfile entities)
     (\profile ->
-      pure . SS.P.PageL $ Pages.PublicProfileView (Just profile) targetProfile
+      pure . SS.P.PageL $ Pages.PublicProfileView (Just profile) targetProfile entities
     )
 
 -- | This try to serve a namespace profile (i.e. a user profile or a business

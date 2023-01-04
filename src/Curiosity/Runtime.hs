@@ -28,7 +28,6 @@ module Curiosity.Runtime
   , signup
   -- * High-level entity operations
   , selectEntityBySlugResolved
-  , selectEntitiesWhereUserId
   , readLegalEntities
   -- * High-level unit operations
   , selectUnitBySlug
@@ -97,6 +96,7 @@ import qualified Curiosity.Data.Quotation      as Quotation
 import qualified Curiosity.Data.RemittanceAdv  as RemittanceAdv
 import qualified Curiosity.Data.SimpleContract as SimpleContract
 import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Graph               as Graph
 import           Curiosity.Runtime.Email       as Runtime.E
 import           Curiosity.Runtime.Error       as RErr
 import           Curiosity.Runtime.IO          as RIO
@@ -111,9 +111,7 @@ import           Curiosity.Runtime.Type        as RType
 import           Curiosity.STM.Helpers          ( atomicallyM )
 import qualified Data.Aeson.Text               as Aeson
 import qualified Data.ByteString.Char8         as B
-import           Data.List                      ( lookup
-                                                , nub
-                                                )
+import           Data.List                      ( nub )
 import qualified Data.Map                      as M
 import qualified Data.Text.Encoding            as T
 import qualified Data.Text.Lazy                as LT
@@ -412,6 +410,16 @@ handleCommand runtime@Runtime {..} user command = do
             then show value
             else LT.toStrict (Aeson.encodeToLazyText value)
       pure (ExitSuccess, [value'])
+    Command.Graph out format -> do
+      value <- runRunM runtime state
+      output <- case format of
+        True -> pure $ Graph.graphDot value
+        False -> lines <$> liftIO (Graph.graphSvg value)
+      case out of
+        Command.GraphStdOut -> pure (ExitSuccess, output)
+        Command.GraphFileName fn -> do
+          liftIO $ writeFile fn $ unlines output
+          pure (ExitSuccess, [])
     Command.Reset -> do
       runRunM runtime reset
       pure (ExitSuccess, ["State is now empty."])
@@ -1620,7 +1628,7 @@ selectUserByIdResolved db id = do
   users' <- STM.readTVar usersTVar
   case find ((== id) . User._userProfileId) users' of
     Just user -> do
-      entities <- selectEntitiesWhereUserId db $ User._userProfileId user
+      entities <- Core.selectEntitiesWhereUserId db $ User._userProfileId user
       pure $ Just (user, entities)
     Nothing -> pure Nothing
 
@@ -1632,17 +1640,9 @@ selectUserByUsername db username =
 selectUserByUsernameResolved
   :: Core.StmDb
   -> User.UserName
-  -> STM (Maybe (User.UserProfile, [Legal.EntityAndRole]))
+  -> IO (Maybe (User.UserProfile, [Legal.EntityAndRole]))
 selectUserByUsernameResolved db username = do
-  let usersTVar = Data._dbUserProfiles db
-  users' <- STM.readTVar usersTVar
-  case
-      find ((== username) . User._userCredsName . User._userProfileCreds) users'
-    of
-      Just user -> do
-        entities <- selectEntitiesWhereUserId db $ User._userProfileId user
-        pure $ Just (user, entities)
-      Nothing -> pure Nothing
+  STM.atomically $ Core.selectUserByUsernameResolved db username
 
 filterUsers :: Core.StmDb -> User.Predicate -> STM [User.UserProfile]
 filterUsers db predicate = do
@@ -1718,20 +1718,6 @@ selectEntityBySlugResolved db name = do
           (\(Just u, role) -> Legal.ActingUser u role)
           musers
     Nothing -> pure Nothing
-
--- | Select legal entities where the given user ID is "acting".
-selectEntitiesWhereUserId
-  :: Core.StmDb -> User.UserId -> STM [Legal.EntityAndRole]
-selectEntitiesWhereUserId db uid = do
-  let tvar = Data._dbLegalEntities db
-  records <- STM.readTVar tvar
-  pure $ mapMaybe getEntityAndRole records
- where
-  getRole =
-    lookup uid
-      . map (\(Legal.ActingUserId uid' role) -> (uid', role))
-      . Legal._entityUsersAndRoles
-  getEntityAndRole e = Legal.EntityAndRole e <$> getRole e
 
 readLegalEntities :: Core.StmDb -> STM [Legal.Entity]
 readLegalEntities db = do

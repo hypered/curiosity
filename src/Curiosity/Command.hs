@@ -10,6 +10,7 @@ module Curiosity.Command
   , CommandTarget(..)
   , CommandUser(..)
   , ObjectType(..)
+  , GraphConf(..)
   , parserInfo
   , parserInfoWithTarget
   , commandToString
@@ -59,6 +60,8 @@ data Command =
     -- ^ Parse a single command.
   | State Bool
     -- ^ Show the full state. If True, use Haskell format instead of JSON.
+  | Graph GraphConf Bool
+    -- ^ Show the main objects graphically. If True, use Dot instead of SVG.
   | Threads
     -- ^ Show the state of the threads.
   | StartEmail
@@ -151,6 +154,11 @@ data ParseConf =
   deriving (Eq, Show)
 
 data ObjectType = ParseState | ParseUser
+  deriving (Eq, Show)
+
+data GraphConf =
+    GraphFileName FilePath
+  | GraphStdOut
   deriving (Eq, Show)
 
 -- | The same commands, defined above, can be used within the UNIX-domain
@@ -279,6 +287,12 @@ parser =
            ( A.info (parserState <**> A.helper)
            $ A.progDesc "Show the full state"
            )
+
+      <>  A.command
+          "graph"
+          ( A.info (parserGraph <**> A.helper)
+          $ A.progDesc "Display the state's main objects graphically"
+          )
 
       <> A.command
            "threads"
@@ -481,9 +495,21 @@ parserObject =
   f "user"  = Right ParseUser
   f _       = Left "Unrecognized object type."
 
+parserFileName' :: A.Parser GraphConf
+parserFileName' = A.argument (A.eitherReader f)
+                            (A.metavar "FILE" <> A.help "Command to parse.")
+ where
+  f "-" = Right GraphStdOut
+  f s   = Right $ GraphFileName s
+
 parserState :: A.Parser Command
 parserState = State <$> A.switch
   (A.long "hs" <> A.help "Use the Haskell format (default is JSON).")
+
+parserGraph :: A.Parser Command
+parserGraph = Graph <$> parserFileName'
+    <*> A.switch
+          (A.long "dot" <> A.help "Use the Dot format (default is SVG).")
 
 parserThreads :: A.Parser Command
 parserThreads = pure Threads
@@ -1042,6 +1068,10 @@ commandToString = \case
   Init _      -> Left "Can't send `init` to a server."
   Reset       -> Right "reset"
   State useHs -> Right $ "state" <> if useHs then " --hs" else ""
+  Graph GraphStdOut True         -> Right "graph - --dot"
+  Graph GraphStdOut False        -> Right "graph -"
+  Graph (GraphFileName fn) True  -> Right $ "graph " <> T.pack fn <> " --dot"
+  Graph (GraphFileName fn) False -> Right $ "graph " <> T.pack fn
   Signup User.Signup {..} ->
     Right $ "user signup " <> User.unUserName username
       <> " " <> {- TODO -} T.take 1 (User.unUserName username)

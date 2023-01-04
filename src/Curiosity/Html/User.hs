@@ -205,7 +205,7 @@ profileView profile entities hasEditButton =
     displayAdvisors $ User._userProfileAdvisors profile
 
     title' "Related entities" Nothing
-    H.ul $ mapM_ displayEntitie entities
+    H.ul $ mapM_ displayEntity entities
 
 displayAuthorization auth = H.li $ do
   H.code . H.text $ show auth
@@ -224,34 +224,37 @@ displayAdvisors (Just (User.Advisors {..})) = do
     )
     _userAdvisorsPast
 
-displayEntitie (Legal.EntityAndRole entity role) = H.li $ do
-  H.a
-    ! A.href (H.toValue $ "/entity/" <> Legal._entitySlug entity)
-    $ H.text
-    . Legal.unRegistrationName
-    $ Legal._entityName entity
-  H.code . H.text $ show role
+displayEntity (Legal.EntityAndRole entity role) = do
+  let link =
+        H.a
+          ! A.href (H.toValue $ "/entity/" <> Legal._entitySlug entity)
+          $ H.text
+          . Legal.unRegistrationName
+          $ Legal._entityName entity
+  H.dl ! A.class_ "c-key-value c-key-value--horizontal c-key-value--short" $ do
+    keyValuePair (show role) link
 
 
 --------------------------------------------------------------------------------
 data PublicProfileView = PublicProfileView
-  { _publicProfileViewUserProfile   :: (Maybe User.UserProfile)
+  { _publicProfileViewUserProfile      :: (Maybe User.UserProfile)
     -- ^ The logged in user, if any
-  , _publicProfileViewTargetProfile :: User.UserProfile
+  , _publicProfileViewTargetProfile    :: User.UserProfile
     -- ^ The profile being displayed
+  , _publicProfileViewEntitiesAndRoles :: [Legal.EntityAndRole]
   }
 
 instance H.ToMarkup PublicProfileView where
-  toMarkup (PublicProfileView mprofile targetProfile) =
+  toMarkup (PublicProfileView mprofile targetProfile entities) =
     Render.renderCanvasFullScroll
       . Dsl.SingletonCanvas
       $ H.div
       ! A.class_ "c-app-layout u-scroll-vertical"
       $ do
           header mprofile
-          H.main ! A.class_ "u-maximize-width" $ publicProfileView targetProfile
+          H.main ! A.class_ "u-maximize-width" $ publicProfileView targetProfile entities
 
-publicProfileView profile =
+publicProfileView profile entities =
   containerMedium $ H.div ! A.class_ "u-spacer-bottom-xl" $ do
     H.div
       ! A.class_ "u-spacer-bottom-l"
@@ -288,8 +291,14 @@ publicProfileView profile =
                 (keyValuePair "Twitter" . linkTwitter)
                 (User._userProfileTwitterUsername profile)
 
+    title' "Authorizations" Nothing
+    H.ul $ mapM_ displayAuthorization $ User._userProfileAuthorizations profile
+
     title' "Advisors" Nothing
     displayAdvisors $ User._userProfileAdvisors profile
+
+    title' "Related entities" Nothing
+    H.ul $ mapM_ displayEntity entities
 
 
 formatEpochIso8601 :: EpochTime -> Text

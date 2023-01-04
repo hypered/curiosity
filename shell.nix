@@ -26,6 +26,7 @@ let
   formatters = [ nixpkgs.ormolu nixpkgs.treefmt ] ;
 
   system-tooling = with nixpkgs; [
+    graphviz # needed for the dot command
     inotify-tools # needed for HotExe.sh (filesystem notifs.)
     psmisc # needed for HotExe.sh: (kill processes by port.)
   ];
