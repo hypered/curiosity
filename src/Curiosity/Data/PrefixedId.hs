@@ -33,6 +33,7 @@ newtype PrefixedIdT = PrefixedIdT Text
                              , Show
                              , FromJSON, ToJSON
                              , FromHttpApiData, ToHttpApiData
+                             , IsString
                              ) via Text
 
 -- | Get a given symbol as prefix.  
@@ -68,7 +69,7 @@ class KnownSymbol (Prefix id) => PrefixedId id where
       (hyphenate -> PrefixT prefix) = symToPrefix @(Prefix id)
     in case prefix `T.stripPrefix` txt of
       -- the prefix was not found. 
-      Nothing -> Left "ID prefix is not in text."
+      Nothing -> Left $ T.unwords [ "ID prefix:", "'" <> prefix <> "'", "is not in input text:" , "'" <> txt <> "'." ]
       Just rest -> fromText rest
 
 -- | Automagically derive via `W.Wrapped`. 
