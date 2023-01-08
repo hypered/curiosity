@@ -43,7 +43,7 @@ module Curiosity.Data.Employment
   ) where
 
 import qualified Commence.Types.Wrapped        as W
-import           Control.Lens                  as Lens
+import           Control.Lens                  
 import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Curiosity.Data.User           as User
 import           Data.Aeson

@@ -52,7 +52,7 @@ instance FromForm Update where
 data Unit = Unit
   { _entityId             :: UnitId
   , _entitySlug           :: Text
-    -- An identifier suitable for URLs
+    -- ^ An identifier suitable for URLs
   , _entityName           :: Text
   , _entityDescription    :: Maybe Text
   , _entityType           :: Text
