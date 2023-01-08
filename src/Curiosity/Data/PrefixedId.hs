@@ -1,6 +1,5 @@
 {-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE ViewPatterns        #-}
-{-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE DefaultSignatures   #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
@@ -17,8 +16,12 @@ module Curiosity.Data.PrefixedId
   , getPrefix
   , PrefixedIdT(..)
   , PrefixedId(..)
+  -- * Errors
+  , PrefixParseErr(..)
   ) where
 
+import  Network.HTTP.Types.Status (unprocessableEntity422)
+import qualified Commence.Runtime.Errors as Errs 
 import qualified Commence.Types.Wrapped        as W
 import           Control.Lens
 import           Data.Aeson
@@ -50,6 +53,7 @@ getPrefix = symToPrefix @(Prefix id)
 
 class KnownSymbol (Prefix id) => PrefixedId id where
 
+  -- | Associated symbol indicating (at the type-level) the prefix to use for these IDs. 
   type Prefix id :: Symbol
 
   -- | How to add the prefix to an ID.
@@ -60,18 +64,27 @@ class KnownSymbol (Prefix id) => PrefixedId id where
 
   -- | Parse an incoming ID: the default implementation is a naive parser. 
   parsePrefixedId
-    :: (Text -> Either Text id) -- ^ Parser to employ for parsing the ID without the hyphenated prefix.
+    :: (Text -> Either PrefixParseErr id) -- ^ Parser to employ for parsing the ID without the hyphenated prefix.
     -> PrefixedIdT -- ^ Fully prefixed ID. 
-    -> Either Text id -- ^ Eventual parsing result. 
-  default parsePrefixedId :: (Text -> Either Text id) -> PrefixedIdT -> Either Text id
+    -> Either PrefixParseErr id -- ^ Eventual parsing result. 
+  default parsePrefixedId :: (Text -> Either PrefixParseErr id) -> PrefixedIdT -> Either PrefixParseErr id
   parsePrefixedId fromText (PrefixedIdT txt) =
     let
       (hyphenate -> PrefixT prefix) = symToPrefix @(Prefix id)
     in case prefix `T.stripPrefix` txt of
       -- the prefix was not found. 
-      Nothing -> Left $ T.unwords [ "ID prefix:", "'" <> prefix <> "'", "is not in input text:" , "'" <> txt <> "'." ]
+      Nothing -> Left . PrefixAbsent $ T.unwords [ "ID prefix:", "'" <> prefix <> "'", "is not in input text:" , "'" <> txt <> "'." ]
       Just rest -> fromText rest
 
 -- | Automagically derive via `W.Wrapped`. 
 instance (KnownSymbol prefix, Coercible id Text) => PrefixedId (W.Wrapped prefix id) where
   type Prefix (W.Wrapped prefix id) = prefix
+
+newtype PrefixParseErr = PrefixAbsent Text
+                       deriving Show
+
+instance Errs.IsRuntimeErr PrefixParseErr where
+  errCode PrefixAbsent{} = "ERR.PREFIXED_ID.PREFIX_ABSENT"
+  httpStatus PrefixAbsent{} = unprocessableEntity422 
+  userMessage (PrefixAbsent msg) = Just msg 
+  
