@@ -14,6 +14,7 @@ module Curiosity.Data.PrefixedId
   , hyphenate
   , symToPrefix
   , getPrefix
+  , getPrefixHyphenate 
   , PrefixedIdT(..)
   , PrefixedId(..)
   -- * Errors
@@ -47,9 +48,13 @@ symToPrefix = PrefixT . T.pack $ symbolVal (Proxy @prefix)
 hyphenate :: PrefixT -> PrefixT
 hyphenate (PrefixT noHy) = PrefixT $ noHy <> "-"
 
--- | Get the prefix of 
+-- | Get the prefix of @id@: non hyphenated. 
 getPrefix :: forall id . PrefixedId id => PrefixT
 getPrefix = symToPrefix @(Prefix id)
+
+-- | Get the hyphenated prefix of @id@.
+getPrefixHyphenate :: forall id . PrefixedId id => PrefixT
+getPrefixHyphenate = hyphenate $ getPrefix @id 
 
 class KnownSymbol (Prefix id) => PrefixedId id where
 

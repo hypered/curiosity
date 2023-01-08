@@ -77,7 +77,7 @@ newtype UnitId = UnitId { unUnitId :: Text }
 
 unitIdPrefix :: Text
 unitIdPrefix =
-  let Pre.PrefixT prefix = Pre.hyphenate $ Pre.getPrefix @UnitId in prefix
+  let Pre.PrefixT prefix =  Pre.getPrefixHyphenate @UnitId in prefix
 
 data ActingRole = Dummy | Holder
   deriving (Eq, Generic, Show)

@@ -238,7 +238,7 @@ newtype ContractId = ContractId { unContractId :: Text }
                deriving Pre.PrefixedId via W.Wrapped "EMP" Text
 
 contractIdPrefix :: Text
-contractIdPrefix = Pre.getPrefix @ContractId ^. Lens.to Pre.hyphenate . coerced
+contractIdPrefix = Pre.getPrefixHyphenate @ContractId ^. coerced
 
 data Err = Err Text
   deriving (Eq, Exception, Show)

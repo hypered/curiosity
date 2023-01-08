@@ -277,7 +277,7 @@ newtype UserId = UserId { unUserId :: Text }
 
 userIdPrefix :: Text
 userIdPrefix =
-  let Pre.PrefixT prefix = Pre.hyphenate $ Pre.getPrefix @UserId in prefix
+  let Pre.PrefixT prefix = Pre.getPrefixHyphenate @UserId in prefix
 
 -- TODO Ask Roger the meaning of these.
 -- | Those are in addition of AccessRight, maybe they should be combined
