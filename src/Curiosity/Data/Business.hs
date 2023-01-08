@@ -17,6 +17,7 @@ module Curiosity.Data.Business
   ) where
 
 import qualified Commence.Types.Wrapped        as W
+import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Curiosity.Data.User           as User
 import           Data.Aeson
 import qualified Text.Blaze.Html5              as H
@@ -72,9 +73,11 @@ newtype UnitId = UnitId { unUnitId :: Text }
                         , H.ToValue
                         ) via Text
                deriving FromForm via W.Wrapped "unit-id" Text
+               deriving Pre.PrefixedId via W.Wrapped "BENT" Text
 
 unitIdPrefix :: Text
-unitIdPrefix = "BENT-"
+unitIdPrefix =
+  let Pre.PrefixT prefix = Pre.hyphenate $ Pre.getPrefix @UnitId in prefix
 
 data ActingRole = Dummy | Holder
   deriving (Eq, Generic, Show)
