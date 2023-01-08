@@ -295,7 +295,7 @@ data Advisors = Advisors
 
 
 --------------------------------------------------------------------------------
-data SetUserEmailAddrAsVerified = SetUserEmailAddrAsVerified UserName
+newtype SetUserEmailAddrAsVerified = SetUserEmailAddrAsVerified UserName
 
 instance FromForm SetUserEmailAddrAsVerified where
   fromForm f = SetUserEmailAddrAsVerified <$> parseUnique "username" f
