@@ -43,6 +43,8 @@ module Curiosity.Data.Employment
   ) where
 
 import qualified Commence.Types.Wrapped        as W
+import           Control.Lens                  as Lens
+import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Curiosity.Data.User           as User
 import           Data.Aeson
 import qualified Text.Blaze.Html5              as H
@@ -217,7 +219,7 @@ validateCreateContract profile = do
 -- | This represents a contract in database. TODO The notion of contract
 -- includes more than amployment contract and all should share most of their
 -- structure.
-data Contract = Contract
+newtype Contract = Contract
   { _contractId :: ContractId
   }
   deriving (Show, Eq, Generic)
@@ -233,9 +235,10 @@ newtype ContractId = ContractId { unContractId :: Text }
                         , H.ToValue
                         ) via Text
                deriving FromForm via W.Wrapped "contract-id" Text
+               deriving Pre.PrefixedId via W.Wrapped "EMP" Text
 
 contractIdPrefix :: Text
-contractIdPrefix = "EMP-"
+contractIdPrefix = Pre.getPrefix @ContractId ^. Lens.to Pre.hyphenate . coerced
 
 data Err = Err Text
   deriving (Eq, Exception, Show)
