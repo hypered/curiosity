@@ -423,10 +423,9 @@ validateSignup now id Signup {..} = if null errors
           -- TODO Define some mechanism to get the initial authorizations
                         [AuthorizedAsEmployee]
                         Nothing
-  errors = concat
-    [ if not tosConsent then [NoTosConsent] else []
-    , if username `elem` usernameBlocklist then [UsernameBlocked] else []
-    ]
+  errors =
+    [ NoTosConsent | not tosConsent ]
+    <> [ UsernameBlocked | username `elem` usernameBlocklist ]
 
 -- | Similar to `validateCreateQuotation` but throw away the returned
 -- contract, i.e. keep only the errors.
