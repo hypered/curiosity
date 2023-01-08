@@ -93,7 +93,7 @@ data Scope = ScopeCreateQuotation | ScopeSendQuotation | ScopeCreateInvoice
   deriving (Eq, Generic, Show)
   deriving (FromJSON, ToJSON)
 
-data Err = Err
+newtype Err = Err
   { unErr :: Text
   }
   deriving (Eq, Exception, Show)
