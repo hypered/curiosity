@@ -381,7 +381,7 @@ instance Errs.IsRuntimeErr Err where
         $  Pages.ErrorPage 401 "Unauthorized action"
         $  "The user has not the required access right "
         <> show a
-    ValidationErrs [err] -> maybe "TODO" identity $ Errs.userMessage err
+    ValidationErrs [err] -> fromMaybe "TODO" $ Errs.userMessage err
     ValidationErrs _ ->
       LT.toStrict . renderMarkup . H.toMarkup $ Pages.ErrorPage
         409 -- TODO
