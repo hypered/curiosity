@@ -69,6 +69,7 @@ import           Commence.Types.Secret          ( (=:=) )
 import qualified Commence.Types.Secret         as Secret
 import qualified Commence.Types.Wrapped        as W
 import           Control.Lens
+import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Curiosity.Html.Errors         as Pages
 import           Data.Aeson
 import qualified Data.Text                     as T
@@ -115,9 +116,7 @@ data Invite = Invite
   deriving (Generic, Eq, Show)
 
 instance FromForm Invite where
-  fromForm f =
-    Invite
-      <$> parseUnique "email-addr"   f
+  fromForm f = Invite <$> parseUnique "email-addr" f
 
 -- | Represents the input data to log in a user.
 data Login = Login
@@ -142,10 +141,10 @@ data Update = Update
 instance FromForm Update where
   fromForm f =
     Update
-      <$> parseUnique "user-id"          f
-      <*> parseMaybe  "display-name"     f
-      <*> parseMaybe  "bio"              f
-      <*> parseMaybe  "twitter-username" f
+      <$> parseUnique "user-id" f
+      <*> parseMaybe "display-name"     f
+      <*> parseMaybe "bio"              f
+      <*> parseMaybe "twitter-username" f
 
 
 --------------------------------------------------------------------------------
@@ -189,11 +188,11 @@ data Credentials =
 
 getUsername :: Credentials -> Maybe UserName
 getUsername Credentials {..} = Just _userCredsName
-getUsername _ = Nothing
+getUsername _                = Nothing
 
 getInviteToken :: Credentials -> Maybe Text
 getInviteToken InviteToken {..} = Just _inviteToken
-getInviteToken _ = Nothing
+getInviteToken _                = Nothing
 
 -- For Completion-1 level
 data UserCompletion1 = UserCompletion1
@@ -274,9 +273,11 @@ newtype UserId = UserId { unUserId :: Text }
                         , H.ToValue
                         ) via Text
                deriving (FromHttpApiData, FromForm) via W.Wrapped "user-id" Text
+               deriving Pre.PrefixedId via W.Wrapped "USER" Text
 
 userIdPrefix :: Text
-userIdPrefix = "USER-"
+userIdPrefix =
+  let Pre.PrefixT prefix = Pre.hyphenate $ Pre.getPrefix @UserId in prefix
 
 -- TODO Ask Roger the meaning of these.
 -- | Those are in addition of AccessRight, maybe they should be combined
@@ -330,7 +331,7 @@ instance Errs.IsRuntimeErr Err where
     UserNotFound{}              -> "USER_NOT_FOUND"
     IncorrectUsernameOrPassword -> "INCORRECT_CREDENTIALS"
     EmailAddrAlreadyVerified    -> "EMAIL_ADDR_ALREADY_VERIFIED"
-    MissingRight _              -> "MISSING_RIGHT_" <> "TODO"
+    MissingRight   _            -> "MISSING_RIGHT_" <> "TODO"
     ValidationErrs _            -> "VALIDATION_ERRS"
     where errCode' = mappend "ERR.USER"
 
@@ -341,7 +342,7 @@ instance Errs.IsRuntimeErr Err where
     UserNotFound{}              -> HTTP.notFound404
     IncorrectUsernameOrPassword -> HTTP.unauthorized401
     EmailAddrAlreadyVerified    -> HTTP.conflict409
-    MissingRight _              -> HTTP.unauthorized401
+    MissingRight   _            -> HTTP.unauthorized401
     ValidationErrs _            -> HTTP.conflict409
 
   userMessage = Just . \case
@@ -354,11 +355,10 @@ instance Errs.IsRuntimeErr Err where
         409 -- TODO
         "Username disallowed"
         "Some usernames are not allowed. Please select another."
-    NoTosConsent ->
-      LT.toStrict . renderMarkup . H.toMarkup $ Pages.ErrorPage
-        409 -- TODO
-        "TOS consent required"
-        "To use our services, accepting the Terms of Services is required."
+    NoTosConsent -> LT.toStrict . renderMarkup . H.toMarkup $ Pages.ErrorPage
+      409 -- TODO
+      "TOS consent required"
+      "To use our services, accepting the Terms of Services is required."
     UserNotFound msg ->
       LT.toStrict . renderMarkup . H.toMarkup $ Pages.ErrorPage
         404
@@ -402,39 +402,30 @@ makeLenses ''UserProfile'
 -- the ID).
 -- This is a pure function: everything required to perform the validation
 -- should be provided as arguments.
-validateSignup
-  :: EpochTime
-  -> UserId
-  -> Signup
-  -> Either [Err] UserProfile
+validateSignup :: EpochTime -> UserId -> Signup -> Either [Err] UserProfile
 validateSignup now id Signup {..} = if null errors
   then Right profile
   else Left errors
  where
-  profile = UserProfile
-          id
-          (Credentials username password)
-          Nothing
-          Nothing
-          email
-          Nothing
-          tosConsent
-          (UserCompletion1 Nothing Nothing Nothing)
-          (UserCompletion2 Nothing Nothing)
-          now
-          Nothing
+  profile = UserProfile id
+                        (Credentials username password)
+                        Nothing
+                        Nothing
+                        email
+                        Nothing
+                        tosConsent
+                        (UserCompletion1 Nothing Nothing Nothing)
+                        (UserCompletion2 Nothing Nothing)
+                        now
+                        Nothing
           -- The very first user has plenty of rights:
-          (if id == firstUserId then firstUserRights else [])
+                        (if id == firstUserId then firstUserRights else [])
           -- TODO Define some mechanism to get the initial authorizations
-          [AuthorizedAsEmployee]
-          Nothing
+                        [AuthorizedAsEmployee]
+                        Nothing
   errors = concat
-    [ if not tosConsent
-      then [NoTosConsent]
-      else []
-    , if username `elem` usernameBlocklist
-      then [UsernameBlocked]
-      else []
+    [ if not tosConsent then [NoTosConsent] else []
+    , if username `elem` usernameBlocklist then [UsernameBlocked] else []
     ]
 
 -- | Similar to `validateCreateQuotation` but throw away the returned
@@ -489,6 +480,5 @@ userNotFound = Left . UserNotFound . mappend "User not found: "
 checkPassword :: UserProfile -> Password -> Bool
 checkPassword profile (Password passInput) = case _userProfileCreds profile of
   Credentials {..} ->
-    let Password storedPass = _userCredsPassword
-    in storedPass =:= passInput
+    let Password storedPass = _userCredsPassword in storedPass =:= passInput
   InviteToken _ -> False
