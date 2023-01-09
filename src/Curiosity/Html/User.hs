@@ -58,7 +58,7 @@ instance H.ToMarkup EditProfilePage where
           "display-name"
           ( Just
           . H.toValue
-          . maybe "" identity
+          . fromMaybe ""
           . User._userProfileDisplayName
           $ profile
           )
@@ -68,7 +68,7 @@ instance H.ToMarkup EditProfilePage where
                          "Bio"
                          6
                          "The bio appears on your public profile"
-                         (maybe "" identity . User._userProfileBio $ profile)
+                         (fromMaybe "" . User._userProfileBio $ profile)
                          True
       disabledText "Email address"
                    "email-addr"
@@ -83,17 +83,17 @@ instance H.ToMarkup EditProfilePage where
           . User._userProfileRegistrationDate
           $ profile
           )
-        $ Nothing
+        Nothing
       inputText
           "Twitter username"
           "twitter-username"
           ( Just
           . H.toValue
-          . maybe "" identity
+          . fromMaybe ""
           . User._userProfileTwitterUsername
           $ profile
           )
-        $ Nothing
+        Nothing
       submitButton submitUrl "Update profile"
 
 
@@ -136,7 +136,7 @@ profileView profile entities hasEditButton =
             (User._userCredsName . User._userProfileCreds $ profile)
           keyValuePair @Text "Password" ""
           keyValuePair "Display name"
-            $ maybe "" identity (User._userProfileDisplayName profile)
+            $ fromMaybe "" (User._userProfileDisplayName profile)
           keyValuePair "Bio"
             $ maybe "" linkifyAts (User._userProfileBio profile)
           keyValuePair
@@ -225,19 +225,19 @@ displayAdvisors (Just (User.Advisors {..})) = do
     _userAdvisorsPast
 
 displayEntity (Legal.EntityAndRole entity role) = do
-  let link =
+  let link' =
         H.a
           ! A.href (H.toValue $ "/entity/" <> Legal._entitySlug entity)
           $ H.text
           . Legal.unRegistrationName
           $ Legal._entityName entity
   H.dl ! A.class_ "c-key-value c-key-value--horizontal c-key-value--short" $ do
-    keyValuePair (show role) link
+    keyValuePair (show role) link'
 
 
 --------------------------------------------------------------------------------
 data PublicProfileView = PublicProfileView
-  { _publicProfileViewUserProfile      :: (Maybe User.UserProfile)
+  { _publicProfileViewUserProfile      :: Maybe User.UserProfile
     -- ^ The logged in user, if any
   , _publicProfileViewTargetProfile    :: User.UserProfile
     -- ^ The profile being displayed

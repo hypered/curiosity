@@ -145,7 +145,7 @@ renderForm' mprofile content =
     $ do
         header mprofile
         H.main ! A.class_ "u-maximize-width" $ containerMedium $ do
-          H.form $ content
+          H.form content
 
 renderForm :: User.UserProfile -> Html -> Html
 renderForm profile content =
@@ -156,7 +156,7 @@ renderForm profile content =
     $ do
         H.header $ navbar' profile
         H.main ! A.class_ "u-maximize-width" $ containerMedium $ do
-          H.form $ content
+          H.form content
 
 renderFormLarge :: User.UserProfile -> Html -> Html
 renderFormLarge profile content =
@@ -167,7 +167,7 @@ renderFormLarge profile content =
     $ do
         H.header $ navbar' profile
         H.main ! A.class_ "u-maximize-width" $ containerLarge $ do
-          H.form $ content
+          H.form content
 
 navbar' profile =
   H.toMarkup
@@ -179,7 +179,7 @@ navbar' profile =
 panel s content = H.div ! A.class_ "c-panel u-spacer-bottom-l" $ do
   H.div ! A.class_ "c-panel__header" $ H.h2 ! A.class_ "c-panel__title" $ H.text
     s
-  H.div ! A.class_ "c-panel__body" $ groupLayout $ content
+  H.div ! A.class_ "c-panel__body" $ groupLayout content
 
 panel' panelTitle body =
   H.div
@@ -205,7 +205,7 @@ panel' panelTitle body =
 panelStandard s content = H.div ! A.class_ "c-panel u-spacer-bottom-l" $ do
   H.div ! A.class_ "c-panel__header" $ H.h2 ! A.class_ "c-panel__title" $ H.text
     s
-  H.div ! A.class_ "c-panel__body" $ groupLayoutStandard $ content
+  H.div ! A.class_ "c-panel__body" $ groupLayoutStandard content
 
 groupLayout content =
   H.div
@@ -257,8 +257,8 @@ inputText' label name mvalue mhelp disabled =
     H.div
       ! A.class_ "o-form-group__controls o-form-group__controls--full-width"
       $ do
-          (if disabled then (! (A.disabled "disabled")) else identity)
-            $ maybe identity (\value -> (! (A.value value))) mvalue
+          (if disabled then (! A.disabled "disabled") else identity)
+            $ maybe identity (\value -> (! A.value value)) mvalue
             $ H.input
             ! A.class_ "c-input"
             ! A.id name
