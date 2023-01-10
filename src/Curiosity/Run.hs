@@ -342,9 +342,6 @@ repl runtime user = HL.runInputT HL.defaultSettings loop
  where
   loop = HL.getInputLine prompt >>= \case
     Nothing     -> output' ""
-    -- TODO Probably processInput below (within parseAnyStateInput) should have
-    -- other possible results (beside mod and viz): comments and blanks
-    -- (no-op), instead of this special empty case.
     Just ""     -> loop
     Just "quit" -> pure ()
     Just input  -> do
