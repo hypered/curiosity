@@ -11,6 +11,7 @@ module Curiosity.Command
   , CommandUser(..)
   , ObjectType(..)
   , GraphConf(..)
+  , parser
   , parserInfo
   , parserInfoWithTarget
   , commandToString
