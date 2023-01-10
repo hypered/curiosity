@@ -82,6 +82,33 @@ A [GitHub action](https://github.com/hypered/curiosity/actions) is used to run
 the tests on every commit, and report the results on each Pull Request. It is
 also used to populate a [Nix binary cache](#nix-binary-cache).
 
+# `ghcid`
+
+Reloading the code automatically upon changes can be done with `ghcid`. A
+convenience script to run `ghcid` is `script/ghcid.sh`.
+
+`ghcid` can also be instructed to run something when code loads successfully.
+This is used to typically run tests, but can also be used to restart the
+Curiosity HTTP server.
+
+This looks like this (be sure to enter the `nix-shell` first):
+
+```
+$ ghcid --warnings --command scripts/ghci.sh --test ':main serve'
+```
+
+Note: use the
+[`autoReload`](https://smartcoop.sh/haddock/Curiosity-Html-Misc.html#v:autoReload)
+function defined in `Curiosity.Html.Misc` to cause an open web page to be
+automatically refreshed when working on some HTML snippet.
+
+The same mechanism can be used with the HSPec-based tests or the Golden tests:
+
+```
+$ ghcid --warnings --command scripts/ghci-spec.sh --test ':main'
+$ ghcid --warnings --command scripts/ghci-scenarios.sh --test ':main'
+```
+
 # Running
 
 There are multiple ways to run Curiosity's code. Building the `cty` binary and
