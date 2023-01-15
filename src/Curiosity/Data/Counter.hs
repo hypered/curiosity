@@ -7,6 +7,7 @@ module Curiosity.Data.Counter
   , bumpCounterPrefix
   ) where
 
+import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Control.Concurrent.STM        as STM
 import           Data.Aeson
 
@@ -48,7 +49,7 @@ instance Enum count => Counter count STM.TVar STM.STM  where
 
   readCounter (CounterValue countTvar) = STM.readTVar countTvar
 
-  writeCounter (CounterValue countTvar) count = STM.writeTVar countTvar count
+  writeCounter (CounterValue countTvar) = STM.writeTVar countTvar 
 
   bumpCounter ctr@(CounterValue countTvar) = do
     was <- readCounter ctr
@@ -70,10 +71,15 @@ instance Enum count => Counter count Identity Identity where
 
 -- | Get the current value of a counter bumping the value as we go.
 bumpCounterPrefix
-  :: forall count m datastore
-   . (Counter count datastore m, Applicative m, Show count)
-  => Text
-  -> CounterValue datastore count
+  :: forall id count m datastore
+   . ( Pre.PrefixedId id
+     , Counter count datastore m
+     , Applicative m
+     , Show count
+     )
+  => CounterValue datastore count -- ^ The current counter value (in the datastore)
   -> m Text
-bumpCounterPrefix prefix ctr = bumpCounter ctr <&> mappend prefix . show . was
+bumpCounterPrefix ctr = bumpCounter ctr <&> mappend prefix . show . was
+  where
+    Pre.PrefixT prefix = Pre.getPrefix @id 
 

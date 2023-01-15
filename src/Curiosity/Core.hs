@@ -57,6 +57,7 @@ module Curiosity.Core
   , canPerform
   ) where
 
+import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Control.Concurrent.STM        as STM
 import           Curiosity.Data
 import qualified Curiosity.Data.Business       as Business
@@ -249,53 +250,53 @@ readFullStmDbInHask' stmDb = do
 -- | Generate a fresh user ID.
 generateUserId :: StmDb -> STM User.UserId
 generateUserId Db {..} =
-  User.UserId <$> C.bumpCounterPrefix User.userIdPrefix _dbNextUserId
+  User.UserId <$> C.bumpCounterPrefix @User.UserId _dbNextUserId
 
 -- | Generate a fresh busines unit ID.
 generateBusinessId :: StmDb -> STM Business.UnitId
 generateBusinessId Db {..} =
   Business.UnitId
-    <$> C.bumpCounterPrefix Business.unitIdPrefix _dbNextBusinessId
+    <$> C.bumpCounterPrefix @Business.UnitId _dbNextBusinessId
 
 -- | Generate a fresh legal entity ID.
 generateLegalId :: StmDb -> STM Legal.EntityId
 generateLegalId Db {..} =
-  Legal.EntityId <$> C.bumpCounterPrefix Legal.entityIdPrefix _dbNextLegalId
+  Legal.EntityId <$> C.bumpCounterPrefix @Legal.EntityId _dbNextLegalId
 
 -- | Generate a fresh quotation ID.
 generateQuotationId :: StmDb -> STM Quotation.QuotationId
 generateQuotationId Db {..} =
   Quotation.QuotationId
-    <$> C.bumpCounterPrefix Quotation.quotationIdPrefix _dbNextQuotationId
+    <$> C.bumpCounterPrefix @Quotation.QuotationId _dbNextQuotationId
 
 -- | Generate a fresh order ID.
 generateOrderId :: StmDb -> STM Order.OrderId
 generateOrderId Db {..} =
-  Order.OrderId <$> C.bumpCounterPrefix Order.orderIdPrefix _dbNextOrderId
+  Order.OrderId <$> C.bumpCounterPrefix @Order.OrderId _dbNextOrderId
 
 -- | Generate a fresh remittance advice ID.
 generateRemittanceAdvId :: StmDb -> STM RemittanceAdv.RemittanceAdvId
 generateRemittanceAdvId Db {..} =
   RemittanceAdv.RemittanceAdvId
-    <$> C.bumpCounterPrefix RemittanceAdv.remittanceAdvIdPrefix
+    <$> C.bumpCounterPrefix @RemittanceAdv.RemittanceAdvId
                             _dbNextRemittanceAdvId
 
 -- | Generate a fresh employment contract ID.
 generateEmploymentId :: StmDb -> STM Employment.ContractId
 generateEmploymentId Db {..} =
   Employment.ContractId
-    <$> C.bumpCounterPrefix Employment.contractIdPrefix _dbNextEmploymentId
+    <$> C.bumpCounterPrefix @Employment.ContractId _dbNextEmploymentId
 
 -- | Generate a fresh invoice ID.
 generateInvoiceId :: StmDb -> STM Invoice.InvoiceId
 generateInvoiceId Db {..} =
   Invoice.InvoiceId
-    <$> C.bumpCounterPrefix Invoice.invoiceIdPrefix _dbNextInvoiceId
+    <$> C.bumpCounterPrefix @Invoice.InvoiceId _dbNextInvoiceId
 
 -- | Generate a fresh email ID.
 generateEmailId :: StmDb -> STM Email.EmailId
 generateEmailId Db {..} =
-  Email.EmailId <$> C.bumpCounterPrefix Email.emailIdPrefix _dbNextEmailId
+  Email.EmailId <$> C.bumpCounterPrefix @Email.EmailId _dbNextEmailId
 
 
 --------------------------------------------------------------------------------

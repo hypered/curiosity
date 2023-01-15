@@ -13,6 +13,7 @@ module Curiosity.Data.PrefixedId
   ( PrefixT(..)
   , symToPrefix
   , getPrefix
+  , getPrefixText 
   , PrefixedIdT(..)
   , PrefixedId(..)
   -- * Errors
@@ -30,11 +31,11 @@ import           Web.HttpApiData
 
 -- | Newtype over value level prefixes (eg @USER-@ is one such prefix for UserIds).
 -- The only purpose is type-safety. 
-newtype PrefixT = PrefixT Text
+newtype PrefixT = PrefixT { _unPrefixT :: Text }
                deriving (Eq, Show, IsString) via Text
 
 -- | An ID with a generated prefix. 
-newtype PrefixedIdT = PrefixedIdT Text
+newtype PrefixedIdT = PrefixedIdT { _unPrefixedIdT :: Text }
                     deriving ( Eq
                              , Show
                              , FromJSON, ToJSON
@@ -51,6 +52,10 @@ symToPrefix = PrefixT . T.pack $ symbolVal (Proxy @prefix)
 -- | Get the prefix of @id@: non hyphenated. 
 getPrefix :: forall id . PrefixedId id => PrefixT
 getPrefix = symToPrefix @(Prefix id)
+
+-- | Same as `getPrefix` but generates an unsafe `Text` value instead. 
+getPrefixText :: forall id . PrefixedId id => Text
+getPrefixText = _unPrefixT (getPrefix @id) 
 
 {- | Generalisations over IDs that have a prefix. For example, UserId values are always represented as
 @USER-<ID>@ where @<ID>@ is the unique ID of the user. This lets us namespace IDs to avoid conflicts and also

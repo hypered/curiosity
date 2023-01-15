@@ -24,7 +24,6 @@ module Curiosity.Data.Quotation
     -- * Main data representation
   , Quotation(..)
   , QuotationId(..)
-  , quotationIdPrefix
   , QuotationState(..)
   , displayQuotationState
   , SetQuotationAsSigned(..)
@@ -34,6 +33,7 @@ module Curiosity.Data.Quotation
   , Err(..)
   ) where
 
+import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Commence.Runtime.Errors       as Errs
 import qualified Commence.Types.Wrapped        as W
 import qualified Curiosity.Data.Business       as Business
@@ -181,9 +181,7 @@ newtype QuotationId = QuotationId { unQuotationId :: Text }
                         , H.ToValue
                         ) via Text
                deriving (FromHttpApiData, FromForm) via W.Wrapped "quotation-id" Text
-
-quotationIdPrefix :: Text
-quotationIdPrefix = "QUOT-"
+               deriving Pre.PrefixedId via W.Wrapped "QUOT-" Text
 
 data QuotationState =
     QuotationCreated

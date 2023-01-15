@@ -52,7 +52,6 @@ module Curiosity.Data.User
   , Predicate(..)
   , applyPredicate
   , SetUserEmailAddrAsVerified(..)
-  , userIdPrefix
   , firstUserId
   , firstUserRights
   , validateSignup
@@ -275,10 +274,6 @@ newtype UserId = UserId { unUserId :: Text }
                deriving (FromHttpApiData, FromForm) via W.Wrapped "user-id" Text
                deriving Pre.PrefixedId via W.Wrapped "USER-" Text
 
-userIdPrefix :: Text
-userIdPrefix =
-  let Pre.PrefixT prefix = Pre.getPrefix @UserId in prefix
-
 -- TODO Ask Roger the meaning of these.
 -- | Those are in addition of AccessRight, maybe they should be combined
 -- together.
@@ -438,7 +433,7 @@ validateSignup' now id signup =
 -- | Define the first user ID. A test exists to make sure this matches the
 -- behavior of `generateUserId`.
 firstUserId :: UserId
-firstUserId = UserId $ userIdPrefix <> "1"
+firstUserId = UserId "1"
 
 firstUserRights :: [AccessRight]
 firstUserRights = [CanCreateContracts, CanVerifyEmailAddr]

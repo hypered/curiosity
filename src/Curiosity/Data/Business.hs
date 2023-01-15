@@ -9,7 +9,6 @@ module Curiosity.Data.Business
   , Create(..)
   , Update(..)
   , UnitId(..)
-  , unitIdPrefix
   , ActingRole(..)
   , Authorization(..)
   , Scope(..)
@@ -74,10 +73,6 @@ newtype UnitId = UnitId { unUnitId :: Text }
                         ) via Text
                deriving FromForm via W.Wrapped "unit-id" Text
                deriving Pre.PrefixedId via W.Wrapped "BENT-" Text
-
-unitIdPrefix :: Text
-unitIdPrefix =
-  let Pre.PrefixT prefix =  Pre.getPrefix @UnitId in prefix
 
 data ActingRole = Dummy | Holder
   deriving (Eq, Generic, Show)

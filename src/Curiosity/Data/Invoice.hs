@@ -7,10 +7,10 @@ Description: Invoice related datatypes
 module Curiosity.Data.Invoice
   ( Invoice(..)
   , InvoiceId(..)
-  , invoiceIdPrefix
   , Err(..)
   ) where
 
+import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Commence.Types.Wrapped        as W
 import           Data.Aeson
 import qualified Text.Blaze.Html5              as H
@@ -34,9 +34,7 @@ newtype InvoiceId = InvoiceId { unInvoiceId :: Text }
                         , H.ToValue
                         ) via Text
                deriving FromForm via W.Wrapped "invoice-id" Text
-
-invoiceIdPrefix :: Text
-invoiceIdPrefix = "INV-"
+               deriving Pre.PrefixedId via W.Wrapped "INV-" Text
 
 data Err = Err
   { unErr :: Text

@@ -15,7 +15,6 @@ module Curiosity.Data.Email
     -- * Main data representation
   , Email(..)
   , EmailId(..)
-  , emailIdPrefix
   , EmailTemplate(..)
   , emailTemplateName
   , displayEmailBody
@@ -26,6 +25,7 @@ module Curiosity.Data.Email
   , Err(..)
   ) where
 
+import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Commence.Types.Wrapped        as W
 import qualified Curiosity.Data.User           as User
 import           Data.Aeson
@@ -61,10 +61,7 @@ newtype EmailId = EmailId { unEmailId :: Text }
                         , H.ToValue
                         ) via Text
                deriving (FromHttpApiData, FromForm) via W.Wrapped "email-id" Text
-
-emailIdPrefix :: Text
-emailIdPrefix = "EMAIL-"
-
+               deriving Pre.PrefixedId via W.Wrapped "EMAIL-" Text
 
 --------------------------------------------------------------------------------
 -- | All the emails that can be sent by the system are given by variants of the
