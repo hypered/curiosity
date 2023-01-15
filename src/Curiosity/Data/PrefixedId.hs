@@ -84,7 +84,7 @@ class KnownSymbol (Prefix id) => PrefixedId id where
 
   -- | Parse an incoming ID: the default implementation is a naive parser. 
   parsePrefixedId
-    :: (Text -> Either PrefixParseErr id) -- ^ Parser to employ for parsing the ID without the hyphenated prefix.
+    :: (Text -> Either PrefixParseErr id) -- ^ Parser to employ for parsing the ID, without the prefix.
     -> PrefixedIdT -- ^ Fully prefixed ID. 
     -> Either PrefixParseErr id -- ^ Eventual parsing result. 
   default parsePrefixedId :: (Text -> Either PrefixParseErr id) -> PrefixedIdT -> Either PrefixParseErr id
