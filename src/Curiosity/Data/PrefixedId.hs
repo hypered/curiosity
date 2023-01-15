@@ -19,6 +19,7 @@ module Curiosity.Data.PrefixedId
   , PrefixParseErr(..)
   ) where
 
+import qualified Text.Blaze.Html5              as H
 import  Network.HTTP.Types.Status (unprocessableEntity422)
 import qualified Commence.Runtime.Errors as Errs 
 import qualified Commence.Types.Wrapped        as W
@@ -39,6 +40,8 @@ newtype PrefixedIdT = PrefixedIdT Text
                              , FromJSON, ToJSON
                              , FromHttpApiData, ToHttpApiData
                              , IsString
+                             , H.ToMarkup
+                             , H.ToValue
                              ) via Text
 
 -- | Get a given symbol as prefix.  
