@@ -273,11 +273,11 @@ newtype UserId = UserId { unUserId :: Text }
                         , H.ToValue
                         ) via Text
                deriving (FromHttpApiData, FromForm) via W.Wrapped "user-id" Text
-               deriving Pre.PrefixedId via W.Wrapped "USER" Text
+               deriving Pre.PrefixedId via W.Wrapped "USER-" Text
 
 userIdPrefix :: Text
 userIdPrefix =
-  let Pre.PrefixT prefix = Pre.getPrefixHyphenate @UserId in prefix
+  let Pre.PrefixT prefix = Pre.getPrefix @UserId in prefix
 
 -- TODO Ask Roger the meaning of these.
 -- | Those are in addition of AccessRight, maybe they should be combined

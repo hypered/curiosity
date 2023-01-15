@@ -1,5 +1,4 @@
 {-# LANGUAGE TypeFamilies        #-}
-{-# LANGUAGE ViewPatterns        #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE DefaultSignatures   #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
@@ -11,10 +10,8 @@ Description: Standardised ID prefixing.
 -}
 module Curiosity.Data.PrefixedId
   ( PrefixT(..)
-  , hyphenate
   , symToPrefix
   , getPrefix
-  , getPrefixHyphenate 
   , PrefixedIdT(..)
   , PrefixedId(..)
   -- * Errors
@@ -44,17 +41,9 @@ newtype PrefixedIdT = PrefixedIdT Text
 symToPrefix :: forall prefix . KnownSymbol prefix => PrefixT
 symToPrefix = PrefixT . T.pack $ symbolVal (Proxy @prefix)
 
--- | Add hyphens to the prefix. 
-hyphenate :: PrefixT -> PrefixT
-hyphenate (PrefixT noHy) = PrefixT $ noHy <> "-"
-
 -- | Get the prefix of @id@: non hyphenated. 
 getPrefix :: forall id . PrefixedId id => PrefixT
 getPrefix = symToPrefix @(Prefix id)
-
--- | Get the hyphenated prefix of @id@.
-getPrefixHyphenate :: forall id . PrefixedId id => PrefixT
-getPrefixHyphenate = hyphenate $ getPrefix @id 
 
 class KnownSymbol (Prefix id) => PrefixedId id where
 
@@ -65,7 +54,7 @@ class KnownSymbol (Prefix id) => PrefixedId id where
   addPrefix :: id -> PrefixedIdT
   default addPrefix :: Coercible id Text => id -> PrefixedIdT
   addPrefix id = PrefixedIdT $ prefix <> id ^. coerced
-    where (hyphenate -> PrefixT prefix) = symToPrefix @(Prefix id)
+    where (PrefixT prefix) = symToPrefix @(Prefix id)
 
   -- | Parse an incoming ID: the default implementation is a naive parser. 
   parsePrefixedId
@@ -75,7 +64,7 @@ class KnownSymbol (Prefix id) => PrefixedId id where
   default parsePrefixedId :: (Text -> Either PrefixParseErr id) -> PrefixedIdT -> Either PrefixParseErr id
   parsePrefixedId fromText (PrefixedIdT txt) =
     let
-      (hyphenate -> PrefixT prefix) = symToPrefix @(Prefix id)
+      (PrefixT prefix) = symToPrefix @(Prefix id)
     in case prefix `T.stripPrefix` txt of
       -- the prefix was not found. 
       Nothing -> Left . PrefixAbsent $ T.unwords [ "ID prefix:", "'" <> prefix <> "'", "is not in input text:" , "'" <> txt <> "'." ]

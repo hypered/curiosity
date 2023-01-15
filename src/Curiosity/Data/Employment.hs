@@ -235,10 +235,10 @@ newtype ContractId = ContractId { unContractId :: Text }
                         , H.ToValue
                         ) via Text
                deriving FromForm via W.Wrapped "contract-id" Text
-               deriving Pre.PrefixedId via W.Wrapped "EMP" Text
+               deriving Pre.PrefixedId via W.Wrapped "EMP-" Text
 
 contractIdPrefix :: Text
-contractIdPrefix = Pre.getPrefixHyphenate @ContractId ^. coerced
+contractIdPrefix = Pre.getPrefix @ContractId ^. coerced
 
 data Err = Err Text
   deriving (Eq, Exception, Show)
