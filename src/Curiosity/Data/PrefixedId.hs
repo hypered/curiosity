@@ -18,8 +18,13 @@ module Curiosity.Data.PrefixedId
   , PrefixedId(..)
   -- * Errors
   , PrefixParseErr(..)
+  -- * DerivingVia
+  , Prefixed(..)
   ) where
 
+import GHC.Base (error)
+import qualified Data.String  -- for fromString 
+import Web.FormUrlEncoded 
 import qualified Text.Blaze.Html5              as H
 import  Network.HTTP.Types.Status (unprocessableEntity422)
 import qualified Commence.Runtime.Errors as Errs 
@@ -105,6 +110,53 @@ class KnownSymbol (Prefix id) => PrefixedId id where
 instance (KnownSymbol prefix, Coercible id Text) => PrefixedId (W.Wrapped prefix id) where
   type Prefix (W.Wrapped prefix id) = prefix
 
+-- | Newtype that we can use for DerivingVia. 
+newtype Prefixed id = Prefixed { _unPrefixed :: id }
+                    deriving (Eq, Show)
+
+instance PrefixedId id => ToJSON (Prefixed id) where
+  toJSON = String . _unPrefixedIdT . addPrefix @id . _unPrefixed 
+
+instance (PrefixedId id, Coercible Text id) => FromJSON (Prefixed id) where
+  parseJSON = parseJSON >=> \case
+    -- if the JSON value is a string, succeed. 
+    String idWithPrefixT -> either mempty (pure . Prefixed) -- succeed on right. 
+                            . parsePrefixedId @id (Right . view coerced) -- parse it, accepting any text.
+                            . PrefixedIdT -- view as the prefixedIdT newtype.
+                            $ idWithPrefixT 
+    _ -> mempty -- in all other cases, fail.
+
+-- | When rendering to markup, always add the prefix.
+instance PrefixedId id => H.ToMarkup (Prefixed id) where
+  toMarkup = H.toMarkup . addPrefix . _unPrefixed 
+
+instance PrefixedId id => H.ToValue (Prefixed id) where
+  toValue = H.toValue . addPrefix . _unPrefixed 
+
+instance (PrefixedId id, Coercible Text id) => FromHttpApiData (Prefixed id) where
+  parseQueryParam =
+    bimap Errs.displayErr Prefixed
+    .  parsePrefixedId @id (Right . view coerced)
+    . PrefixedIdT 
+  
+instance ( PrefixedId id
+         , Coercible Text id
+         , KnownSymbol field 
+         ) => FromForm (Prefixed (W.Wrapped field id)) where
+  fromForm =
+    fromForm @(W.Wrapped field Text)
+    >=> bimap Errs.displayErr (Prefixed . W.Wrapped)
+    . parsePrefixedId @id (Right . view coerced)
+    . PrefixedIdT
+    . W.unWrap
+
+instance (PrefixedId id, Coercible Text id) => IsString (Prefixed id) where
+
+  fromString  = either (error . T.unpack . Errs.displayErr) Prefixed
+                . parsePrefixedId @id (Right . view coerced)
+                . PrefixedIdT
+                . T.pack 
+
 -- | An error raised when we fail to parse a prefix or an ID that has been prefixed. 
 newtype PrefixParseErr = PrefixAbsent Text
                        deriving Show
@@ -114,3 +166,4 @@ instance Errs.IsRuntimeErr PrefixParseErr where
   httpStatus PrefixAbsent{} = unprocessableEntity422 
   userMessage (PrefixAbsent msg) = Just msg 
   
+

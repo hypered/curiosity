@@ -270,9 +270,11 @@ newtype UserId = UserId { unUserId :: Text }
                         , ToJSON
                         , H.ToMarkup
                         , H.ToValue
-                        ) via Text
-               deriving (FromHttpApiData, FromForm) via W.Wrapped "user-id" Text
+                        ) via Pre.Prefixed UserId 
                deriving Pre.PrefixedId via W.Wrapped "USER-" Text
+               deriving ( FromHttpApiData
+                        , FromForm
+                        ) via Pre.Prefixed (W.Wrapped "user-id" UserId)
 
 -- TODO Ask Roger the meaning of these.
 -- | Those are in addition of AccessRight, maybe they should be combined

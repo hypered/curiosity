@@ -5,7 +5,7 @@ module Curiosity.Data.Counter
   , Counter(..)
   , CounterStep(..)
   , bumpCounterPrefix
-  , bumpCounterPrefixCoerce 
+  , bumpCounterPrefixCoerce
   , newIdOf 
   ) where
 
@@ -100,7 +100,7 @@ bumpCounterPrefixCoerce
   -> m id 
 bumpCounterPrefixCoerce = fmap (view coerced) . bumpCounterPrefix @id 
 
--- | A more readable alias of `bumpCounterPrefixCoerce`. 
+-- | A more readable alias of `newIdOf`. 
 newIdOf
   :: forall id count m datastore
    . ( Pre.PrefixedId id
@@ -110,5 +110,7 @@ newIdOf
      , Show count
      )
   => CounterValue datastore count -- ^ The current counter value (in the datastore)
-  -> m id 
-newIdOf = bumpCounterPrefixCoerce 
+  -> m id  
+newIdOf ctr =  bumpCounter ctr <&> (view coerced :: Text -> id)  . show . was --  <&> view (coerced @id @Text ) 
+
+ 
