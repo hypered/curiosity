@@ -7,6 +7,7 @@
 Module: Curiosity.Data.PrefixedId
 Description: Standardised ID prefixing.
 
+See the documentation of the `PrefixedId` class for motivation. 
 -}
 module Curiosity.Data.PrefixedId
   ( PrefixT(..)
@@ -26,9 +27,12 @@ import           Data.Aeson
 import qualified Data.Text                     as T
 import           Web.HttpApiData
 
+-- | Newtype over value level prefixes (eg @USER-@ is one such prefix for UserIds).
+-- The only purpose is type-safety. 
 newtype PrefixT = PrefixT Text
                deriving (Eq, Show, IsString) via Text
 
+-- | An ID with a generated prefix. 
 newtype PrefixedIdT = PrefixedIdT Text
                     deriving ( Eq
                              , Show
@@ -45,6 +49,25 @@ symToPrefix = PrefixT . T.pack $ symbolVal (Proxy @prefix)
 getPrefix :: forall id . PrefixedId id => PrefixT
 getPrefix = symToPrefix @(Prefix id)
 
+{- | Generalisations over IDs that have a prefix. For example, UserId values are always represented as
+@USER-<ID>@ where @<ID>@ is the unique ID of the user. This lets us namespace IDs to avoid conflicts and also
+have more human friendly IDs. 
+
+We use type level symbols to ensure we have type-safety and don't get into "stringly typed programming".
+Eg. a UserId can be a distinct type (using `W.Wrapped`) than other IDs. 
+
+Consider:
+@
+λ> import Curiosity.Data.User
+λ> UserId "foo" -- create a value. 
+UserId {unUserId = "foo"}
+λ> import Curiosity.Data.PrefixedId
+λ> addPrefix it -- add prefix to the ID and show it. 
+"USER-foo"
+λ> parsePrefixedId @UserId (Right . UserId {- accept all texts, but other more complex parsing also possible. -}) it -- parse it back. 
+Right (UserId {unUserId = "foo"})
+@ 
+-}
 class KnownSymbol (Prefix id) => PrefixedId id where
 
   -- | Associated symbol indicating (at the type-level) the prefix to use for these IDs. 
@@ -74,6 +97,7 @@ class KnownSymbol (Prefix id) => PrefixedId id where
 instance (KnownSymbol prefix, Coercible id Text) => PrefixedId (W.Wrapped prefix id) where
   type Prefix (W.Wrapped prefix id) = prefix
 
+-- | An error raised when we fail to parse a prefix or an ID that has been prefixed. 
 newtype PrefixParseErr = PrefixAbsent Text
                        deriving Show
 
