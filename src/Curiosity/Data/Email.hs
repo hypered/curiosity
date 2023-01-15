@@ -134,7 +134,7 @@ applyPredicate EmailsTodo Email {..} = _emailState == EmailTodo
 applyPredicate EmailsDone Email {..} = _emailState == EmailDone
 
 applyPredicate (AndEmails predicates) email =
-  and $ map (flip applyPredicate email) predicates
+  all (`applyPredicate` email) predicates
 
 
 --------------------------------------------------------------------------------
