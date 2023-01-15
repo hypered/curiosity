@@ -5,8 +5,11 @@ module Curiosity.Data.Counter
   , Counter(..)
   , CounterStep(..)
   , bumpCounterPrefix
+  , bumpCounterPrefixCoerce 
+  , newIdOf 
   ) where
 
+import Control.Lens 
 import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Control.Concurrent.STM        as STM
 import           Data.Aeson
@@ -83,3 +86,29 @@ bumpCounterPrefix ctr = bumpCounter ctr <&> mappend prefix . show . was
   where
     Pre.PrefixT prefix = Pre.getPrefix @id 
 
+-- | Same as `bumpCounterPrefix` except that the returned value is represented as the
+-- prefixed id @id@, given that we can coerce a `Text` as an @id@.
+bumpCounterPrefixCoerce 
+  :: forall id count m datastore
+   . ( Pre.PrefixedId id
+     , Counter count datastore m
+     , Coercible Text id 
+     , Applicative m
+     , Show count
+     )
+  => CounterValue datastore count -- ^ The current counter value (in the datastore)
+  -> m id 
+bumpCounterPrefixCoerce = fmap (view coerced) . bumpCounterPrefix @id 
+
+-- | A more readable alias of `bumpCounterPrefixCoerce`. 
+newIdOf
+  :: forall id count m datastore
+   . ( Pre.PrefixedId id
+     , Counter count datastore m
+     , Coercible Text id 
+     , Applicative m
+     , Show count
+     )
+  => CounterValue datastore count -- ^ The current counter value (in the datastore)
+  -> m id 
+newIdOf = bumpCounterPrefixCoerce 
