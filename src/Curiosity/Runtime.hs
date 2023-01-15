@@ -75,6 +75,7 @@ module Curiosity.Runtime
   , module Runtime.E
   ) where
 
+import qualified Curiosity.Data.Counter as C
 import qualified Commence.Multilogging         as ML
 import qualified Commence.Runtime.Errors       as Errs
 import qualified Control.Concurrent.STM        as STM
@@ -817,7 +818,7 @@ createLegal db Legal.Create {..} = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- Core.generateLegalId db
+    newId <- C.newIdOf @Legal.EntityId (Data._dbNextLegalId db)
     let new = Legal.Entity
           newId
           _createSlug
@@ -990,7 +991,7 @@ createRemittanceAdv db = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- Core.generateRemittanceAdvId db
+    newId <- C.newIdOf @RemittanceAdv.RemittanceAdvId (Data._dbNextRemittanceAdvId db)
     let new = RemittanceAdv.RemittanceAdv newId
     createRemittanceAdvFull db new >>= either STM.throwSTM pure
 
@@ -1019,7 +1020,7 @@ createEmployment db _ = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- Core.generateEmploymentId db
+    newId <- C.newIdOf @Employment.ContractId (Data._dbNextEmploymentId db)
     let new = Employment.Contract newId
     createEmploymentFull db new >>= either STM.throwSTM pure
 
@@ -1591,7 +1592,7 @@ createInvoice db = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- Core.generateInvoiceId db
+    newId <- C.newIdOf @Invoice.InvoiceId (Data._dbNextInvoiceId db)
     let new = Invoice.Invoice newId
     createInvoiceFull db new >>= either STM.throwSTM pure
 

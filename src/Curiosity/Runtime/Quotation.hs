@@ -8,6 +8,7 @@ module Curiosity.Runtime.Quotation
   , createOrderForQuotation
   ) where
 
+import qualified Curiosity.Data.Counter as C
 import qualified Control.Concurrent.STM        as STM
 import qualified Curiosity.Core                as Core
 import qualified Curiosity.Data                as Data
@@ -46,7 +47,7 @@ createQuotation db quotation = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- Core.generateQuotationId db
+    newId <- C.newIdOf @Quotation.QuotationId (Data._dbNextQuotationId db)
     let new = quotation { Quotation._quotationId = newId }
     createQuotationFull db new >>= either STM.throwSTM pure
 

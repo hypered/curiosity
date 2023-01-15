@@ -4,6 +4,7 @@ module Curiosity.Runtime.Order
   , modifyOrders
   ) where
 
+import qualified Curiosity.Data.Counter as C 
 import qualified Control.Concurrent.STM        as STM
 import qualified Curiosity.Core                as Core
 import qualified Curiosity.Data                as Data
@@ -14,7 +15,7 @@ createOrder db = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- Core.generateOrderId db
+    newId <- C.newIdOf @Order.OrderId (Data._dbNextOrderId db)
     let new = Order.Order newId
     createOrderFull db new >>= either STM.throwSTM pure
 

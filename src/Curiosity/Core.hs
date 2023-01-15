@@ -22,16 +22,6 @@ module Curiosity.Core
   , modifyQuotations
   , selectQuotationById
   , checkCredentials
-  -- * ID generation
-  , generateUserId
-  , generateBusinessId
-  , generateLegalId
-  , generateQuotationId
-  , generateOrderId
-  , generateRemittanceAdvId
-  , generateEmploymentId
-  , generateInvoiceId
-  , generateEmailId
   -- * Operations on legal entities
   , selectEntityBySlug
   , selectEntitiesWhereUserId
@@ -57,18 +47,13 @@ module Curiosity.Core
   , canPerform
   ) where
 
-import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Control.Concurrent.STM        as STM
 import           Curiosity.Data
 import qualified Curiosity.Data.Business       as Business
 import qualified Curiosity.Data.Counter        as C
 import qualified Curiosity.Data.Email          as Email
-import qualified Curiosity.Data.Employment     as Employment
-import qualified Curiosity.Data.Invoice        as Invoice
 import qualified Curiosity.Data.Legal          as Legal
-import qualified Curiosity.Data.Order          as Order
 import qualified Curiosity.Data.Quotation      as Quotation
-import qualified Curiosity.Data.RemittanceAdv  as RemittanceAdv
 import qualified Curiosity.Data.User           as User
 import           Data.List                      ( lookup, nub )
 import qualified Data.List                     as L
@@ -245,69 +230,15 @@ readFullStmDbInHask' stmDb = do
   _dbEmails      <- pure <$> STM.readTVar (_dbEmails stmDb)
   pure Db { .. }
 
-
---------------------------------------------------------------------------------
--- | Generate a fresh user ID.
-generateUserId :: StmDb -> STM User.UserId
-generateUserId Db {..} =
-  User.UserId <$> C.bumpCounterPrefix @User.UserId _dbNextUserId
-
--- | Generate a fresh busines unit ID.
-generateBusinessId :: StmDb -> STM Business.UnitId
-generateBusinessId Db {..} =
-  Business.UnitId
-    <$> C.bumpCounterPrefix @Business.UnitId _dbNextBusinessId
-
--- | Generate a fresh legal entity ID.
-generateLegalId :: StmDb -> STM Legal.EntityId
-generateLegalId Db {..} =
-  Legal.EntityId <$> C.bumpCounterPrefix @Legal.EntityId _dbNextLegalId
-
--- | Generate a fresh quotation ID.
-generateQuotationId :: StmDb -> STM Quotation.QuotationId
-generateQuotationId Db {..} =
-  Quotation.QuotationId
-    <$> C.bumpCounterPrefix @Quotation.QuotationId _dbNextQuotationId
-
--- | Generate a fresh order ID.
-generateOrderId :: StmDb -> STM Order.OrderId
-generateOrderId Db {..} =
-  Order.OrderId <$> C.bumpCounterPrefix @Order.OrderId _dbNextOrderId
-
--- | Generate a fresh remittance advice ID.
-generateRemittanceAdvId :: StmDb -> STM RemittanceAdv.RemittanceAdvId
-generateRemittanceAdvId Db {..} =
-  RemittanceAdv.RemittanceAdvId
-    <$> C.bumpCounterPrefix @RemittanceAdv.RemittanceAdvId
-                            _dbNextRemittanceAdvId
-
--- | Generate a fresh employment contract ID.
-generateEmploymentId :: StmDb -> STM Employment.ContractId
-generateEmploymentId Db {..} =
-  Employment.ContractId
-    <$> C.bumpCounterPrefix @Employment.ContractId _dbNextEmploymentId
-
--- | Generate a fresh invoice ID.
-generateInvoiceId :: StmDb -> STM Invoice.InvoiceId
-generateInvoiceId Db {..} =
-  Invoice.InvoiceId
-    <$> C.bumpCounterPrefix @Invoice.InvoiceId _dbNextInvoiceId
-
--- | Generate a fresh email ID.
-generateEmailId :: StmDb -> STM Email.EmailId
-generateEmailId Db {..} =
-  Email.EmailId <$> C.bumpCounterPrefix @Email.EmailId _dbNextEmailId
-
-
 --------------------------------------------------------------------------------
 signup
   :: StmDb -> User.Signup -> STM (Either User.Err (User.UserId, Email.EmailId))
-signup db input@User.Signup {..} = do
+signup db@Db{..} input@User.Signup {..} = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
     now        <- readTime db
-    newId      <- generateUserId db
+    newId      <- C.newIdOf @User.UserId _dbNextUserId  
     newProfile <-
       pure (User.validateSignup now newId input)
         >>= either (STM.throwSTM . User.ValidationErrs) pure
@@ -321,12 +252,12 @@ signup db input@User.Signup {..} = do
 
 inviteUser
   :: StmDb -> User.Invite -> STM (Either User.Err (User.UserId, Email.EmailId))
-inviteUser db User.Invite {..} = do
+inviteUser db@Db {..} User.Invite {..} = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
     now   <- readTime db
-    newId <- generateUserId db
+    newId <- C.newIdOf @User.UserId _dbNextUserId 
     let email      = _inviteEmail
         token      = "TODO"
         newProfile = User.UserProfile
@@ -514,11 +445,11 @@ selectEntitiesWhereUserId db uid = do
 --------------------------------------------------------------------------------
 createBusiness
   :: StmDb -> Business.Create -> STM (Either Business.Err Business.UnitId)
-createBusiness db Business.Create {..} = do
+createBusiness db@Db{..} Business.Create {..} = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- generateBusinessId db
+    newId <- C.bumpCounterPrefixCoerce @Business.UnitId _dbNextBusinessId
     let new =
           Business.Unit newId _createSlug _createName Nothing "TODO" [] [] []
     createBusinessFull db new >>= either STM.throwSTM pure
@@ -587,11 +518,11 @@ createEmail
   -> User.UserEmailAddr
   -> User.UserEmailAddr
   -> STM (Either Email.Err Email.EmailId)
-createEmail db template senderAddr recipientAddr = do
+createEmail db@Db {..} template senderAddr recipientAddr = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- generateEmailId db
+    newId <- C.bumpCounterPrefixCoerce @Email.EmailId _dbNextEmailId 
     let new =
           Email.Email newId template senderAddr recipientAddr Email.EmailTodo
     createEmailFull db new >>= either STM.throwSTM pure
