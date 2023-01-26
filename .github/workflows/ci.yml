@@ -53,13 +53,15 @@ jobs:
     - name: Build Curiosity
       run: |
         PATH="$(nix-build -A ci-tools.queued-build-hook)"/bin:"$(nix-build -A ci-tools.systemfd)"/bin:$PATH
+        # Starting the queued-build-hook-daemon.
         systemfd -s unix::/tmp/queued-build-hook.sock -- queued-build-hook daemon -hook /etc/nix/real-post-build-hook &
+        # Waiting for the build-hook daemon to be ready to receive connections.
         until [ -S /tmp/queued-build-hook.sock ]
         do
           sleep 1
         done
-        nix-build -A toplevel --show-trace
-        system_path=$(nix-build -A toplevel)
+        $(nix-build -A ci-tools.build-curiosity)/bin/build-curiosity
+        # Waiting for the build-hook daemon to upload all the pending paths.
         queued-build-hook wait -socket /tmp/queued-build-hook.sock
         echo "SYSTEM_PATH=$system_path" > $GITHUB_OUTPUT
       id: build_curiosity
