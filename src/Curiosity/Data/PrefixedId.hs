@@ -22,6 +22,7 @@ module Curiosity.Data.PrefixedId
   , Prefixed(..)
   ) where
 
+import qualified Servant.Auth.Server           as SAuth
 import GHC.Base (error)
 import qualified Data.String  -- for fromString 
 import Web.FormUrlEncoded 
@@ -139,10 +140,12 @@ instance (PrefixedId id, Coercible Text id) => FromHttpApiData (Prefixed id) whe
     .  parsePrefixedId @id (Right . view coerced)
     . PrefixedIdT 
 
-instance (PrefixedId id, Coercible Text id) =>
+instance PrefixedId id =>
   ToHttpApiData (Prefixed id) where
   toQueryParam = _unPrefixedIdT . addPrefix . _unPrefixed 
-  
+
+-- instance PrefixedId id => SAuth.ToJWT (Prefixed id) where
+--   encodeJWT = SAuth.encodeJWT . _unPrefixedIdT . addPrefix . _unPrefixed 
   
 instance ( PrefixedId id
          , Coercible Text id
