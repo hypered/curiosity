@@ -138,6 +138,11 @@ instance (PrefixedId id, Coercible Text id) => FromHttpApiData (Prefixed id) whe
     bimap Errs.displayErr Prefixed
     .  parsePrefixedId @id (Right . view coerced)
     . PrefixedIdT 
+
+instance (PrefixedId id, Coercible Text id) =>
+  ToHttpApiData (Prefixed id) where
+  toQueryParam = _unPrefixedIdT . addPrefix . _unPrefixed 
+  
   
 instance ( PrefixedId id
          , Coercible Text id

@@ -17,6 +17,8 @@ module Curiosity.Command
   , commandToString
   ) where
 
+import qualified Data.String as Str
+import Web.HttpApiData 
 import qualified Curiosity.Data                as Data
 import qualified Curiosity.Data.Business       as Business
 import qualified Curiosity.Data.Email          as Email
@@ -746,7 +748,7 @@ parserGetUser =
     <*> argumentUserId
     <*> A.switch (A.long "short" <> A.help "Show only the ID and username.")
 
-argumentUserId = User.UserId <$> A.argument A.str metavarUserId
+argumentUserId = Str.fromString @User.UserId <$> A.argument A.str metavarUserId
 
 metavarUserId = A.metavar "USER-ID" <> A.completer complete <> A.help
   "A user ID"
@@ -1079,7 +1081,7 @@ commandToString = \case
       <> " " <> User.unUserEmailAddr email
       <> (if tosConsent then " --accept-tos" else "")
   SelectUser useHs userId isShort ->
-    Right $ "user get " <> User.unUserId userId
+    Right $ "user get " <> toQueryParam userId
       <> (if useHs then " --hs" else "")
       <> (if isShort then " --short" else "")
   _           -> Left "Unimplemented"
