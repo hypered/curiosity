@@ -272,8 +272,8 @@ newtype UserId = UserId { unUserId :: Text }
                         , ToJSON
                         , H.ToMarkup
                         , H.ToValue
-                        , ToHttpApiData 
-                        ) via Pre.Prefixed UserId 
+                        , ToHttpApiData
+                        ) via Pre.Prefixed UserId
                deriving Pre.PrefixedId via W.Wrapped "USER-" Text
                deriving ( FromHttpApiData
                         , FromForm

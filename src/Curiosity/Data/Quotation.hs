@@ -179,7 +179,7 @@ newtype QuotationId = QuotationId { unQuotationId :: Text }
                         , ToJSON
                         , H.ToMarkup
                         , H.ToValue
-                        ) via Text
+                        ) via Pre.Prefixed QuotationId
                deriving (FromHttpApiData, FromForm) via W.Wrapped "quotation-id" Text
                deriving Pre.PrefixedId via W.Wrapped "QUOT-" Text
 

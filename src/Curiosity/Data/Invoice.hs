@@ -32,7 +32,7 @@ newtype InvoiceId = InvoiceId { unInvoiceId :: Text }
                         , ToJSON
                         , H.ToMarkup
                         , H.ToValue
-                        ) via Text
+                        ) via Pre.Prefixed InvoiceId
                deriving FromForm via W.Wrapped "invoice-id" Text
                deriving Pre.PrefixedId via W.Wrapped "INV-" Text
 

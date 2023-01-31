@@ -18,7 +18,7 @@ module Curiosity.Command
   ) where
 
 import qualified Data.String as Str
-import Web.HttpApiData 
+import Web.HttpApiData
 import qualified Curiosity.Data                as Data
 import qualified Curiosity.Data.Business       as Business
 import qualified Curiosity.Data.Email          as Email
@@ -806,9 +806,10 @@ parserSignQuotation = do
 
 parserRejectQuotation :: A.Parser Command
 parserRejectQuotation = do
-  id <- A.argument
-    A.str
-    (A.metavar "QUOTATION-ID" <> A.help "A quotation identifier.")
+  id <- Str.fromString @Quotation.QuotationId <$>
+    A.argument
+      A.str
+      (A.metavar "QUOTATION-ID" <> A.help "A quotation identifier.")
   mcomment <-
     optional $ A.strOption $ A.long "comment" <> A.metavar "COMMENT" <> A.help
       "A possible comment accompanying the rejection."
@@ -918,8 +919,10 @@ parserPayment = A.subparser $ A.command
 
 parserMatchPayment :: A.Parser Command
 parserMatchPayment = do
-  id <- A.argument A.str
-                   (A.metavar "INVOICE-ID" <> A.help "An invoice identifier.")
+  id <- Str.fromString @Invoice.InvoiceId <$>
+    A.argument
+      A.str
+      (A.metavar "INVOICE-ID" <> A.help "An invoice identifier.")
   pure $ MatchPayment id
 
 parserReminder :: A.Parser Command

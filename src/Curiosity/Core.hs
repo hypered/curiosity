@@ -238,7 +238,7 @@ signup db@Db{..} input@User.Signup {..} = do
  where
   transaction = do
     now        <- readTime db
-    newId      <- C.newIdOf @User.UserId _dbNextUserId  
+    newId      <- C.newIdOf @User.UserId _dbNextUserId
     newProfile <-
       pure (User.validateSignup now newId input)
         >>= either (STM.throwSTM . User.ValidationErrs) pure
@@ -257,7 +257,7 @@ inviteUser db@Db {..} User.Invite {..} = do
  where
   transaction = do
     now   <- readTime db
-    newId <- C.newIdOf @User.UserId _dbNextUserId 
+    newId <- C.newIdOf @User.UserId _dbNextUserId
     let email      = _inviteEmail
         token      = "TODO"
         newProfile = User.UserProfile
@@ -449,7 +449,7 @@ createBusiness db@Db{..} Business.Create {..} = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- C.bumpCounterPrefixCoerce @Business.UnitId _dbNextBusinessId
+    newId <- C.newIdOf @Business.UnitId _dbNextBusinessId
     let new =
           Business.Unit newId _createSlug _createName Nothing "TODO" [] [] []
     createBusinessFull db new >>= either STM.throwSTM pure
@@ -522,7 +522,7 @@ createEmail db@Db {..} template senderAddr recipientAddr = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- C.bumpCounterPrefixCoerce @Email.EmailId _dbNextEmailId 
+    newId <- C.bumpCounterPrefixCoerce @Email.EmailId _dbNextEmailId
     let new =
           Email.Email newId template senderAddr recipientAddr Email.EmailTodo
     createEmailFull db new >>= either STM.throwSTM pure
