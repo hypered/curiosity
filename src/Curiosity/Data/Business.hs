@@ -9,7 +9,6 @@ module Curiosity.Data.Business
   , Create(..)
   , Update(..)
   , UnitId(..)
-  , unitIdPrefix
   , ActingRole(..)
   , Authorization(..)
   , Scope(..)
@@ -17,6 +16,7 @@ module Curiosity.Data.Business
   ) where
 
 import qualified Commence.Types.Wrapped        as W
+import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Curiosity.Data.User           as User
 import           Data.Aeson
 import qualified Text.Blaze.Html5              as H
@@ -51,7 +51,7 @@ instance FromForm Update where
 data Unit = Unit
   { _entityId             :: UnitId
   , _entitySlug           :: Text
-    -- An identifier suitable for URLs
+    -- ^ An identifier suitable for URLs
   , _entityName           :: Text
   , _entityDescription    :: Maybe Text
   , _entityType           :: Text
@@ -72,9 +72,7 @@ newtype UnitId = UnitId { unUnitId :: Text }
                         , H.ToValue
                         ) via Text
                deriving FromForm via W.Wrapped "unit-id" Text
-
-unitIdPrefix :: Text
-unitIdPrefix = "BENT-"
+               deriving Pre.PrefixedId via W.Wrapped "BENT-" Text
 
 data ActingRole = Dummy | Holder
   deriving (Eq, Generic, Show)
@@ -90,7 +88,7 @@ data Scope = ScopeCreateQuotation | ScopeSendQuotation | ScopeCreateInvoice
   deriving (Eq, Generic, Show)
   deriving (FromJSON, ToJSON)
 
-data Err = Err
+newtype Err = Err
   { unErr :: Text
   }
   deriving (Eq, Exception, Show)

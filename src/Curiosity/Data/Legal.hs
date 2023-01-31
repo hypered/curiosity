@@ -9,7 +9,6 @@ module Curiosity.Data.Legal
   , Create(..)
   , Update(..)
   , EntityId(..)
-  , entityIdPrefix
   , RegistrationName(..)
   , ActingUserId(..)
   , ActingRole(..)
@@ -21,6 +20,7 @@ module Curiosity.Data.Legal
   , toUBL
   ) where
 
+import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Commence.Types.Wrapped        as W
 import qualified Curiosity.Data.User           as User
 import           Data.Aeson
@@ -94,9 +94,7 @@ newtype EntityId = EntityId { unEntityId :: Text }
                         , H.ToValue
                         ) via Text
                deriving FromForm via W.Wrapped "legal-id" Text
-
-entityIdPrefix :: Text
-entityIdPrefix = "LENT-"
+               deriving Pre.PrefixedId via W.Wrapped "LENT-" Text
 
 -- | A registation name.
 newtype RegistrationName = RegistrationName { unRegistrationName :: Text }

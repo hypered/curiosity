@@ -17,6 +17,8 @@ module Curiosity.Command
   , commandToString
   ) where
 
+import qualified Data.String as Str
+import Web.HttpApiData
 import qualified Curiosity.Data                as Data
 import qualified Curiosity.Data.Business       as Business
 import qualified Curiosity.Data.Email          as Email
@@ -746,7 +748,7 @@ parserGetUser =
     <*> argumentUserId
     <*> A.switch (A.long "short" <> A.help "Show only the ID and username.")
 
-argumentUserId = User.UserId <$> A.argument A.str metavarUserId
+argumentUserId = Str.fromString @User.UserId <$> A.argument A.str metavarUserId
 
 metavarUserId = A.metavar "USER-ID" <> A.completer complete <> A.help
   "A user ID"
@@ -804,9 +806,10 @@ parserSignQuotation = do
 
 parserRejectQuotation :: A.Parser Command
 parserRejectQuotation = do
-  id <- A.argument
-    A.str
-    (A.metavar "QUOTATION-ID" <> A.help "A quotation identifier.")
+  id <- Str.fromString @Quotation.QuotationId <$>
+    A.argument
+      A.str
+      (A.metavar "QUOTATION-ID" <> A.help "A quotation identifier.")
   mcomment <-
     optional $ A.strOption $ A.long "comment" <> A.metavar "COMMENT" <> A.help
       "A possible comment accompanying the rejection."
@@ -916,8 +919,10 @@ parserPayment = A.subparser $ A.command
 
 parserMatchPayment :: A.Parser Command
 parserMatchPayment = do
-  id <- A.argument A.str
-                   (A.metavar "INVOICE-ID" <> A.help "An invoice identifier.")
+  id <- Str.fromString @Invoice.InvoiceId <$>
+    A.argument
+      A.str
+      (A.metavar "INVOICE-ID" <> A.help "An invoice identifier.")
   pure $ MatchPayment id
 
 parserReminder :: A.Parser Command
@@ -1079,7 +1084,7 @@ commandToString = \case
       <> " " <> User.unUserEmailAddr email
       <> (if tosConsent then " --accept-tos" else "")
   SelectUser useHs userId isShort ->
-    Right $ "user get " <> User.unUserId userId
+    Right $ "user get " <> toQueryParam userId
       <> (if useHs then " --hs" else "")
       <> (if isShort then " --short" else "")
   _           -> Left "Unimplemented"

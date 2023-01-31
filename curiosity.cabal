@@ -94,6 +94,7 @@ library
     Curiosity.Command
     Curiosity.Core
     Curiosity.Data
+    Curiosity.Data.PrefixedId
     Curiosity.Data.Business
     Curiosity.Data.Command
     Curiosity.Data.Counter

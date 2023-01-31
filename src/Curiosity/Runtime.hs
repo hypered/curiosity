@@ -75,6 +75,7 @@ module Curiosity.Runtime
   , module Runtime.E
   ) where
 
+import qualified Curiosity.Data.Counter as C
 import qualified Commence.Multilogging         as ML
 import qualified Commence.Runtime.Errors       as Errs
 import qualified Control.Concurrent.STM        as STM
@@ -92,6 +93,7 @@ import qualified Curiosity.Data.Employment     as Employment
 import qualified Curiosity.Data.Invoice        as Invoice
 import qualified Curiosity.Data.Legal          as Legal
 import qualified Curiosity.Data.Order          as Order
+import           Curiosity.Data.PrefixedId      ( showWithPrefix )
 import qualified Curiosity.Data.Quotation      as Quotation
 import qualified Curiosity.Data.RemittanceAdv  as RemittanceAdv
 import qualified Curiosity.Data.SimpleContract as SimpleContract
@@ -388,7 +390,7 @@ appMHandlerNatTrans rt appM =
       unwrapReaderT          = (`runReaderT` rt) . runAppM $ appM
       -- Map our errors to `ServantError`
       runtimeErrToServantErr = withExceptT Errs.asServantError
-  in 
+  in
       -- Re-wrap as servant `Handler`
       Servant.Handler $ runtimeErrToServantErr unwrapReaderT
 
@@ -441,8 +443,8 @@ handleCommand runtime@Runtime {..} user command = do
       case output of
         Right mid -> do
           case mid of
-            Right (Business.UnitId id) -> do
-              pure (ExitSuccess, ["Business entity created: " <> id])
+            Right id -> do
+              pure (ExitSuccess, ["Business entity created: " <> showWithPrefix id])
             Left err -> pure (ExitFailure 1, [show err])
         Left err -> pure (ExitFailure 1, [show err])
     Command.UpdateBusinessUnit input -> do
@@ -469,8 +471,8 @@ handleCommand runtime@Runtime {..} user command = do
       case output of
         Right mid -> do
           case mid of
-            Right (Legal.EntityId id) -> do
-              pure (ExitSuccess, ["Legal entity created: " <> id])
+            Right id -> do
+              pure (ExitSuccess, ["Legal entity created: " <> showWithPrefix id])
             Left err -> pure (ExitFailure 1, [show err])
         Left err -> pure (ExitFailure 1, [show err])
     Command.UpdateLegalEntity input -> do
@@ -501,9 +503,9 @@ handleCommand runtime@Runtime {..} user command = do
     Command.Signup input -> do
       muid <- stepRunM runtime $ signup input
       case muid of
-        Right (User.UserId uid, Email.EmailId eid) -> pure
+        Right (uid, Email.EmailId eid) -> pure
           ( ExitSuccess
-          , [ "User created: " <> uid
+          , [ "User created: " <> showWithPrefix uid
             , "Signup confirmation email enqueued: " <> eid
             ]
           )
@@ -513,8 +515,8 @@ handleCommand runtime@Runtime {..} user command = do
     Command.Invite input -> do
       muid <- stepRunM runtime $ inviteUser input
       case muid of
-        Right (User.UserId uid) ->
-          pure (ExitSuccess, ["User created: " <> uid])
+        Right uid ->
+          pure (ExitSuccess, ["User created: " <> showWithPrefix uid])
         Left err -> pure (ExitFailure 1, [show err])
     Command.SelectUser useHs uid short -> do
       output <- runAppMSafe runtime . atomicallyM $ Core.selectUserById _rDb uid
@@ -528,7 +530,7 @@ handleCommand runtime@Runtime {..} user command = do
               if short
                 then pure
                   ( ExitSuccess
-                  , [ User.unUserId (User._userProfileId value)
+                  , [ showWithPrefix (User._userProfileId value)
                       <> " "
                       <> User.unUserName
                            (User._userCredsName $ User._userProfileCreds value)
@@ -540,12 +542,12 @@ handleCommand runtime@Runtime {..} user command = do
     Command.FilterUsers predicate -> do
       profiles <- runRunM runtime $ filterUsers' predicate
       let f User.UserProfile {..} =
-            let User.UserId i = _userProfileId
-                n             = case _userProfileCreds of
+            let i = _userProfileId
+                n = case _userProfileCreds of
                   User.Credentials {..} ->
                     let User.UserName n' = _userCredsName in n'
                   User.InviteToken _ -> "/"
-            in  i <> " " <> n
+            in  showWithPrefix i <> " " <> n
       pure (ExitSuccess, map f profiles)
     Command.UpdateUser input -> do
       output <- runAppMSafe runtime . atomicallyM $ Core.updateUser _rDb input
@@ -555,7 +557,7 @@ handleCommand runtime@Runtime {..} user command = do
             Right () -> do
               pure
                 ( ExitSuccess
-                , ["User updated: " <> User.unUserId (User._updateUserId input)]
+                , ["User updated: " <> showWithPrefix (User._updateUserId input)]
                 )
             Left err -> pure (ExitFailure 1, [show err])
         Left err -> pure (ExitFailure 1, [show err])
@@ -565,7 +567,7 @@ handleCommand runtime@Runtime {..} user command = do
         Right mid -> do
           case mid of
             Right () -> do
-              pure (ExitSuccess, ["User updated: " <> User.unUserId input])
+              pure (ExitSuccess, ["User updated: " <> showWithPrefix input])
             Left err -> pure (ExitFailure 1, [show err])
         Left err -> pure (ExitFailure 1, [show err])
     Command.SetUserEmailAddrAsVerified username -> do
@@ -601,8 +603,8 @@ handleCommand runtime@Runtime {..} user command = do
       case output of
         Right mid -> do
           case mid of
-            Right (Employment.ContractId id) -> do
-              pure (ExitSuccess, ["Employment contract created: " <> id])
+            Right id -> do
+              pure (ExitSuccess, ["Employment contract created: " <> showWithPrefix id])
             Left err -> pure (ExitFailure 1, [show err])
         Left err -> pure (ExitFailure 1, [show err])
     Command.CreateInvoice -> do
@@ -610,8 +612,8 @@ handleCommand runtime@Runtime {..} user command = do
       case output of
         Right mid -> do
           case mid of
-            Right (Invoice.InvoiceId id) -> do
-              pure (ExitSuccess, ["Invoice created: " <> id])
+            Right id -> do
+              pure (ExitSuccess, ["Invoice created: " <> showWithPrefix id])
             Left err -> pure (ExitFailure 1, [show err])
         Left err -> pure (ExitFailure 1, [show err])
     Command.FormNewQuotation input -> do
@@ -652,8 +654,8 @@ handleCommand runtime@Runtime {..} user command = do
     Command.SignQuotation input -> do
       moid <- stepRunM runtime $ signQuotation user input
       case moid of
-        Right (Order.OrderId oid) ->
-          pure (ExitSuccess, ["Order created: " <> oid])
+        Right oid ->
+          pure (ExitSuccess, ["Order created: " <> showWithPrefix oid])
         Left err -> pure (ExitFailure 1, [show err])
     Command.RejectQuotation input mcomment -> do
       moid <- stepRunM runtime $ rejectQuotation user input mcomment
@@ -667,15 +669,15 @@ handleCommand runtime@Runtime {..} user command = do
           case mids of
             Right (id0, id1, id2, id3) -> pure
               ( ExitSuccess
-              , [ "Invoice created: " <> Invoice.unInvoiceId id0
+              , [ "Invoice created: " <> showWithPrefix id0
                 , "Internal (proxy) invoice created: "
-                  <> Invoice.unInvoiceId id1
-                , "Generating payment for " <> Invoice.unInvoiceId id1 <> "..."
+                  <> showWithPrefix id1
+                , "Generating payment for " <> showWithPrefix id1 <> "..."
                 , "Remittance advice (using proxy bank account) created: "
-                  <> RemittanceAdv.unRemittanceAdvId id2
+                  <> showWithPrefix id2
                 , "Remittance advice (using business unit bank account) created: "
-                  <> RemittanceAdv.unRemittanceAdvId id3
-                , "Invoice sent to client: " <> Invoice.unInvoiceId id0
+                  <> showWithPrefix id3
+                , "Invoice sent to client: " <> showWithPrefix id0
                 ]
               )
             Left err -> pure (ExitFailure 1, [Order.unErr err])
@@ -690,7 +692,7 @@ handleCommand runtime@Runtime {..} user command = do
                        "TODO client email addr"
       pure
         ( ExitSuccess
-        , ["Reminder for invoice sent: " <> Invoice.unInvoiceId input]
+        , ["Reminder for invoice sent: " <> showWithPrefix input]
         )
     Command.MatchPayment input ->
       -- TODO Check this is the "system" user ?
@@ -699,11 +701,11 @@ handleCommand runtime@Runtime {..} user command = do
       case mids of
         Right (id0, id1) -> pure
           ( ExitSuccess
-          , [ "Generating payment for " <> Invoice.unInvoiceId input <> "..."
+          , [ "Generating payment for " <> showWithPrefix input <> "..."
             , "Remittance advice (using client bank account) created: "
-              <> RemittanceAdv.unRemittanceAdvId id0
+              <> showWithPrefix id0
             , "Remittance advice (using business unit bank account) created: "
-              <> RemittanceAdv.unRemittanceAdvId id1
+              <> showWithPrefix id1
             ]
           )
         Left err -> pure (ExitFailure 1, [Invoice.unErr err])
@@ -795,8 +797,8 @@ handleCommand runtime@Runtime {..} user command = do
 
 submitQuotationSuccess id =
   [ "Quotation form validated."
-  , "Quotation created: " <> Quotation.unQuotationId id
-  , "Quotation sent to client: " <> Quotation.unQuotationId id
+  , "Quotation created: " <> showWithPrefix id
+  , "Quotation sent to client: " <> showWithPrefix id
   ]
 
 setUserEmailAddrAsVerifiedFull
@@ -817,7 +819,7 @@ createLegal db Legal.Create {..} = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- Core.generateLegalId db
+    newId <- C.newIdOf @Legal.EntityId (Data._dbNextLegalId db)
     let new = Legal.Entity
           newId
           _createSlug
@@ -990,7 +992,7 @@ createRemittanceAdv db = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- Core.generateRemittanceAdvId db
+    newId <- C.newIdOf @RemittanceAdv.RemittanceAdvId (Data._dbNextRemittanceAdvId db)
     let new = RemittanceAdv.RemittanceAdv newId
     createRemittanceAdvFull db new >>= either STM.throwSTM pure
 
@@ -1019,7 +1021,7 @@ createEmployment db _ = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- Core.generateEmploymentId db
+    newId <- C.newIdOf @Employment.ContractId (Data._dbNextEmploymentId db)
     let new = Employment.Contract newId
     createEmploymentFull db new >>= either STM.throwSTM pure
 
@@ -1301,9 +1303,9 @@ signQuotation user input = ML.localEnv (<> "Command" <> "SignQuotation") $ do
   db   <- asks _rDb
   moid <- atomicallyM $ signQuotation' db user input
   case moid of
-    Right (Order.OrderId oid) -> do
-      ML.info $ "Order created: " <> oid
-      pure . Right $ Order.OrderId oid
+    Right oid -> do
+      ML.info $ "Order created: " <> showWithPrefix oid
+      pure $ Right oid
     Left err@(Quotation.Err msg) -> do
       ML.info msg
       pure $ Left err
@@ -1419,7 +1421,7 @@ setQuotationAsRejected db id mcomment = do
         Core.modifyQuotations db replaceOlder
         pure $ Right ()
       _ -> pure . Left $ Quotation.Err "Quotation is not in the Sent state."
-    Nothing -> pure . Left $ Quotation.Err "No such quotation."
+    Nothing -> pure . Left $ Quotation.Err $ "No such quotation." <> show id
 
 
 --------------------------------------------------------------------------------
@@ -1591,7 +1593,7 @@ createInvoice db = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- Core.generateInvoiceId db
+    newId <- C.newIdOf @Invoice.InvoiceId (Data._dbNextInvoiceId db)
     let new = Invoice.Invoice newId
     createInvoiceFull db new >>= either STM.throwSTM pure
 
@@ -1661,10 +1663,10 @@ signup input = ML.localEnv (<> "Command" <> "Signup") $ do
   db   <- asks _rDb
   muid <- atomicallyM $ Core.signup db input
   case muid of
-    Right (User.UserId uid, Email.EmailId eid) -> do
-      ML.info $ "User created: " <> uid
-      ML.info $ "Signup confirmation email enqueued: " <> eid
-      pure $ Right (User.UserId uid, Email.EmailId eid)
+    Right (uid, eid) -> do
+      ML.info $ "User created: " <> showWithPrefix uid
+      ML.info $ "Signup confirmation email enqueued: " <> showWithPrefix eid
+      pure $ Right (uid, eid)
     Left err -> do
       ML.info $ "Failed to create user: " <> show err
       pure $ Left err
@@ -1675,10 +1677,10 @@ inviteUser input = ML.localEnv (<> "Command" <> "Signup") $ do
   db   <- asks _rDb
   muid <- atomicallyM $ Core.inviteUser db input
   case muid of
-    Right (User.UserId uid, Email.EmailId eid) -> do
-      ML.info $ "User created: " <> uid
-      ML.info $ "Signup confirmation email enqueued: " <> eid
-      pure . Right $ User.UserId uid
+    Right (uid, eid) -> do
+      ML.info $ "User created: " <> showWithPrefix uid
+      ML.info $ "Signup confirmation email enqueued: " <> showWithPrefix eid
+      pure $ Right uid
     Left err -> do
       ML.info $ "Failed to create user: " <> show err
       pure $ Left err

@@ -5,8 +5,12 @@ module Curiosity.Data.Counter
   , Counter(..)
   , CounterStep(..)
   , bumpCounterPrefix
+  , bumpCounterPrefixCoerce
+  , newIdOf 
   ) where
 
+import Control.Lens 
+import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Control.Concurrent.STM        as STM
 import           Data.Aeson
 
@@ -48,7 +52,7 @@ instance Enum count => Counter count STM.TVar STM.STM  where
 
   readCounter (CounterValue countTvar) = STM.readTVar countTvar
 
-  writeCounter (CounterValue countTvar) count = STM.writeTVar countTvar count
+  writeCounter (CounterValue countTvar) = STM.writeTVar countTvar 
 
   bumpCounter ctr@(CounterValue countTvar) = do
     was <- readCounter ctr
@@ -70,10 +74,43 @@ instance Enum count => Counter count Identity Identity where
 
 -- | Get the current value of a counter bumping the value as we go.
 bumpCounterPrefix
-  :: forall count m datastore
-   . (Counter count datastore m, Applicative m, Show count)
-  => Text
-  -> CounterValue datastore count
+  :: forall id count m datastore
+   . ( Pre.PrefixedId id
+     , Counter count datastore m
+     , Applicative m
+     , Show count
+     )
+  => CounterValue datastore count -- ^ The current counter value (in the datastore)
   -> m Text
-bumpCounterPrefix prefix ctr = bumpCounter ctr <&> mappend prefix . show . was
+bumpCounterPrefix ctr = bumpCounter ctr <&> mappend prefix . show . was
+  where
+    Pre.PrefixT prefix = Pre.getPrefix @id 
 
+-- | Same as `bumpCounterPrefix` except that the returned value is represented as the
+-- prefixed id @id@, given that we can coerce a `Text` as an @id@.
+bumpCounterPrefixCoerce 
+  :: forall id count m datastore
+   . ( Pre.PrefixedId id
+     , Counter count datastore m
+     , Coercible Text id 
+     , Applicative m
+     , Show count
+     )
+  => CounterValue datastore count -- ^ The current counter value (in the datastore)
+  -> m id 
+bumpCounterPrefixCoerce = fmap (view coerced) . bumpCounterPrefix @id 
+
+-- | A more readable alias of `newIdOf`. 
+newIdOf
+  :: forall id count m datastore
+   . ( Pre.PrefixedId id
+     , Counter count datastore m
+     , Coercible Text id 
+     , Applicative m
+     , Show count
+     )
+  => CounterValue datastore count -- ^ The current counter value (in the datastore)
+  -> m id  
+newIdOf ctr =  bumpCounter ctr <&> (view coerced :: Text -> id)  . show . was --  <&> view (coerced @id @Text ) 
+
+ 
