@@ -45,7 +45,7 @@ instead stem from programming decisions taken over time (e.g. use another
 database migration mechanism for the new application than for the previous one,
 or another authentication mechanism, or another way to produce PDFs, or a
 frontend framework instead of the existing server-side framework, or another
-newer frontend framework, ...).
+newer frontend framework, ... while still keeping everything that came before).
 
 Indeed, until around 2017-2018, it was possible for Smart to grow with less
 than 10 developers. (At the end of 2019, they were about 20.)
@@ -73,7 +73,7 @@ software is supposed to do.
 
 So the central theme I tried to follow was this: I wanted to expose the system
 surface as a single unified "document" and I wanted to surface any internal
-detail that matter to business experts (or anyone working closely with the
+detail that matters to business experts (or anyone working closely with the
 development teams). Doing so, I also wanted the "document" to be a shared and
 central place to provoke discussions and a vehicule to think its evolution,
 i.e. a prototype prefiguring the future of a real system.
@@ -86,17 +86,17 @@ that you can browse.
 
 Two initiatives in particular really followed this common theme: the design
 system, and CLIs. I will explain them a bit, because they help to undersand the
-trajectory of Curiosity.
+trajectory of this project, Curiosity.
 
 ## The design system initiative
 
 We started to use this "unified view" approach from two different angles: at
-the database level (although not as a website), and from the application
-screens (or pages) level. I picture this double approach in my mind as one
-layer at the top (the GUI), and one layer at the bottom (the databases),
-sandwiching the bulk of the code in between. By making those two layers as
-smooth as possible, my hope was to also improve that bulk of code, as if we
-applied pressure on it.
+the database level (although not presented as a website), and at the
+application screens (or pages) level. I picture this double approach in my mind
+as one layer at the top (the GUI), and one layer at the bottom (the databases),
+sandwiching the bulk of the code in between. By massaging those two layers to
+make them as smooth as possible, my hope was to also improve that bulk of code,
+as if we applied pressure on it.
 
 The "screens" initiative was really successful (I'm not saying the "databases"
 initiative wasn't, but since I focus on the "document" approach, I will no
@@ -129,9 +129,10 @@ this means that a lot of different profiles are autonomous to create new
 screens. For instance, a backend developer can quickly generate the same HTML
 as the reference implementation (even more quickly once it is implemented in a
 reusable package). Even if it's not perfect from a designer or UX persperctive,
-those other roles can iterate on the design directly within the design system.
-The result of their work can be applied in the production system at a later
-date.
+those other roles can iterate on the design directly within the design system
+(within the reference implementation examples, or within Figma, depending on
+their skills). The result of their work can be applied in the production
+system at a later date.
 
 As a "measure" of the success of the design system initiative, I'll mention
 that multiple Smart european partners started to use it, and that it was used
@@ -145,15 +146,15 @@ predicted, changing the design of the ancient application applied some
 
 Command-line interfaces (CLIs) seem prehistoric. If you're old enough, you may
 have used them when you were kids, on the first PC of the familly. Nowadays,
-they are used moslty by developers. With experiences in the Linux and Open
+they are used mostly by developers. With experiences in the Linux and Open
 Source world, I'm used to CLIs and value them. Smart, maybe because it is a
 Microsoft shop, is more used to graphical user interfaces (GUIs), be it native
 desktop applications or web apps.
 
 Although it's no longer "screens" or "documents" in the sense of a browsable
 website, CLIs share a lot of the qualities of the theme I was after. Maybe
-obvisouly, the "I" in GUI and CLI is the same: interface. This is the surface
-through which you can interact (and observe) a system.
+obviously, the "I" in GUI and CLI is the same: it stands for "Interface". This
+is the surface through which you can interact (and observe) a system.
 
 Similarly to a website that you can browse, [well-done
 CLIs](https://clig.dev/) have a flag, (usually `-h` or `--help`) that serves as
@@ -185,10 +186,14 @@ demand from Smart), itself following a [previous
 description](https://github.com/noteed/start-servant) of what I wanted to mean
 by "prototype". And although the project started in August 2022 and was planned
 to go until January 2023 included, I had very few contacts with Smart after
-mid-November.
+mid-November 2022.
 
-This means I had a lot of freedom to push the project towards an opinionated
-direction, the one exposed above.
+This means on one hand, I had a lot of freedom to push the project towards an
+opinionated direction, the one exposed above, and on the other hand, the
+project lacked a focus on more business-oriented features. For instance some
+commands supported by Curiosity are exposed through SSH, a nice feature from a
+technical perspective, but the concept of "invoice" is very light on the
+details.
 
 Compared to the design system, Curiosity has to implement features from the
 business domain (so that people can simply use the system, instead of studying
@@ -219,13 +224,13 @@ that is deployed on the server, not a copied version):
 
 Curiosity can interpret [test](/documentation/tests)
 [scenarios](/documentation/scenarios) (that use the commands of the `cty` CLI
-shown above) and renderd them as the following table:
+shown above) and render them as the following table:
 
 <!--# include virtual="/partials/scenarios/user-signup" -->
 
-We can view the command being run (preceded by its line number withing the
-scenario), the CLI output, but we can also follow links in the columns on the
-right where we can see the internal state evolve across the scenario.
+We can view the command being run (preceded by its line number within the
+scenario), and the CLI output, but we can also follow links in the columns on
+the right where we can see the internal state evolve across the scenario.
 
 ## Screens
 
@@ -238,16 +243,18 @@ and also the specific email sent.
 # Final thoughts
 
 With Curiosity, I think I've shown how features can both exist in a live system
-and be faithfully re-used in the documentation without duplication. Curiosity
-is very small and it's hard to prove that the approach would scale for the
-whole Smart eco-system, but I think it would, and also that a production system
-could be built this way (instead of merely a prototype).
+and be faithfully re-used in the documentation without duplication. With
+additional business expert inputs, I believe complete (business) features could
+have been implemented in the timeframe of the project. Curiosity is very small
+and it's hard to prove that the approach would scale for the whole Smart
+eco-system, but I think it would, and also that a production system could be
+built this way (instead of merely a prototype).
 
 I didn't talk about the more technical aspects of Curiosity, but it's written
 very similarly to a real system. For instance, it is setup within a virtual
 machine image, with a reverse-proxy, ready to be deployed in a cloud provider
 or on-premises infrastructure, as demonstrated by
-[`smartcoop.sh`](https://smartcoop.sh) and a basic continuous integration and
+[`smartcoop.sh`](https://smartcoop.sh), and a basic continuous integration and
 automated deployment pipeline exists.
 
 Unfortunately Curiosity failed to attract a discussion centered around it.
@@ -257,3 +264,6 @@ display its inner workings. I remained the only person trying to organise
 content or thinking of new ways to display useful information (e.g. the
 relationship between users, business units and legal entities rendered as SVG
 diagrams).
+
+I still think that such a prototype, powering a live documentation website, is
+a poweful approach to master the developement of a software application.
