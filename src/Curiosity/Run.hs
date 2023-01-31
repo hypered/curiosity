@@ -14,6 +14,7 @@ import qualified Curiosity.Runtime             as Rt
 import qualified Curiosity.Server              as Srv
 import qualified Data.Aeson                    as Aeson
 import qualified Data.ByteString.Lazy          as BS
+import qualified Data.String                   as S
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T
 import           Network.Socket
@@ -338,13 +339,25 @@ client path command = do
 
 --------------------------------------------------------------------------------
 repl :: Rt.Runtime -> User.UserName -> IO ()
-repl runtime user = HL.runInputT HL.defaultSettings loop
+repl runtime user = HL.runInputT settings loop
  where
+  settings = (HL.defaultSettings :: HL.Settings IO)
+    { HL.complete =
+        HL.completeWordWithPrev Nothing " \t\n" complete
+    }
+  complete begin str = do
+    let begin' = S.words (reverse begin)
+        cmd = "cty" : begin' ++ if null str then [] else [str]
+        cmd' =
+          [ "--bash-completion-index", show (length begin' + 1)
+          ]
+          ++ concatMap (\w -> ["--bash-completion-word", w]) cmd
+    case A.execParserPure A.defaultPrefs Command.parserInfo cmd' of
+      A.CompletionInvoked (A.CompletionResult f) ->
+        map HL.simpleCompletion . S.lines <$> f str
+      _  -> pure [] -- Shouldn't happen.
   loop = HL.getInputLine prompt >>= \case
     Nothing     -> output' ""
-    -- TODO Probably processInput below (within parseAnyStateInput) should have
-    -- other possible results (beside mod and viz): comments and blanks
-    -- (no-op), instead of this special empty case.
     Just ""     -> loop
     Just "quit" -> pure ()
     Just input  -> do
@@ -363,7 +376,7 @@ repl runtime user = HL.runInputT HL.defaultSettings loop
             _ -> do
               (_, output) <- Rt.handleCommand runtime user command
               mapM_ output' output
-        A.Failure           err -> output' $ show err
+        A.Failure (A.ParserFailure f) -> let (err, _, _) = f "" in output' $ show err
         A.CompletionInvoked _   -> output' "Shouldn't happen"
 
       loop
