@@ -65,10 +65,10 @@
         "homepage": "https://design.smartcoop.sh",
         "owner": "hypered",
         "repo": "smart-design-hs",
-        "rev": "9174089bf96836dc0583e5ba71771706b7ac673a",
-        "sha256": "05m523anh4yck2ccafr5k06bpnq6b40zd20n19wddgla773ybiwc",
+        "rev": "b4c814ebf235edecc5c039acfdd5f2b7bdab4621",
+        "sha256": "1q2ffszcpinraq4j54a7177ji9r7sa922djglzrycmbpbv3m3aa4",
         "type": "tarball",
-        "url": "https://github.com/hypered/smart-design-hs/archive/9174089bf96836dc0583e5ba71771706b7ac673a.tar.gz",
+        "url": "https://github.com/hypered/smart-design-hs/archive/b4c814ebf235edecc5c039acfdd5f2b7bdab4621.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }

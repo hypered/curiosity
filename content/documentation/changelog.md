@@ -12,6 +12,52 @@ developers (or more generally, contributors) to apply changes to the [code
 base](/documentation/source).  PRs may contain additional details and
 discussions, or provide historical context.
 
+## 2023-01-31
+
+This changelog entry ends the six-month long Curiosity project at Smart. It's
+comprised of technical improvements only.
+
+**Cleanup.** Some simple low hanging cleanup fruit. See
+[PR-132](https://github.com/hypered/curiosity/pull/132).
+
+**Improve CI run time.** We improve the CI run time by:
+
+- Running the post-build-hook in a asynchronous fashion by using
+  `queued-build-hook`.
+- Evaluating the jobs in parralel and preventing necessary downloads from the
+  binary cache by using nix-eval-jobs
+- See [PR-134](https://github.com/hypered/curiosity/pull/134).
+
+**Document how to use ghcid and add helper scripts.**
+
+- This adds some notes in the README about using ghcid to reload the code and
+  either run tests or the server.
+- This adds two scripts, `ghci-scenarios.sh` and `ghci-spec.sh` to load the
+  toplevel files for the HSPec-based tests or Golden-files -based
+- See [PR-135](https://github.com/hypered/curiosity/pull/135).
+
+**Add auto-completion to the REPL.**
+
+- The optparse-applicative -based parsers (used e.g. to define our `cty`
+  commands) have a feature to provide auto-completion within Bash. Furthermore
+  Haskeline has a feature to define auto-completion. This branch wires those
+  two features together so that commands can be auto-completed within the REPL
+  too. This works by "calling" `cty` with special arguments,
+  `--bash-completion-index` and `--bas-completion-word` (we dont really call it
+  as Bash does, since we can run the parser directly within Haskell) and
+  reporting the result.
+- See [PR-136](https://github.com/hypered/curiosity/pull/136).
+
+**Principled prefixed IDs.**
+
+- This provides a more principled way of deriving, adding and parsing prefixed
+  IDs (such as USER-1) via a typeclass.
+- There is also some handy derivation via W.Wrapped to avoid boilerplate: eg.
+  eventually, we can remove `contractIdPrefix`, `userIdPrefix` etc. and just
+  use `getPrefixHyphenate` instead, making the interface much more uniform and
+  more expressive.
+- See [PR-131](https://github.com/hypered/curiosity/pull/131).
+
 ## 2023-01-04
 
 **Introduce a [GitHub actions](https://github.com/hypered/curiosity/actions)
