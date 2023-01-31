@@ -1,3 +1,9 @@
+**Note**: This project was carried roughly for seven months, from July 2022
+till January 2023 included. It demonstrated that a rich prototype to inform
+discussions and show what a real life production system could look like can be
+implemented and evolved with a small team on a short timeframe.
+
+
 # Curiosity - A prototype application for Smart
 
 This repository contains a prototype application for the
