@@ -1,15 +1,10 @@
-**Note**: This project was carried roughly for seven months, from July 2022
-till January 2023 included. It demonstrated that a rich prototype to inform
-discussions and show what a real life production system could look like can be
-implemented and evolved with a small team on a short timeframe. A page was
-written to explain [why Curiosity was
-created](https://smartcoop.sh/documentation/why) the way it is.
+**Note**: The project as initially carried for Smart Coop is easily available
+in the `smartcoop.sh` branch. The corresponding domain will be let expiring in
+June 2023.
 
+# Curiosity - A prototype application
 
-# Curiosity - A prototype application for Smart
-
-This repository contains a prototype application for the
-[Smart](https://github.com/smartcoop/) cooperative. What we hear about
+This repository contains a prototype application. What we hear about
 "prototype" is written in `commence`'s
 [README](https://github.com/hypered/commence#readme).
 
