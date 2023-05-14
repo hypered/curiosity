@@ -16,7 +16,7 @@ let
     mkdir -p $out
     cp key.pem cert.pem $out
   '';
-  serverFqdn = "smartcoop.sh";
+  serverFqdn = "cty.hypered.systems";
   hosts = nodes: ''
     ${nodes.server.config.networking.primaryIPAddress} ${serverFqdn}
   '';

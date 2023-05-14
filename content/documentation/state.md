@@ -56,7 +56,7 @@ state file is `cty init`.
 # Virtual machine state
 
 The virtual machine shipped with the prototype (and featured at
-[`smartcoop.sh`](https://smartcoop.sh)) is configured to start with an initial
+[`cty.hypered.systems`](https://cty.hypered.systems)) is configured to start with an initial
 state, called [`state-0`](/documentation/state-0). This is the same state used
 in automated [test scenarios](/documentation/scenarios).
 

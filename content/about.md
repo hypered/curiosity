@@ -8,7 +8,7 @@ title: Curiosity
 Curiosity is an ever-evolving prototype system to think, discuss, and
 communicate the future of Smart Coop's developments. It is exposed to
 end-users as a web application and a running instance of Curiosity is made
-available at [`smartcoop.sh`](//smartcoop.sh) for demonstration purpose. For
+available at [`cty.hypered.systems`](//cty.hypered.systems) for demonstration purpose. For
 tech savvy users, the complete system is packaged as a [virtual machine
 image](/documentation/machine), made to be easily run and explored.
 
@@ -17,7 +17,7 @@ image](/documentation/machine), made to be easily run and explored.
 To achieve our goals in making Curiosity a central place to inform future
 developments, the complete documentation is part of the virtual machine image.
 The documentation is comprised of HTML pages, visible at
-[`smartcoop.sh`](//smartcoop.sh/documentation), and [man
+[`cty.hypered.systems`](//cty.hypered.systems/documentation), and [man
 pages](/documentation/man-pages), available from the terminal within the
 virtual machine.
 

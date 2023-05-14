@@ -2,7 +2,7 @@
 {
   services.nginx = {
     enable = true;
-    virtualHosts."play.smartcoop.sh" = {
+    virtualHosts."play.cty.hypered.systems" = {
       forceSSL = true;
       enableACME = true;
       locations = {
@@ -18,6 +18,6 @@
   };
 
   security.acme.certs = {
-    "play.smartcoop.sh".email = "noteed@gmail.com";
+    "play.cty.hypered.systems".email = "noteed@gmail.com";
   };
 }

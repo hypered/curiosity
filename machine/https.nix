@@ -1,7 +1,7 @@
 { pkgs, ... }:
 {
   services.nginx = {
-    virtualHosts."smartcoop.sh" = {
+    virtualHosts."cty.hypered.systems" = {
       forceSSL = true;
       enableACME = true;
     };
@@ -9,6 +9,6 @@
 
   security.acme.acceptTerms = true;
   security.acme.certs = {
-    "smartcoop.sh".email = "noteed@gmail.com";
+    "cty.hypered.systems".email = "noteed@gmail.com";
   };
 }

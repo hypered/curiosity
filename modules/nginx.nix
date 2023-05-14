@@ -20,7 +20,7 @@ in
     package = pkgs.nginxMainline;
     additionalModules = [ pkgs.nginxModules.brotli ];
     recommendedGzipSettings = true;
-    virtualHosts."smartcoop.sh" = {
+    virtualHosts."cty.hypered.systems" = {
       locations = {
         "/".proxyPass = "http://127.0.0.1:9100";
         "/about" = {

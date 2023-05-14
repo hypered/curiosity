@@ -36,7 +36,7 @@ import           Web.HttpApiData                ( FromHttpApiData(..) )
 
 --------------------------------------------------------------------------------
 systemEmailAddr :: User.UserEmailAddr
-systemEmailAddr = "hello@smartcoop.sh"
+systemEmailAddr = "hello@cty.hypered.systems"
 
 
 --------------------------------------------------------------------------------

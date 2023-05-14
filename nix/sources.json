@@ -61,8 +61,8 @@
     },
     "smart-design-hs": {
         "branch": "main",
-        "description": "An implementation of smartcoop/design in Haskell ",
-        "homepage": "https://design.smartcoop.sh",
+        "description": "An implementation of hypered/smart-design in Haskell ",
+        "homepage": "https://monohs.hypered.design",
         "owner": "hypered",
         "repo": "smart-design-hs",
         "rev": "b4c814ebf235edecc5c039acfdd5f2b7bdab4621",

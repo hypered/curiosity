@@ -8,7 +8,7 @@ on:
   pull_request:
 
 env:
-  DEPLOY_HOST: smartcoop.sh
+  DEPLOY_HOST: cty.hypered.systems
 
 jobs:
   build:
@@ -77,7 +77,7 @@ jobs:
         echo "SSH_KEY_PATH=$ssh_key" > $GITHUB_OUTPUT
       id: deploy_env
 
-    - name: Deploy closure to smartcoop.sh
+    - name: Deploy closure to cty.hypered.systems
       if: github.event_name == 'push' && github.ref_name == 'main'
       env:
         NIX_SSHOPTS: "-o StrictHostKeyChecking=no -i ${{ steps.deploy_env.outputs.SSH_KEY_PATH }} -l root"

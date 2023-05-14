@@ -69,7 +69,7 @@ When running a virtual machine based on that image, the reverse proxy, the SSH
 server and the Curiosity web application are automatically started.
 
 An example deployment of this virtual machine image runs at
-[smartcoop.sh](https://smartcoop.sh).
+[cty.hypered.systems](https://cty.hypered.systems).
 
 ## Docker image
 

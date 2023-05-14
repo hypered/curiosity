@@ -101,7 +101,7 @@ as if we applied pressure on it.
 The "screens" initiative was really successful (I'm not saying the "databases"
 initiative wasn't, but since I focus on the "document" approach, I will no
 longer talk about the databases here). In 6 months (actually totalling 3
-full-time months of work), a [design system](https://reference.smartcoop.sh/)
+full-time months of work), a [design system](https://mono.hypered.design/)
 was created. (I'm linking to an older version of the design system, as used in
 Curiosity. The official one is at
 [design.smart.coop](https://design.smart.coop/).)
@@ -254,8 +254,8 @@ I didn't talk about the more technical aspects of Curiosity, but it's written
 very similarly to a real system. For instance, it is setup within a virtual
 machine image, with a reverse-proxy, ready to be deployed in a cloud provider
 or on-premises infrastructure, as demonstrated by
-[`smartcoop.sh`](https://smartcoop.sh), and a basic continuous integration and
-automated deployment pipeline exists.
+[`cty.hypered.systems`](https://cty.hypered.systems), and a basic continuous
+integration and automated deployment pipeline exists.
 
 Unfortunately Curiosity failed to attract a discussion centered around it.
 Communications about the project, when originating from Smart, continued to be

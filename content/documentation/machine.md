@@ -11,7 +11,7 @@ including this page).
 
 The same image can be built for different environments. For instance we use KVM
 for local development and the virtual machine available at
-[`smartcoop.sh`](//smartcoop.sh) for demonstration purpose is
+[`cty.hypered.systems`](//cty.hypered.systems) for demonstration purpose is
 [deployed](/documentation/deployment) at DigitalOcean.
 
 ## Built with Nix

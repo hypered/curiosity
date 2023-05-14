@@ -15,8 +15,8 @@ In particular, in addition of working features, we want
 > logic by virtue of having a working implementation.
 
 A demonstration instance of Curiosity is running at
-[smartcoop.sh](https://smartcoop.sh). It contains
-[documentation](https://smartcoop.sh/documentation) that complements this
+[cty.hypered.systems](https://cty.hypered.systems). It contains
+[documentation](https://cty.hypered.systems/documentation) that complements this
 README. If you're non-technical, those links are a better starting point. The
 rest of this README is intended for more technical profiles.
 
@@ -101,7 +101,7 @@ $ ghcid --warnings --command scripts/ghci.sh --test ':main serve'
 ```
 
 Note: use the
-[`autoReload`](https://smartcoop.sh/haddock/Curiosity-Html-Misc.html#v:autoReload)
+[`autoReload`](https://cty.hypered.systems/haddock/Curiosity-Html-Misc.html#v:autoReload)
 function defined in `Curiosity.Html.Misc` to cause an open web page to be
 automatically refreshed when working on some HTML snippet.
 
@@ -215,12 +215,12 @@ $ result/bin/nixos-test-driver
 
 This opens two QEMU windows, one for the server, one for the client, and you
 can use the root account to interactively log in the VMs. The client can access
-the server using the `smartcoop.sh` domain name. You can read the relevant
+the server using the `cty.hypered.systems` domain name. You can read the relevant
 [NixOS manual
 section](https://nixos.org/manual/nixos/stable/index.html#sec-running-nixos-tests-interactively)
 for more informations.
 
-**Note**: these VMs are not connected to the internet, `smartcoop.sh` here
+**Note**: these VMs are not connected to the internet, `cty.hypered.systems` here
 refers to the server VM, not the production machine.
 
 And finally, we can run a local virtual machine running both `cty serve` and an
@@ -234,7 +234,7 @@ $ result/bin/run-nixos-vm
 The web application can be accessed at `127.0.0.1:8180`. A helper script is
 provided to do the same: `scripts/runvm.sh`.
 
-The virtual machine image running at `smartcoop.sh` is based on the above, and
+The virtual machine image running at `cty.hypered.systems` is based on the above, and
 can be built with:
 
 ```
@@ -307,7 +307,7 @@ Exiting
 ```
 
 Such scripts, together with their expected output, are used as a high-level
-[testing mechanism](https://smartcoop.sh/documentation/tests).
+[testing mechanism](https://cty.hypered.systems/documentation/tests).
 
 # Nix binary cache
 
@@ -421,7 +421,7 @@ $ nix-build -A public --out-link _site
 $ scripts/serve-doc.sh
 ```
 
-# The `smartcoop.sh` host
+# The `cty.hypered.systems` host
 
 These are raw notes about how `smartcoo.sh` was deployed. I (Thu) have used 4
 scripts that come from my [nix-notes](https://github.com/noteed/nix-notes)
@@ -467,7 +467,7 @@ control.
 
 -   `deploy.sh` is used to deploy changes to the Droplet, without needing to
     rebuild an image or create a new Droplet. Note that I specified
-    `smartcoop.sh` within the script instead of its IP address. See below.
+    `cty.hypered.systems` within the script instead of its IP address. See below.
 
 # The `smartcoop.sh` domain
 
@@ -475,3 +475,6 @@ I've bought the domain at Namecheap on 2022-06-08 and configured Namecheap to
 use DO's name servers. I've created the `smartcoop.sh` domain manually within
 the DO web interface (within the "curiosity" project). Then I've created an A
 record for `@`, associated to the above IP address.
+
+The domain expires in 2023 June and will not be renewed. Instead, the work will
+be moved to `cty.hypered.systems`.

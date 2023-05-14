@@ -157,7 +157,7 @@ configuration-name     firmware            kernel                  specialisatio
 ```
 
 The complete system, as found in the virtual machine image or on the machine
-running [`smartcoop.sh`](https://smartcoop.sh), can be built with the
+running [`cty.hypered.systems`](https://cty.hypered.systems), can be built with the
 `toplevel` attribute.
 
 Since NixOS is based on a Linux kernel, we can find in the results an
