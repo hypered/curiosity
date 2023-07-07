@@ -335,7 +335,7 @@ instance H.ToMarkup SelectRolePage where
   toMarkup (SelectRolePage profile key confirmRoleBaseUrl) = renderFormLarge profile $ do
     title' "Select role" Nothing
 
-    H.div ! A.class_ "c-display" $ do
+    H.div ! A.class_ "c-content" $ do
       mapM_ (displayRole0 confirmRoleBaseUrl key) SimpleContract.roles
 
 displayRole0 confirmRoleBaseUrl key (SimpleContract.Role0 title_ roles1) = do

@@ -124,7 +124,7 @@ signupPage Page {..} = Dsl.SingletonCanvas $ do
                       ! A.class_ "c-button__content"
                       $ "Sign up"
                     H.div ! A.class_ "o-form-group u-ta-center" $ ""
-        H.div ! A.class_ "c-content u-text-center u-spacer-top-l" $ do
+        H.div ! A.class_ "c-text u-text-center u-spacer-top-l" $ do
           H.a ! A.class_ "u-text-muted" ! A.href "/login" $ "Log in"
 
 
@@ -156,6 +156,6 @@ withMessage title msg =
     $ H.div
     ! A.class_ "o-container-vertical"
     $ do
-        H.div ! A.class_ "c-content" $ H.h1 $ H.toHtml title
+        H.div ! A.class_ "c-text" $ H.h1 $ H.toHtml title
 
         H.div ! A.class_ "c-panel" $ H.div ! A.class_ "c-panel__body" $ msg
