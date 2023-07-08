@@ -16,6 +16,9 @@ A demonstration instance of Curiosity is running at
 README. If you're non-technical, those links are a better starting point. The
 rest of this README is intended for more technical profiles.
 
+A previous version of Curiosity, written for Smart Coop, is running at
+[cty-1.hypered.systems](https://cty-1.hypered.systems).
+
 # Content
 
 Curiosity offers multiple tools compiled as a single executable, called
@@ -419,9 +422,9 @@ $ scripts/serve-doc.sh
 
 # The `cty-2.hypered.systems` host
 
-These are raw notes about how `smartcoo.sh` was deployed. I (Thu) have used 4
-scripts that come from my [nix-notes](https://github.com/noteed/nix-notes)
-repository.
+These are raw notes about how the original `smartcoop.sh` was deployed. I (Thu)
+have used 4 scripts that come from my
+[nix-notes](https://github.com/noteed/nix-notes) repository.
 
 Those scripts require some environment variables for authentication, and some
 configuration to point to the right services (DigitalOcean instead of AWS). I'm
@@ -465,19 +468,11 @@ control.
     rebuild an image or create a new Droplet. Note that I specified
     `cty-2.hypered.systems` within the script instead of its IP address. See below.
 
-# The `smartcoop.sh` domain
-
-I've bought the domain at Namecheap on 2022-06-08 and configured Namecheap to
-use DO's name servers. I've created the `smartcoop.sh` domain manually within
-the DO web interface (within the "curiosity" project). Then I've created an A
-record for `@`, associated to the above IP address.
-
-The domain expires in 2023 June and will not be renewed. Instead, the work will
-be moved to `cty-1.hypered.systems`. (`cty-2.hypered.systems` is used for the
-current version.)
-
 # Acknowledgement
 
 This project was initially carried for Smart Coop, from August 2022 till
 January 2023. The version done for Smart Coop is easily available in the
 `smartcoop.sh` branch. The corresponding domain expired in June 2023.
+
+The work done done for Smart Coop is visible at `cty-1.hypered.systems`.
+(`cty-2.hypered.systems` is used for the current version.)
