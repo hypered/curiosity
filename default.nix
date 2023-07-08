@@ -9,6 +9,7 @@ let
       "${toString sources.nixpkgs}/nixos/modules/virtualisation/digital-ocean-image.nix"
       ./machine/disk-size.nix
       ./machine/https.nix
+      (sources.curiosity-1 + "/machine/https.nix")
       ./modules/play.nix
     ];
   };

@@ -1,7 +1,3 @@
-**Note**: The project as initially carried for Smart Coop is easily available
-in the `smartcoop.sh` branch. The corresponding domain will be let expiring in
-June 2023.
-
 # Curiosity - A prototype application
 
 This repository contains a prototype application. What we hear about
@@ -105,7 +101,7 @@ Note: use the
 function defined in `Curiosity.Html.Misc` to cause an open web page to be
 automatically refreshed when working on some HTML snippet.
 
-The same mechanism can be used with the HSPec-based tests or the Golden tests:
+The same mechanism can be used with the HSpec-based tests or the Golden tests:
 
 ```
 $ ghcid --warnings --command scripts/ghci-spec.sh --test ':main'
@@ -478,3 +474,9 @@ record for `@`, associated to the above IP address.
 
 The domain expires in 2023 June and will not be renewed. Instead, the work will
 be moved to `cty.hypered.systems`.
+
+# Acknowledgement
+
+This project was initially carried for Smart Coop, from August 2022 till
+January 2023. The version done for Smart Coop is easily available in the
+`smartcoop.sh` branch. The corresponding domain expired in June 2023.

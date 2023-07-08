@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 {
-  systemd.services.curiosity = {
+  systemd.services.curiosity-2 = {
     wantedBy = [ "multi-user.target" ];
     # TODO Right way to depends on graphviz in curiosity.
     path = [ pkgs.graphviz ];
@@ -26,7 +26,7 @@
         --state /tmp/state.json \
         --user system \
         serve \
-        --server-port 9100 \
+        --server-port 9102 \
         --static-dir ${(import ../.).content} \
         --data-dir ${(import ../.).data} \
         --scenarios-dir ${(import ../.).scenarios} \

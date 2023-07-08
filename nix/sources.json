@@ -11,6 +11,18 @@
         "url": "https://github.com/hypered/commence/archive/9896c3278020ddb9f4c60fb3dc748ad4dfe7fce6.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
+    "curiosity-1": {
+        "branch": "cty-1.hypered.systems",
+        "description": "Branch corresponding to the version written for Smart Coop",
+        "homepage": null,
+        "owner": "hypered",
+        "repo": "curiosity",
+        "rev": "68d8d2a29001364f76a714cdd60e6010f4292f5f",
+        "sha256": "0qabyjc737j4w5kipxfbsgvl9905x5pbglcl0zs77kj10absn983",
+        "type": "tarball",
+        "url": "https://github.com/hypered/curiosity/archive/68d8d2a29001364f76a714cdd60e6010f4292f5f.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "gitignore": {
         "branch": "master",
         "description": "Nix function for filtering local git sources",
