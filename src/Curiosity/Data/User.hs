@@ -448,7 +448,7 @@ firstUserRights = [CanCreateContracts, CanVerifyEmailAddr]
 -- | In addition of dynamic rules (e.g. the username should not already be
 -- taken), we disallow some names because they might be used later by the
 -- system or the company, or cause confusion (because usernames are used as
--- e.g. cty.hypered.systems/<username>).
+-- e.g. cty-2.hypered.systems/<username>).
 usernameBlocklist :: [UserName]
 usernameBlocklist =
   [ "a"
