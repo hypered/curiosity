@@ -10,20 +10,20 @@
         let preScript = pkgs.writers.writeBashBin "curiosityStartPre" ''
           # Run from a state file, reset to a known state.
           # TODO system is meaningless for now.
-          rm -f /tmp/state.json
+          rm -f /tmp/state-2.json
           ${(import ../.).binaries}/bin/cty \
-          --state /tmp/state.json \
+          --state /tmp/state-2.json \
           --user system \
           init
           ${(import ../.).binaries}/bin/cty \
-          --state /tmp/state.json \
+          --state /tmp/state-2.json \
           --user system \
           run ${(import ../.).scenarios}/state-0.txt
           '';
         in "${preScript}/bin/curiosityStartPre";
       ExecStart = ''
         ${(import ../.).binaries}/bin/cty \
-        --state /tmp/state.json \
+        --state /tmp/state-2.json \
         --user system \
         serve \
         --server-port 9102 \
