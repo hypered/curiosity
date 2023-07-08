@@ -8,7 +8,7 @@ let
     # $2 must be 'cty --user <username>'.
     # In practice, they are provided by the SSH ForceCommand.
     # $SSH_ORIGINAL_COMMAND is what the user types, e.g.
-    # if she types 'ssh curiosity@cty.hypered.systems state', then
+    # if she types 'ssh curiosity@cty-1.hypered.systems state', then
     # it is 'state'.
 
     if [[ -n $SSH_ORIGINAL_COMMAND ]]

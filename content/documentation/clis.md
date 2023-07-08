@@ -26,11 +26,11 @@ page](/documentation/asciinema).
 # Quick start
 
 This quick start section assumes you have SSH access to the Linux user `alice`
-at `cty.hypered.systems`, but also applies to the other possible
+at `cty-1.hypered.systems`, but also applies to the other possible
 [environments](/documentation/environments):
 
 ```
-$ ssh alice@cty.hypered.systems
+$ ssh alice@cty-1.hypered.systems
 Last login: Thu Sep 22 18:24:30 2022 from xxx.xxx.xxx.xxx
 Welcome to the Curiosity environment.
 Run `man curiosity` for the manual.
@@ -41,7 +41,7 @@ For simplicity, we write the prompt `[alice@curiosity-1:~]$` as `$` in the
 following text.
 
 In addition to the documentation available online at
-[`cty.hypered.systems`](https://cty.hypered.systems/documentation), information is also
+[`cty-1.hypered.systems`](https://cty-1.hypered.systems/documentation), information is also
 available locally in man pages and as part of the `cty` command-line
 executable:
 
@@ -156,8 +156,8 @@ documentation](/documentation/scenarios#scenarios) from where they can be run
 and explored.
 
 To expose the state file using a web interface, `cty serve` can be used. By
-default it uses port 9000. In the specific case of the `cty.hypered.systems` machine,
-it can be reached by using the [`play.cty.hypered.systems`](https://play.cty.hypered.systems)
+default it uses port 9000. In the specific case of the `cty-1.hypered.systems` machine,
+it can be reached by using the [`play.cty-1.hypered.systems`](https://play.cty-1.hypered.systems)
 sub-domain:
 
 ```

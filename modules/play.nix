@@ -2,7 +2,7 @@
 {
   services.nginx = {
     enable = true;
-    virtualHosts."play.cty.hypered.systems" = {
+    virtualHosts."play.cty-1.hypered.systems" = {
       forceSSL = true;
       enableACME = true;
       locations = {
@@ -18,6 +18,6 @@
   };
 
   security.acme.certs = {
-    "play.cty.hypered.systems".email = "noteed@gmail.com";
+    "play.cty-1.hypered.systems".email = "noteed@gmail.com";
   };
 }

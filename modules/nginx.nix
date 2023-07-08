@@ -20,15 +20,15 @@ in
     package = pkgs.nginxMainline;
     additionalModules = [ pkgs.nginxModules.brotli ];
     recommendedGzipSettings = true;
-    virtualHosts."cty.hypered.systems" = {
+    virtualHosts."cty-1.hypered.systems" = {
       locations = {
-        "/".proxyPass = "http://127.0.0.1:9100";
+        "/".proxyPass = "http://127.0.0.1:9101";
         "/about" = {
-          proxyPass = "http://127.0.0.1:9100";
+          proxyPass = "http://127.0.0.1:9101";
           extraConfig = "ssi on;";
         };
         "/documentation" = {
-          proxyPass = "http://127.0.0.1:9100";
+          proxyPass = "http://127.0.0.1:9101";
           extraConfig = "ssi on;";
         };
         "/static/" = {

@@ -150,7 +150,7 @@ the static documentation part of the site.
 - This calls
   [`scripts/deploy.sh`](https://github.com/hypered/curiosity/blob/main/scripts/deploy.sh)
   after a succesful build when the impacted branch is `main`, so that
-  [`cty.hypered.systems`](https://cty.hypered.systems) is deployed automatically.
+  [`cty-1.hypered.systems`](https://cty-1.hypered.systems) is deployed automatically.
 - See [PR-125](https://github.com/hypered/curiosity/pull/125).
 
 **Improve the run command.**
@@ -189,7 +189,7 @@ some roles as edges.
   there is already [`/state`](/state) and [`/state.json`](/state.json)).
 - Similarly for executed scenarios, it is possible to see the SVG
   representation of the state after each step, e.g. in the [quotation
-flow](https://cty.hypered.systems/documentation/scenarios/quotation-flow).
+flow](https://cty-1.hypered.systems/documentation/scenarios/quotation-flow).
 - See [PR-128](https://github.com/hypered/curiosity/pull/128).
 
 **Improve documentation.** This adds some improvements to the documentation and
@@ -284,7 +284,7 @@ quotation, and the rejection accepts an optional comment. See [PR-104](https://g
 ## 2022-11-08
 
 **Document the main sale flow.** This adds a dedicated [documentation
-page](https://cty.hypered.systems/documentation/smart) written by Roger to document
+page](https://cty-1.hypered.systems/documentation/smart) written by Roger to document
 some business matter, and in particular a Sale flow. To contrast that flow with
 the existing `quotation-flow.golden`, this scenario is now rendered within a
 [documentation page](/documentation/scenarios/quotation-flow). See
@@ -559,7 +559,7 @@ employment contracts, and invoices.
   yet complete.)
 - Introduce the idea of a set, called `state-0`, of well-known example objects
   that can be manipulated by test scenarios. See the
-  [documentation](https://cty.hypered.systems/documentation/scenarios).
+  [documentation](https://cty-1.hypered.systems/documentation/scenarios).
 - See [PR-63](https://github.com/hypered/curiosity/pull/63),
   [PR-68](https://github.com/hypered/curiosity/pull/68), and
   [PR-72](https://github.com/hypered/curiosity/pull/72).
@@ -570,7 +570,7 @@ viewed as a UBL `PartyLegalEntity`.
 - The structure of that representation is taken from
   [issue 39](https://github.com/hypered/curiosity/issues/39).
 - See the example in the
-  [documentation](https://cty.hypered.systems/documentation/ubl).
+  [documentation](https://cty-1.hypered.systems/documentation/ubl).
 - See [PR-65](https://github.com/hypered/curiosity/pull/65).
 
 Add [Brotli compression](https://en.wikipedia.org/wiki/Brotli) to Nginx. This
@@ -599,7 +599,7 @@ Improve the `cty` command-line.
   mentioned above.
 - See [PR-70](https://github.com/hypered/curiosity/pull/70).
 
-Add a script to find broken links on [`cty.hypered.systems`](https://cty.hypered.systems).
+Add a script to find broken links on [`cty-1.hypered.systems`](https://cty-1.hypered.systems).
 
 - See [PR-71](https://github.com/hypered/curiosity/pull/71).
 
@@ -613,7 +613,7 @@ virtual machine image.
 - The default options for `cty serve` and the options for the `cty serve`
   service are changed to no longer overlap (e.g. the default listen port is
   9000, but the service is configured to use 9100).
-- There is now a `play.cty.hypered.systems` domain, and Nginx is configured to
+- There is now a `play.cty-1.hypered.systems` domain, and Nginx is configured to
   forward its requests to port 9000. I.e. when the user decides to run
  `cty serve`, it's possible to access it on that new domain.
 - `jq` is also available to further process some `cty` output.
@@ -733,7 +733,7 @@ Practices, SEO). Now they are 97, 100, 100, 100.
 - Add a blocklist for usernames. This is interesting because it shows how to
   use hard-coded data both in some business-logic and show those same data in
   the documentation. See [PR-36](https://github.com/hypered/curiosity/pull/36).
-- The `cty.hypered.systems` domain is now available in HTTPS. See
+- The `cty-1.hypered.systems` domain is now available in HTTPS. See
   [PR-37](https://github.com/hypered/curiosity/pull/37).
 
 ## 2022-07-31

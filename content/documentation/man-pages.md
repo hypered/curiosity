@@ -13,11 +13,11 @@ tools are, is to start typing `cty` at a virtual machine prompt then hit the
 `TAB` key twice to see the proposed auto-completion. There is also a more
 general man page available as `man curiosity`.
 
-Assuming an SSH access to `cty.hypered.systems`, here is a possible session
+Assuming an SSH access to `cty-1.hypered.systems`, here is a possible session
 demonstrating the above:
 
 ```
-$ ssh root@cty.hypered.systems
+$ ssh root@cty-1.hypered.systems
 [root@curiosity-1:~]# cty<TAB><TAB>
 cty
 [root@curiosity-1:~]# man cty

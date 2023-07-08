@@ -10,7 +10,7 @@ manager](https://nixos.org/guides/how-nix-works.html). Nix provides a reliable
 way to specify project dependencies and build our artifacts, whether it is [our
 `cty` binary](/documentation/clis), or even Curiosity's main deliverable: the
 complete virtual machine image running at
-[`cty.hypered.systems`](https://cty.hypered.systems).
+[`cty-1.hypered.systems`](https://cty-1.hypered.systems).
 
 Once you have Nix installed and a clone of the [Curiosity
 repository](https://github.com/hypered/curiosity), building the `cty` binary
@@ -34,7 +34,7 @@ $ nix-build -A toplevel
 
 Whenever we change something in the Curiosity repository, we can build a new
 toplevel and activate it on a given machine (e.g. the machine running at
-[`cty.hypered.systems`](https://cty.hypered.systems)).
+[`cty-1.hypered.systems`](https://cty-1.hypered.systems)).
 
 # Binary cache
 
