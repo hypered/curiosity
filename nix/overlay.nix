@@ -5,7 +5,6 @@ let
   sources = import ./sources.nix;
   contents = import ./contents.nix { nixpkgs = super; };
   inherit (super.lib.attrsets) mapAttrs;
-  inherit (import sources.gitignore { inherit lib; }) gitignoreFilter;
 
   ourOverrides = selfh: superh:
     let
