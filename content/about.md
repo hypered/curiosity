@@ -6,10 +6,10 @@ title: Curiosity
 # About
 
 Curiosity is an ever-evolving prototype system to think, discuss, and
-communicate the future of Smart Coop's developments. It is exposed to
-end-users as a web application and a running instance of Curiosity is made
-available at [`cty-2.hypered.systems`](//cty-2.hypered.systems) for demonstration purpose. For
-tech savvy users, the complete system is packaged as a [virtual machine
+communicate development practices and system design. It is exposed to end-users
+as a web application and a running instance of Curiosity is made available at
+[`cty-2.hypered.systems`](//cty-2.hypered.systems) for demonstration purpose.
+For tech savvy users, the complete system is packaged as a [virtual machine
 image](/documentation/machine), made to be easily run and explored.
 
 ## Documented
@@ -35,14 +35,18 @@ page](/documentation/search).
 ## Experimental
 
 Curiosity is being developed to inform further developments, and is not
-intended to be a production system. It will evolve during the next few months
-as we try to nail down as precisely as possible what the best solutions for
-Smart Coop are.
+intended to be a production system.
 
 ## Open source
 
 Curiosity is an open source project distributed under a 2-clause BSD license.
 It is available on [GitHub](https://github.com/hypered/curiosity).
+
+## cty-1
+
+During the period August 2022 - January 2023, Curiosity was evolved for the
+belgian cooperative Smart Coop. The version as of January is kept alive and
+exposed at [`cty-1.hypered.systems`](//cty-1.hypered.systems).
 
 ## Why
 

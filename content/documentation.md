@@ -32,7 +32,6 @@ title: Curiosity
 - [Queues](/documentation/queues)
 - [Scenarios](/documentation/scenarios)
 - [Search](/documentation/search)
-- [Smart](/documentation/smart)
 - [Source code](/documentation/source)
 - [state-0](/documentation/state-0)
 - [Tests](/documentation/tests)
