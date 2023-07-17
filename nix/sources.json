@@ -11,6 +11,18 @@
         "url": "https://github.com/hypered/commence/archive/9896c3278020ddb9f4c60fb3dc748ad4dfe7fce6.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
+    "curiosity-1": {
+        "branch": "cty-1.hypered.systems",
+        "description": "Branch corresponding to the version written for Smart Coop",
+        "homepage": null,
+        "owner": "hypered",
+        "repo": "curiosity",
+        "rev": "68d8d2a29001364f76a714cdd60e6010f4292f5f",
+        "sha256": "0qabyjc737j4w5kipxfbsgvl9905x5pbglcl0zs77kj10absn983",
+        "type": "tarball",
+        "url": "https://github.com/hypered/curiosity/archive/68d8d2a29001364f76a714cdd60e6010f4292f5f.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
     "gitignore": {
         "branch": "master",
         "description": "Nix function for filtering local git sources",
@@ -65,10 +77,10 @@
         "homepage": "https://monohs.hypered.design",
         "owner": "hypered",
         "repo": "smart-design-hs",
-        "rev": "b4c814ebf235edecc5c039acfdd5f2b7bdab4621",
-        "sha256": "1q2ffszcpinraq4j54a7177ji9r7sa922djglzrycmbpbv3m3aa4",
+        "rev": "ea580f708773edc291de813104ec293f55a83221",
+        "sha256": "0qqzip6kqbx7bp1ig6j01pa7x1i99hw45x37hbmp6y5ax6z0m6gp",
         "type": "tarball",
-        "url": "https://github.com/hypered/smart-design-hs/archive/b4c814ebf235edecc5c039acfdd5f2b7bdab4621.tar.gz",
+        "url": "https://github.com/hypered/smart-design-hs/archive/ea580f708773edc291de813104ec293f55a83221.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }

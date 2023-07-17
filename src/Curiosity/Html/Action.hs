@@ -150,7 +150,7 @@ instance H.ToMarkup EchoPage where
   toMarkup EchoPage {..} =
     renderView' _echoPageUserProfile $
       panelWrapper
-        $ H.div ! A.class_ "c-display" $
+        $ H.div ! A.class_ "c-content" $
           H.pre . H.code $ H.text _echoPageContent
 
 -- | Similar to `EchoPage` but also shows validation errors
@@ -166,7 +166,7 @@ instance H.ToMarkup EchoPage' where
   toMarkup EchoPage' {..} =
     renderView' _echoPage'UserProfile $
       panelWrapper
-        $ H.div ! A.class_ "c-display" $ do
+        $ H.div ! A.class_ "c-content" $ do
           H.pre . H.code $ H.text _echoPage'Content
           if null _echoPage'Errors
             then

@@ -36,7 +36,7 @@ import           Web.HttpApiData                ( FromHttpApiData(..) )
 
 --------------------------------------------------------------------------------
 systemEmailAddr :: User.UserEmailAddr
-systemEmailAddr = "hello@cty.hypered.systems"
+systemEmailAddr = "hello@cty-2.hypered.systems"
 
 
 --------------------------------------------------------------------------------

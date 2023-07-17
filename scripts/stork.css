@@ -18,7 +18,7 @@
 }
 
 /* Disable the normal (from the design system) link borders. */
-.c-display a {
+.c-content a {
   border-bottom: 0.1rem solid var(--stork-border-color);
 }
 

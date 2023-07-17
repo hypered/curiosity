@@ -69,7 +69,7 @@ When running a virtual machine based on that image, the reverse proxy, the SSH
 server and the Curiosity web application are automatically started.
 
 An example deployment of this virtual machine image runs at
-[cty.hypered.systems](https://cty.hypered.systems).
+[cty-2.hypered.systems](https://cty-2.hypered.systems).
 
 ## Docker image
 

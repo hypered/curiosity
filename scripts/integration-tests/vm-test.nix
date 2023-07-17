@@ -16,7 +16,7 @@ let
     mkdir -p $out
     cp key.pem cert.pem $out
   '';
-  serverFqdn = "cty.hypered.systems";
+  serverFqdn = "cty-2.hypered.systems";
   hosts = nodes: ''
     ${nodes.server.config.networking.primaryIPAddress} ${serverFqdn}
   '';

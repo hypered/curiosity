@@ -15,7 +15,7 @@ nix_args=(
 )
 
 # This is the curiosity-1 host at Digital Ocean.
-TARGET="root@cty.hypered.systems"
+TARGET="root@cty-2.hypered.systems"
 
 PROFILE_PATH="${PROFILE_PATH:-}"
 NIX_SSHOPTS="${NIX_SSHOPTS:-}"

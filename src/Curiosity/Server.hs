@@ -2601,15 +2601,15 @@ partialScenario scenariosDir name = do
   let ts' = Inter.flatten ts
   pure $ do
     H.style
-      ".c-display table code {\n\
+      ".c-content table code {\n\
       \background: white;\n\
       \ white-space: normal;\n\
       \}\n\
-      \.c-display table td {\n\
+      \.c-content table td {\n\
       \  padding-top: 0;\n\
       \  padding-bottom: 0;\n\
       \}\n\
-      \.c-display table a {\n\
+      \.c-content table a {\n\
       \  border-bottom: 0;\n\
       \}\n"
     H.table $ do

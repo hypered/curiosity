@@ -254,7 +254,7 @@ I didn't talk about the more technical aspects of Curiosity, but it's written
 very similarly to a real system. For instance, it is setup within a virtual
 machine image, with a reverse-proxy, ready to be deployed in a cloud provider
 or on-premises infrastructure, as demonstrated by
-[`cty.hypered.systems`](https://cty.hypered.systems), and a basic continuous
+[`cty-2.hypered.systems`](https://cty-2.hypered.systems), and a basic continuous
 integration and automated deployment pipeline exists.
 
 Unfortunately Curiosity failed to attract a discussion centered around it.

@@ -17,18 +17,19 @@ in
 {
   services.nginx = {
     enable = true;
-    package = pkgs.nginxMainline;
-    additionalModules = [ pkgs.nginxModules.brotli ];
+    # Commented out because already defined in curiosity-1.
+    # package = pkgs.nginxMainline;
+    # additionalModules = [ pkgs.nginxModules.brotli ];
     recommendedGzipSettings = true;
-    virtualHosts."cty.hypered.systems" = {
+    virtualHosts."cty-2.hypered.systems" = {
       locations = {
-        "/".proxyPass = "http://127.0.0.1:9100";
+        "/".proxyPass = "http://127.0.0.1:9102";
         "/about" = {
-          proxyPass = "http://127.0.0.1:9100";
+          proxyPass = "http://127.0.0.1:9102";
           extraConfig = "ssi on;";
         };
         "/documentation" = {
-          proxyPass = "http://127.0.0.1:9100";
+          proxyPass = "http://127.0.0.1:9102";
           extraConfig = "ssi on;";
         };
         "/static/" = {
@@ -38,9 +39,10 @@ in
         "/haddock/".alias = (import ../.).haddock + "/share/doc/curiosity-0.1.0.0/html/";
       };
 
-      extraConfig = ''
-        brotli_static on;
-      '';
+      # Commented out because already defined in curiosity-1.
+      # extraConfig = ''
+      #   brotli_static on;
+      # '';
     };
   };
 }

@@ -1,6 +1,8 @@
 { config, lib, pkgs,
   ... }:
 let
+  sources = import ../nix/sources.nix;
+
   cty-shell = pkgs.writeShellScriptBin "cty-shell" ''
     #! /bin/bash
 
@@ -8,7 +10,7 @@ let
     # $2 must be 'cty --user <username>'.
     # In practice, they are provided by the SSH ForceCommand.
     # $SSH_ORIGINAL_COMMAND is what the user types, e.g.
-    # if she types 'ssh curiosity@cty.hypered.systems state', then
+    # if she types 'ssh curiosity@cty-2.hypered.systems state', then
     # it is 'state'.
 
     if [[ -n $SSH_ORIGINAL_COMMAND ]]
@@ -50,8 +52,12 @@ in
   services.getty.autologinUser = lib.mkDefault "root";
 
   imports = [
+    # curiosity-2 unit and cty-2 domain.
     ../modules/curiosity.nix
     ../modules/nginx.nix
+    # curiosity-1 unit and cty-1 domain.
+    (sources.curiosity-1 + "/modules/curiosity.nix")
+    (sources.curiosity-1 + "/modules/nginx.nix")
   ];
 
   environment.systemPackages = [
