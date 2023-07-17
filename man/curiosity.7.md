@@ -4,7 +4,7 @@ NAME
 ====
 
 **curiosity** — Curiosity is a prototype application to explore the design
-space of a web applicatoin for Smart <https://smart.coop>.
+space of a web application.
 
 DESCRIPTION
 ===========
