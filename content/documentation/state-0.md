@@ -57,7 +57,7 @@ validation rules.
 - [Amount `100`](/forms/edit/simple-contract/confirm-simple-contract/RZEMQMNF)
 
 Note: the validation rules are visible in the [source
-code](/haddock/src/Curiosity.Data.SimpleContract.html#validateCreateSimpleContract).
+code](/haddock/src/Curiosity.Types.SimpleContract.html#validateCreateSimpleContract).
 We should try to expose them more clearly, both in the documentation, and in
 the code.
 

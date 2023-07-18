@@ -19,16 +19,16 @@ module Curiosity.Command
 
 import qualified Data.String as Str
 import Web.HttpApiData
-import qualified Curiosity.Data                as Data
-import qualified Curiosity.Data.Business       as Business
-import qualified Curiosity.Data.Email          as Email
-import qualified Curiosity.Data.Employment     as Employment
-import qualified Curiosity.Data.Invoice        as Invoice
-import qualified Curiosity.Data.Legal          as Legal
-import qualified Curiosity.Data.Order          as Order
-import qualified Curiosity.Data.Quotation      as Quotation
-import qualified Curiosity.Data.SimpleContract as SimpleContract
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Store          as Store
+import qualified Curiosity.Types.Business       as Business
+import qualified Curiosity.Types.Email          as Email
+import qualified Curiosity.Types.Employment     as Employment
+import qualified Curiosity.Types.Invoice        as Invoice
+import qualified Curiosity.Types.Legal          as Legal
+import qualified Curiosity.Types.Order          as Order
+import qualified Curiosity.Types.Quotation      as Quotation
+import qualified Curiosity.Types.SimpleContract as SimpleContract
+import qualified Curiosity.Types.User           as User
 import qualified Curiosity.Parse               as P
 import qualified Data.Text                     as T
 import qualified Options.Applicative           as A
@@ -41,7 +41,7 @@ import qualified Options.Applicative           as A
 data Command =
     Layout
     -- ^ Display the routing layout of the web server.
-  | Init Data.SteppingMode
+  | Init Store.SteppingMode
     -- ^ Initialise a new, empty state file.
   | Reset
     -- ^ Set the state file to the empty state.
@@ -419,16 +419,16 @@ parserLayout = pure Layout
 parserInit :: A.Parser Command
 parserInit =
   Init
-    <$> (   (A.flag' Data.Normal $ A.long "normal" <> A.help
+    <$> (   (A.flag' Store.Normal $ A.long "normal" <> A.help
               "Select normal stepping mode (default)."
             )
-        <|> (A.flag' Data.Stepped $ A.long "stepped" <> A.help
+        <|> (A.flag' Store.Stepped $ A.long "stepped" <> A.help
               "Select stepped stepping mode."
             )
-        <|> (A.flag' Data.Mixed $ A.long "mixed" <> A.help
+        <|> (A.flag' Store.Mixed $ A.long "mixed" <> A.help
               "Select mixed stepping mode."
             )
-        <|> (pure Data.Normal)
+        <|> (pure Store.Normal)
         )
 
 parserReset :: A.Parser Command

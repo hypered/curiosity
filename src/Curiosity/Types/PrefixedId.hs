@@ -4,12 +4,12 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {- |
 
-Module: Curiosity.Data.PrefixedId
+Module: Curiosity.Types.PrefixedId
 Description: Standardised ID prefixing.
 
 See the documentation of the `PrefixedId` class for motivation.
 -}
-module Curiosity.Data.PrefixedId
+module Curiosity.Types.PrefixedId
   ( PrefixT(..)
   , symToPrefix
   , getPrefix
@@ -72,10 +72,10 @@ Eg. a UserId can be a distinct type (using `W.Wrapped`) than other IDs.
 
 Consider:
 @
-λ> import Curiosity.Data.User
+λ> import Curiosity.Types.User
 λ> UserId "foo" -- create a value.
 UserId {unUserId = "foo"}
-λ> import Curiosity.Data.PrefixedId
+λ> import Curiosity.Types.PrefixedId
 λ> addPrefix it -- add prefix to the ID and show it.
 "USER-foo"
 λ> parsePrefixedId @UserId (Right . UserId {- accept all texts, but other more complex parsing also possible. -}) it -- parse it back.

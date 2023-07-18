@@ -8,8 +8,8 @@ module Curiosity.Html.Email
   , panelSentEmails
   ) where
 
-import qualified Curiosity.Data.Email          as Email
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Email         as Email
+import qualified Curiosity.Types.User          as User
 import           Curiosity.Html.Misc
 import qualified Smart.Html.Misc               as Misc
 import           Text.Blaze.Html5               ( (!) )

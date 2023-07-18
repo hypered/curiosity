@@ -11,4 +11,4 @@ One S.A.
 
 ## Authorizations
 
-See the [library documentation](/haddock/Curiosity-Data-Legal.html#t:Authorization).
+See the [library documentation](/haddock/Curiosity-Types-Legal.html#t:Authorization).

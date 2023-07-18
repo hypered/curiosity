@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
--- | STM operations around `Curiosity.Data`.
+-- | STM operations around `Curiosity.Types`.
 
 -- brittany-disable-next-binding
 module Curiosity.Core
@@ -48,13 +48,13 @@ module Curiosity.Core
   ) where
 
 import qualified Control.Concurrent.STM        as STM
-import           Curiosity.Data
-import qualified Curiosity.Data.Business       as Business
-import qualified Curiosity.Data.Counter        as C
-import qualified Curiosity.Data.Email          as Email
-import qualified Curiosity.Data.Legal          as Legal
-import qualified Curiosity.Data.Quotation      as Quotation
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Business       as Business
+import qualified Curiosity.Types.Counter        as C
+import qualified Curiosity.Types.Email          as Email
+import qualified Curiosity.Types.Legal          as Legal
+import qualified Curiosity.Types.Quotation      as Quotation
+import           Curiosity.Types.Store
+import qualified Curiosity.Types.User           as User
 import           Data.List                      ( lookup, nub )
 import qualified Data.List                     as L
 import qualified Data.Text                     as T

@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {- |
-Module: Curiosity.Data.SimpleContract
+Module: Curiosity.Types.SimpleContract
 Description: Simple contract (also called 3in1) related datatypes
 
 This module contains data types used to represent simple contracts, both as
@@ -10,7 +10,7 @@ used when filling a form, and used as proper validated data.
 See also the [related documentation page](/documentation/objects/invoices).
 
 -}
-module Curiosity.Data.SimpleContract
+module Curiosity.Types.SimpleContract
   ( -- * Form data representation
     --
     -- $formDataTypes
@@ -57,7 +57,7 @@ module Curiosity.Data.SimpleContract
   ) where
 
 import qualified Commence.Types.Wrapped        as W
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.User          as User
 import           Data.Aeson
 import           Data.List                      ( lookup )
 import qualified Text.Blaze.Html5              as H
@@ -76,9 +76,10 @@ import           Web.HttpApiData                ( parseQueryParams )
 -- provided to represent those sets of input fields.
 
 -- | This represents a form being filled in. In particular, it can represent
--- invalid inputs. As it is filled, it is kept in a Map in "Curiosity.Data",
--- where it is identified by a key. The form data are validated when they are
--- "submitted", using the `SubmitContract` data type below, and the key.
+-- invalid inputs. As it is filled, it is kept in a Map in
+-- "Curiosity.Types.Store", where it is identified by a key. The form data are
+-- validated when they are "submitted", using the `SubmitContract` data type
+-- below, and the key.
 data CreateContractAll = CreateContractAll
   { _createContractType     :: CreateContractType
   , _createContractRisks    :: CreateContractRisks

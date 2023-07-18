@@ -3,13 +3,13 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies   #-}
 {- |
-Module: Curiosity.Data
+Module: Curiosity.Types.Store
 Description: This module defines the central state data type.
 
 -}
 
 -- brittany-disable-next-binding
-module Curiosity.Data
+module Curiosity.Types.Store
   ( Db(..)
   , SteppingMode(..)
   , HaskDb
@@ -24,19 +24,19 @@ module Curiosity.Data
   ) where
 
 import qualified Commence.Runtime.Errors       as E
-import qualified Curiosity.Data.Business       as Business
-import qualified Curiosity.Data.Command        as Command
+import qualified Curiosity.Types.Business       as Business
+import qualified Curiosity.Types.Command        as Command
                                                 ( Command(..) )
-import qualified Curiosity.Data.Counter        as C
-import qualified Curiosity.Data.Email          as Email
-import qualified Curiosity.Data.Employment     as Employment
-import qualified Curiosity.Data.Invoice        as Invoice
-import qualified Curiosity.Data.Legal          as Legal
-import qualified Curiosity.Data.Order          as Order
-import qualified Curiosity.Data.Quotation      as Quotation
-import qualified Curiosity.Data.RemittanceAdv  as RemittanceAdv
-import qualified Curiosity.Data.SimpleContract as SimpleContract
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Counter        as C
+import qualified Curiosity.Types.Email          as Email
+import qualified Curiosity.Types.Employment     as Employment
+import qualified Curiosity.Types.Invoice        as Invoice
+import qualified Curiosity.Types.Legal          as Legal
+import qualified Curiosity.Types.Order          as Order
+import qualified Curiosity.Types.Quotation      as Quotation
+import qualified Curiosity.Types.RemittanceAdv  as RemittanceAdv
+import qualified Curiosity.Types.SimpleContract as SimpleContract
+import qualified Curiosity.Types.User           as User
 import           Data.Aeson
 import qualified Data.Text                     as T
 import qualified Network.HTTP.Types.Status     as S

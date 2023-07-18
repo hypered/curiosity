@@ -7,8 +7,8 @@ module Curiosity.Html.Order
   , panelOrders
   ) where
 
-import qualified Curiosity.Data.Order          as Order
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Order         as Order
+import qualified Curiosity.Types.User          as User
 import           Curiosity.Html.Misc
 import qualified Smart.Html.Misc               as Misc
 import           Text.Blaze.Html5               ( Html )

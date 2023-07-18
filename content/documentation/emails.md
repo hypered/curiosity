@@ -6,7 +6,7 @@ title: Curiosity
 
 All the emails that can be sent by the system are given by variants of the
 `EmailTemplate` data type. See [their
-documentation](/haddock/Curiosity-Data-Email.html#t:EmailTemplate).
+documentation](/haddock/Curiosity-Types-Email.html#t:EmailTemplate).
 
 # Sent emails
 

@@ -1,14 +1,14 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {- |
-Module: Curiosity.Data.Order
+Module: Curiosity.Types.Order
 Description: Order -related data types.
 
 This module contains data types used to represent orders (there is no form to
 create them as they result from a signed quotation).
 
 -}
-module Curiosity.Data.Order
+module Curiosity.Types.Order
   ( -- * Main data representation
     Order(..)
   , OrderId(..)
@@ -17,8 +17,8 @@ module Curiosity.Data.Order
   , Err(..)
   ) where
 
-import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Commence.Types.Wrapped        as W
+import qualified Curiosity.Types.PrefixedId    as Pre
 import           Data.Aeson
 import qualified Text.Blaze.Html5              as H
 import           Web.FormUrlEncoded             ( FromForm(..)

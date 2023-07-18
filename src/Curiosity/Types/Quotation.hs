@@ -1,14 +1,14 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {- |
-Module: Curiosity.Data.Quotation
+Module: Curiosity.Types.Quotation
 Description: Quotation -related data types.
 
 This module contains data types used to represent quotations, both as used when
 filling a form, and used as proper validated data.
 
 -}
-module Curiosity.Data.Quotation
+module Curiosity.Types.Quotation
   ( -- * Form data representation
     --
     -- $formDataTypes
@@ -33,13 +33,13 @@ module Curiosity.Data.Quotation
   , Err(..)
   ) where
 
-import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Commence.Runtime.Errors       as Errs
 import qualified Commence.Types.Wrapped        as W
-import qualified Curiosity.Data.Business       as Business
-import qualified Curiosity.Data.Legal          as Legal
-import qualified Curiosity.Data.Order          as Order
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Business      as Business
+import qualified Curiosity.Types.Legal         as Legal
+import qualified Curiosity.Types.Order         as Order
+import qualified Curiosity.Types.PrefixedId    as Pre
+import qualified Curiosity.Types.User          as User
 import qualified Curiosity.Html.Errors         as Pages
 import           Data.Aeson
 import qualified Data.Text.Lazy                as LT

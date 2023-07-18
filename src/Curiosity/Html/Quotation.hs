@@ -10,8 +10,8 @@ module Curiosity.Html.Quotation
   , ConfirmQuotationPage(..)
   ) where
 
-import qualified Curiosity.Data.Quotation      as Quotation
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Quotation     as Quotation
+import qualified Curiosity.Types.User          as User
 import           Curiosity.Html.Misc
 import qualified Smart.Html.Alert              as Alert
 import qualified Smart.Html.Button             as Button

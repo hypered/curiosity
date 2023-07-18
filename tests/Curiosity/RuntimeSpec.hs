@@ -3,8 +3,8 @@ module Curiosity.RuntimeSpec
   ) where
 
 import           Curiosity.Core
-import           Curiosity.Data
-import           Curiosity.Data.User
+import           Curiosity.Types.Store
+import           Curiosity.Types.User
 import           Curiosity.Runtime.IO           ( bootDbAndLogFile )
 import           Curiosity.Runtime.Type         ( _rDb )
 import           Test.Hspec

@@ -1,17 +1,17 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {- |
-Module: Curiosity.Data.Invoice
+Module: Curiosity.Types.Invoice
 Description: Invoice related datatypes
 -}
-module Curiosity.Data.Invoice
+module Curiosity.Types.Invoice
   ( Invoice(..)
   , InvoiceId(..)
   , Err(..)
   ) where
 
-import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Commence.Types.Wrapped        as W
+import qualified Curiosity.Types.PrefixedId    as Pre
 import           Data.Aeson
 import qualified Text.Blaze.Html5              as H
 import           Web.FormUrlEncoded             ( FromForm(..) )

@@ -18,10 +18,10 @@ import qualified Commence.Multilogging         as ML
 import qualified Commence.Runtime.Errors       as Errs
 import qualified Control.Concurrent.STM        as STM
 import           Control.Lens
-import qualified Curiosity.Data                as Data
 import qualified Curiosity.Parse               as Command
 import qualified Curiosity.Runtime.Error       as RErr
 import           Curiosity.Runtime.Type
+import qualified Curiosity.Types.Store         as Store
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as TE
 import qualified Data.Text.IO                  as T
@@ -56,7 +56,7 @@ bootConf _rConf _rThreads =
               Right _rDb -> Right Runtime { .. }
 
 -- | Create a runtime from a given state.
-bootDbAndLogFile :: MonadIO m => Data.HaskDb -> FilePath -> m Runtime
+bootDbAndLogFile :: MonadIO m => Store.HaskDb -> FilePath -> m Runtime
 bootDbAndLogFile db logsPath = do
   let loggingConf = Command.mkLoggingConf logsPath
       _rConf      = Command.defaultConf { Command._confLogging = loggingConf }
@@ -101,7 +101,7 @@ readDb mpath = case mpath of
                    if T.null fdata
       then useEmpty
       else
-        Data.deserialiseDbStrict (TE.encodeUtf8 fdata)
+        Store.deserialiseDbStrict (TE.encodeUtf8 fdata)
           & either (pure . Left . Errs.knownErr) useState
   useEmpty = Right <$> liftIO (STM.atomically Core.instantiateEmptyStmDb)
   useState = fmap Right . liftIO . STM.atomically . Core.instantiateStmDb
@@ -125,7 +125,7 @@ readDbSafe mpath = case mpath of
  where
   fromFile fpath = do
     fdata <- liftIO (T.readFile fpath)
-    Data.deserialiseDbStrict (TE.encodeUtf8 fdata)
+    Store.deserialiseDbStrict (TE.encodeUtf8 fdata)
       & either (pure . Left . Errs.knownErr) useState
   useEmpty = Right <$> liftIO (STM.atomically Core.instantiateEmptyStmDb)
   useState = fmap Right . liftIO . STM.atomically . Core.instantiateStmDb
@@ -160,7 +160,7 @@ saveDb runtime =
 saveDbAs :: MonadIO m => Runtime -> FilePath -> m (Maybe Errs.RuntimeErr)
 saveDbAs runtime fpath = do
   haskDb <- readFullStmDbInHask $ _rDb runtime
-  let bs = Data.serialiseDb haskDb
+  let bs = Store.serialiseDb haskDb
   liftIO
       (try @SomeException (T.writeFile fpath . TE.decodeUtf8 $ BS.toStrict bs))
     <&> either (Just . Errs.RuntimeException) (const Nothing)
@@ -169,5 +169,5 @@ saveDbAs runtime fpath = do
 readFullStmDbInHask
   :: MonadIO m
   => Core.StmDb
-  -> m Data.HaskDb
+  -> m Store.HaskDb
 readFullStmDbInHask = liftIO . STM.atomically . Core.readFullStmDbInHask'

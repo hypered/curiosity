@@ -10,8 +10,8 @@ module Curiosity.Html.Employment
   , ConfirmContractPage(..)
   ) where
 
-import qualified Curiosity.Data.Employment     as Employment
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Employment    as Employment
+import qualified Curiosity.Types.User          as User
 import           Curiosity.Html.Misc
 import qualified Smart.Html.Misc               as Misc
 import           Smart.Html.Panel               ( Panel(..) )

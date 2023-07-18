@@ -435,13 +435,13 @@ This means the following commands are added:
 
 And the follow new data types are added:
 
-- [Quotation](/haddock/Curiosity-Data-Quotation.html)
-- [Order](/haddock/Curiosity-Data-Order.html)
-- [RemittanceAdv](/haddock/Curiosity-Data-RemittanceAdv.html)
-- [Email](/haddock/Curiosity-Data-Email.html)
+- [Quotation](/haddock/Curiosity-Types-Quotation.html)
+- [Order](/haddock/Curiosity-Types-Order.html)
+- [RemittanceAdv](/haddock/Curiosity-Types-RemittanceAdv.html)
+- [Email](/haddock/Curiosity-Types-Email.html)
 
 Unrelated to the above scenario, there is also a new
-[Demand](/haddock/Curiosity-Data-Demand.html) data type (see its module
+[Demand](/haddock/Curiosity-Types-Demand.html) data type (see its module
 description) and the simple contract form has been augmented. See
 [PR-81](https://github.com/hypered/curiosity/pull/81).
 

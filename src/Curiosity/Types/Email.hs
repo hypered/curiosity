@@ -1,15 +1,16 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {- |
-Module: Curiosity.Data.Email
+Module: Curiosity.Types.Email
 Description: Email -related data types.
 
 This module contains data types used to represent emails. Within
-"Curiosity.Data", they are used to record atomically that an email should be
-sent during an STM operation. A separate thread should actually handle them.
+"Curiosity.Types.Store", they are used to record atomically that an email
+should be sent during an STM operation. A separate thread should actually
+handle them.
 
 -}
-module Curiosity.Data.Email
+module Curiosity.Types.Email
   ( -- * Useful constants
     systemEmailAddr
     -- * Main data representation
@@ -25,9 +26,9 @@ module Curiosity.Data.Email
   , Err(..)
   ) where
 
-import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Commence.Types.Wrapped        as W
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.PrefixedId    as Pre
+import qualified Curiosity.Types.User          as User
 import           Data.Aeson
 import qualified Text.Blaze.Html5              as H
 import           Web.FormUrlEncoded             ( FromForm(..)
@@ -70,14 +71,14 @@ newtype EmailId = EmailId { unEmailId :: Text }
 -- "Curiosity.Runtime".)
 data EmailTemplate =
     SignupConfirmationEmail
-    -- ^ An email sent upon signup (see `Curiosity.Data.User.Signup`).
+    -- ^ An email sent upon signup (see `Curiosity.Types.User.Signup`).
   | InviteEmail Text -- TODO Proper Text wrapper.
     -- ^ An email sent to invite a user. Their user profile was already created
     -- (in particular with an email address), and the email gives them a token
     -- (that serves as credentials).
   | QuotationEmail
     -- ^ An email sent when a quotation form is successfully submitted to the
-    -- system (see `Curiosity.Data.Quotation.SubmitQuotation`).
+    -- system (see `Curiosity.Types.Quotation.SubmitQuotation`).
   | InvoiceEmail
   | InvoiceReminderEmail
   deriving (Show, Eq, Generic)

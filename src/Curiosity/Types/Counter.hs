@@ -1,6 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE KindSignatures #-}
-module Curiosity.Data.Counter
+module Curiosity.Types.Counter
   ( CounterValue(..)
   , Counter(..)
   , CounterStep(..)
@@ -10,7 +10,7 @@ module Curiosity.Data.Counter
   ) where
 
 import Control.Lens 
-import qualified Curiosity.Data.PrefixedId     as Pre
+import qualified Curiosity.Types.PrefixedId    as Pre
 import qualified Control.Concurrent.STM        as STM
 import           Data.Aeson
 

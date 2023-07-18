@@ -4,9 +4,9 @@ module Curiosity.Run
 
 import qualified Commence.Runtime.Errors       as Errs
 import qualified Curiosity.Command             as Command
-import qualified Curiosity.Data                as Data
-import qualified Curiosity.Data.Email          as Email
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Store         as Store
+import qualified Curiosity.Types.Email         as Email
+import qualified Curiosity.Types.User          as User
 import qualified Curiosity.Interpret           as Inter
 import qualified Curiosity.Parse               as P
 import qualified Curiosity.Process             as P
@@ -48,7 +48,7 @@ run (Command.CommandWithTarget (Command.Init mode) (Command.StateFileTarget path
         putStrLn @Text "Aborting."
         exitFailure
       else do
-        let bs = Data.serialiseDb Data.emptyHask { Data._dbSteppingMode = pure mode }
+        let bs = Store.serialiseDb Store.emptyHask { Store._dbSteppingMode = pure mode }
         try @SomeException (BS.writeFile path bs) >>= either
           (\e -> print e >> exitFailure)
           (const $ do
@@ -144,7 +144,7 @@ run (Command.CommandWithTarget (Command.Parse confParser) _ _) =
         Command.ParseState -> do
           let result = Aeson.eitherDecodeStrict (T.encodeUtf8 content)
           case result of
-            Right (value :: Data.HaskDb) -> do
+            Right (value :: Store.HaskDb) -> do
               print value
               exitSuccess
             Left err -> do

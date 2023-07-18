@@ -57,4 +57,4 @@ Bob
 
 ## Authorizations
 
-See the [library documentation](/haddock/Curiosity-Data-User.html#t:Authorization).
+See the [library documentation](/haddock/Curiosity-Types-User.html#t:Authorization).
