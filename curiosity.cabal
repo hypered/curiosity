@@ -93,8 +93,6 @@ library
   exposed-modules:
     Curiosity.Command
     Curiosity.Core
-    Curiosity.Data
-    Curiosity.Types.PrefixedId
     Curiosity.Types.Business
     Curiosity.Types.Command
     Curiosity.Types.Counter
@@ -104,9 +102,11 @@ library
     Curiosity.Types.Invoice
     Curiosity.Types.Legal
     Curiosity.Types.Order
+    Curiosity.Types.PrefixedId
     Curiosity.Types.Quotation
     Curiosity.Types.RemittanceAdv
     Curiosity.Types.SimpleContract
+    Curiosity.Types.Store
     Curiosity.Types.User
     Curiosity.Dsl
     Curiosity.Form.Login

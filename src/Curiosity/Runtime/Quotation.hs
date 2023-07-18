@@ -10,7 +10,7 @@ module Curiosity.Runtime.Quotation
 
 import qualified Control.Concurrent.STM        as STM
 import qualified Curiosity.Core                as Core
-import qualified Curiosity.Data                as Data
+import qualified Curiosity.Types.Store         as Store
 import qualified Curiosity.Types.Counter       as C
 import qualified Curiosity.Types.Order         as Order
 import qualified Curiosity.Types.Quotation     as Quotation
@@ -22,7 +22,7 @@ import           Curiosity.STM.Helpers          ( atomicallyM )
 filterQuotations
   :: Core.StmDb -> Quotation.Predicate -> STM [Quotation.Quotation]
 filterQuotations db predicate = do
-  let tvar = Data._dbQuotations db
+  let tvar = Store._dbQuotations db
   records <- STM.readTVar tvar
   pure $ filter (Quotation.applyPredicate predicate) records
 
@@ -47,7 +47,7 @@ createQuotation db quotation = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- C.newIdOf @Quotation.QuotationId (Data._dbNextQuotationId db)
+    newId <- C.newIdOf @Quotation.QuotationId (Store._dbNextQuotationId db)
     let new = quotation { Quotation._quotationId = newId }
     createQuotationFull db new >>= either STM.throwSTM pure
 
@@ -62,7 +62,7 @@ createQuotationFull db new = do
 modifyQuotations
   :: Core.StmDb -> ([Quotation.Quotation] -> [Quotation.Quotation]) -> STM ()
 modifyQuotations db f =
-  let tvar = Data._dbQuotations db in STM.modifyTVar tvar f
+  let tvar = Store._dbQuotations db in STM.modifyTVar tvar f
 
 createOrderForQuotation
   :: Core.StmDb

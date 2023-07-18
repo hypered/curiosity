@@ -36,7 +36,7 @@ module Curiosity.Interpret
   ) where
 
 import qualified Curiosity.Command             as Command
-import qualified Curiosity.Data                as Data
+import qualified Curiosity.Types.Store         as Store
 import qualified Curiosity.Types.User          as User
 import qualified Curiosity.Parse               as P
 import qualified Curiosity.Runtime             as Rt
@@ -83,12 +83,12 @@ handleRun' scriptPath = do
   Rt.powerdown runtime
   pure output
 
-interpret :: Rt.Runtime -> User.UserName -> FilePath -> IO (ExitCode, Data.HaskDb)
+interpret :: Rt.Runtime -> User.UserName -> FilePath -> IO (ExitCode, Store.HaskDb)
 interpret runtime user path = do
   output <- interpretFile runtime user path 0
   let (exitCode, ls) = formatOutput output
       finalState = case ls of
-        [] -> Data.emptyHask
+        [] -> Store.emptyHask
         _ -> traceState $ last output
   mapM_ putStrLn ls
   pure (exitCode, finalState)
@@ -105,7 +105,7 @@ data Trace = Trace
   , traceOutput   :: [Text]
   , traceExitCode :: ExitCode
   , traceNested   :: [Trace]
-  , traceState    :: Data.HaskDb -- ^ The resulting state.
+  , traceState    :: Store.HaskDb -- ^ The resulting state.
   }
 
 -- | Keep all traces, but removes the `traceNested` indirection.
@@ -125,11 +125,11 @@ interpretFile runtime user path nesting = do
 -- The idea is to be able to use this function on some large script to
 -- benchmark the system and make sure it can process each supported operation
 -- quickly.
-interpretFile' :: Rt.Runtime -> User.UserName -> FilePath -> Int -> IO Data.HaskDb
+interpretFile' :: Rt.Runtime -> User.UserName -> FilePath -> Int -> IO Store.HaskDb
 interpretFile' runtime user path nesting = do
   let dir = takeDirectory path
   content <- T.lines <$> readFile path
-  interpretLines runtime user dir content nesting Data.emptyHask (\t _ -> traceState t)
+  interpretLines runtime user dir content nesting Store.emptyHask (\t _ -> traceState t)
 
 interpretLines
   :: Rt.Runtime

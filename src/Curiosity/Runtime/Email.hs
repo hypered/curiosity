@@ -7,14 +7,14 @@ module Curiosity.Runtime.Email
 
 import qualified Control.Concurrent.STM        as STM
 import qualified Curiosity.Core                as Core
-import qualified Curiosity.Data                as Data
+import qualified Curiosity.Types.Store         as Store
 import qualified Curiosity.Types.Email         as Email
 import           Curiosity.Runtime.Type
 import           Curiosity.STM.Helpers          ( atomicallyM )
 
 filterEmails :: Core.StmDb -> Email.Predicate -> STM [Email.Email]
 filterEmails db predicate = do
-  let tvar = Data._dbEmails db
+  let tvar = Store._dbEmails db
   records <- STM.readTVar tvar
   pure $ filter (Email.applyPredicate predicate) records
 

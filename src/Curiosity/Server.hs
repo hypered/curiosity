@@ -35,8 +35,6 @@ import qualified Commence.Server.Auth          as CAuth
 import           Control.Lens
 import "exceptions" Control.Monad.Catch         ( MonadMask )
 import qualified Curiosity.Core                as Core
-import qualified Curiosity.Data                as Data
-import           Curiosity.Data                 ( HaskDb )
 import qualified Curiosity.Types.Business       as Business
 import qualified Curiosity.Types.Country        as Country
 import qualified Curiosity.Types.Email          as Email
@@ -45,6 +43,8 @@ import qualified Curiosity.Types.Legal          as Legal
 import qualified Curiosity.Types.Order          as Order
 import qualified Curiosity.Types.Quotation      as Quotation
 import qualified Curiosity.Types.SimpleContract as SimpleContract
+import qualified Curiosity.Types.Store          as Data
+import           Curiosity.Types.Store           ( HaskDb )
 import qualified Curiosity.Types.User           as User
 import qualified Curiosity.Form.Login          as Login
 import qualified Curiosity.Form.Signup         as Signup

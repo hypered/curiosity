@@ -20,8 +20,8 @@ module Curiosity.Dsl
 
 import qualified Control.Concurrent.STM        as STM
 import qualified Curiosity.Core                as Core
-import qualified Curiosity.Data                as Data
-import           Curiosity.Data                 ( HaskDb )
+import qualified Curiosity.Types.Store         as Store
+import           Curiosity.Types.Store          ( HaskDb )
 import qualified Curiosity.Types.Email         as Email
 import qualified Curiosity.Types.User          as User
 import qualified Language.Haskell.TH.Syntax    as Syntax
@@ -44,7 +44,7 @@ run db Run {..} = STM.atomically $ Core.instantiateStmDb db >>= runReaderT runM
 
 
 --------------------------------------------------------------------------------
-db0 = Data.emptyHask
+db0 = Store.emptyHask
 
 state :: Run HaskDb
 state = ask >>= (Run . lift . Core.readFullStmDbInHask')

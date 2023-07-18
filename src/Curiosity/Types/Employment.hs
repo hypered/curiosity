@@ -60,9 +60,10 @@ import           Web.FormUrlEncoded             ( FromForm(..)
 -- provided to represent those sets of input fields.
 
 -- | This represents a form being filled in. In particular, it can represent
--- invalid inputs. As it is filled, it is kept in a Map in "Curiosity.Data",
--- where it is identified by a key. The form data are validated when they are
--- "submitted", using the `SubmitContract` data type below, and the key.
+-- invalid inputs. As it is filled, it is kept in a Map in
+-- "Curiosity.Types.Store", where it is identified by a key. The form data are
+-- validated when they are "submitted", using the `SubmitContract` data type
+-- below, and the key.
 data CreateContractAll = CreateContractAll CreateContractGenInfo
                                            CreateContractType
                                            CreateContractLocDates

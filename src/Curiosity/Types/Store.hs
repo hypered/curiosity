@@ -3,13 +3,13 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies   #-}
 {- |
-Module: Curiosity.Data
+Module: Curiosity.Types.Store
 Description: This module defines the central state data type.
 
 -}
 
 -- brittany-disable-next-binding
-module Curiosity.Data
+module Curiosity.Types.Store
   ( Db(..)
   , SteppingMode(..)
   , HaskDb

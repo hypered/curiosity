@@ -5,8 +5,9 @@ Module: Curiosity.Types.Email
 Description: Email -related data types.
 
 This module contains data types used to represent emails. Within
-"Curiosity.Data", they are used to record atomically that an email should be
-sent during an STM operation. A separate thread should actually handle them.
+"Curiosity.Types.Store", they are used to record atomically that an email
+should be sent during an STM operation. A separate thread should actually
+handle them.
 
 -}
 module Curiosity.Types.Email

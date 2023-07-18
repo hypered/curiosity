@@ -3,12 +3,12 @@ module CuriositySpec
   ) where
 
 import qualified Curiosity.Command             as Command
-import qualified Curiosity.Data                as Data
 import qualified Curiosity.Run                 as Run
 import qualified Curiosity.Types.Business      as Business
 import qualified Curiosity.Types.Counter       as C
 import qualified Curiosity.Types.Email         as Email
 import qualified Curiosity.Types.Legal         as Legal
+import qualified Curiosity.Types.Store         as Store
 import qualified Curiosity.Types.User          as User
 import qualified Data.Aeson                    as Aeson
 import qualified Data.Text                     as T
@@ -67,9 +67,9 @@ spec = do
             x `shouldBe` command
     mapM_
       go
-      [ ("init"          , Command.Init Data.Normal)
-      , ("init --normal" , Command.Init Data.Normal)
-      , ("init --stepped", Command.Init Data.Stepped)
+      [ ("init"          , Command.Init Store.Normal)
+      , ("init --normal" , Command.Init Store.Normal)
+      , ("init --stepped", Command.Init Store.Stepped)
       , ("state"         , Command.State False)
       , ("state --hs"    , Command.State True)
       ]
@@ -97,43 +97,43 @@ spec = do
     case malice of
       Left err -> runIO $ "x" `shouldBe` err -- TODO How to make it fail ?
       Right alice -> do
-        let aliceState = Data.emptyHask
-              { Data._dbNextUserId   = C.CounterValue 2
-              , Data._dbUserProfiles = Identity [alice]
-              , Data._dbNextEmailId  = C.CounterValue 2
-              , Data._dbEmails       = Identity
+        let aliceState = Store.emptyHask
+              { Store._dbNextUserId   = C.CounterValue 2
+              , Store._dbUserProfiles = Identity [alice]
+              , Store._dbNextEmailId  = C.CounterValue 2
+              , Store._dbEmails       = Identity
                                          [ Email.Email "EMAIL-1"
                                                        Email.SignupConfirmationEmail
                                                        Email.systemEmailAddr
                                                        "alice@example.com"
                                                        Email.EmailTodo
                                          ]
-              , Data._dbEpochTime    = 60
+              , Store._dbEpochTime    = 60
               }
         -- The same state, but with the email set to DONE, and the time
         -- advanced a bit.
-        let aliceState' = Data.emptyHask
-              { Data._dbNextUserId   = C.CounterValue 2
-              , Data._dbUserProfiles = Identity [alice]
-              , Data._dbNextEmailId  = C.CounterValue 2
-              , Data._dbEmails       = Identity
+        let aliceState' = Store.emptyHask
+              { Store._dbNextUserId   = C.CounterValue 2
+              , Store._dbUserProfiles = Identity [alice]
+              , Store._dbNextEmailId  = C.CounterValue 2
+              , Store._dbEmails       = Identity
                                          [ Email.Email "EMAIL-1"
                                                        Email.SignupConfirmationEmail
                                                        Email.systemEmailAddr
                                                        "alice@example.com"
                                                        Email.EmailDone
                                          ]
-              , Data._dbEpochTime    = 120
+              , Store._dbEpochTime    = 120
               }
         runIO $ do
           fileExists <- doesFileExist stateFile
           when fileExists $ removeFile stateFile
         mapM_
           go
-          [ ("init --stepped", Data.emptyHask)
+          [ ("init --stepped", Store.emptyHask)
           , ("user signup alice a alice@example.com --accept-tos", aliceState)
           , ("step-email"    , aliceState')
-          , ("reset"         , Data.emptyHask)
+          , ("reset"         , Store.emptyHask)
           ]
 
 

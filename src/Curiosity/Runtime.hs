@@ -85,7 +85,6 @@ import "exceptions" Control.Monad.Catch         ( MonadCatch
                                                 )
 import qualified Curiosity.Command             as Command
 import qualified Curiosity.Core                as Core
-import qualified Curiosity.Data                as Data
 import qualified Curiosity.Types.Business       as Business
 import qualified Curiosity.Types.Counter        as C
 import qualified Curiosity.Types.Email          as Email
@@ -97,6 +96,7 @@ import           Curiosity.Types.PrefixedId      ( showWithPrefix )
 import qualified Curiosity.Types.Quotation      as Quotation
 import qualified Curiosity.Types.RemittanceAdv  as RemittanceAdv
 import qualified Curiosity.Types.SimpleContract as SimpleContract
+import qualified Curiosity.Types.Store          as Store
 import qualified Curiosity.Types.User           as User
 import qualified Curiosity.Graph               as Graph
 import           Curiosity.Runtime.Email       as Runtime.E
@@ -177,11 +177,11 @@ stepRunM runtime RunM {..} = liftIO $ do
   let RunM setNow = do
         mode <- readSteppingMode
         case mode of
-          Data.Normal  -> setTime now
+          Store.Normal  -> setTime now
             -- TODO This should be False on automated actions.
-          Data.Stepped -> void $ stepTime True
+          Store.Stepped -> void $ stepTime True
             -- TODO Mixed is not yet implemented.
-          Data.Mixed   -> void $ stepTime True
+          Store.Mixed   -> void $ stepTime True
   runReaderT (setNow >> unRunM) runtime
 
 -- | Support for logging for the application
@@ -199,14 +199,14 @@ reset = ML.localEnv (<> "Command" <> "Reset") $ do
   db   <- asks _rDb
   mode <- readSteppingMode
   now  <- case mode of
-    Data.Normal  -> liftIO $ toEpochTime <$> getUnixTime
-    Data.Stepped -> pure 0
-    Data.Mixed   -> liftIO $ toEpochTime <$> getUnixTime
+    Store.Normal  -> liftIO $ toEpochTime <$> getUnixTime
+    Store.Stepped -> pure 0
+    Store.Mixed   -> liftIO $ toEpochTime <$> getUnixTime
   atomicallyM $ Core.reset db now
   ML.info "State is now empty."
 
 -- | Retrieve the whole state as a pure value.
-state :: RunM Data.HaskDb
+state :: RunM Store.HaskDb
 state = do
   db <- asks _rDb
   atomicallyM $ Core.readFullStmDbInHask' db
@@ -230,7 +230,7 @@ stepTime minute = do
   atomicallyM $ Core.stepTime db minute
 
 -- | Retrieve the stepping mode.
-readSteppingMode :: RunM Data.SteppingMode
+readSteppingMode :: RunM Store.SteppingMode
 readSteppingMode = do
   db <- asks _rDb
   atomicallyM $ Core.readSteppingMode db
@@ -819,7 +819,7 @@ createLegal db Legal.Create {..} = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- C.newIdOf @Legal.EntityId (Data._dbNextLegalId db)
+    newId <- C.newIdOf @Legal.EntityId (Store._dbNextLegalId db)
     let new = Legal.Entity
           newId
           _createSlug
@@ -935,7 +935,7 @@ updateLegalEntityIsHost' slug b = do
 modifyLegalEntities
   :: Core.StmDb -> ([Legal.Entity] -> [Legal.Entity]) -> STM ()
 modifyLegalEntities db f =
-  let tvar = Data._dbLegalEntities db in STM.modifyTVar tvar f
+  let tvar = Store._dbLegalEntities db in STM.modifyTVar tvar f
 
 
 --------------------------------------------------------------------------------
@@ -992,7 +992,7 @@ createRemittanceAdv db = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- C.newIdOf @RemittanceAdv.RemittanceAdvId (Data._dbNextRemittanceAdvId db)
+    newId <- C.newIdOf @RemittanceAdv.RemittanceAdvId (Store._dbNextRemittanceAdvId db)
     let new = RemittanceAdv.RemittanceAdv newId
     createRemittanceAdvFull db new >>= either STM.throwSTM pure
 
@@ -1009,7 +1009,7 @@ modifyRemittanceAdvs
   -> ([RemittanceAdv.RemittanceAdv] -> [RemittanceAdv.RemittanceAdv])
   -> STM ()
 modifyRemittanceAdvs db f =
-  let tvar = Data._dbRemittanceAdvs db in STM.modifyTVar tvar f
+  let tvar = Store._dbRemittanceAdvs db in STM.modifyTVar tvar f
 
 
 --------------------------------------------------------------------------------
@@ -1021,7 +1021,7 @@ createEmployment db _ = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- C.newIdOf @Employment.ContractId (Data._dbNextEmploymentId db)
+    newId <- C.newIdOf @Employment.ContractId (Store._dbNextEmploymentId db)
     let new = Employment.Contract newId
     createEmploymentFull db new >>= either STM.throwSTM pure
 
@@ -1036,14 +1036,14 @@ createEmploymentFull db new = do
 modifyEmployments
   :: Core.StmDb -> ([Employment.Contract] -> [Employment.Contract]) -> STM ()
 modifyEmployments db f =
-  let tvar = Data._dbEmployments db in STM.modifyTVar tvar f
+  let tvar = Store._dbEmployments db in STM.modifyTVar tvar f
 
 newCreateContractForm
   :: Core.StmDb -> (User.UserProfile, Employment.CreateContractAll') -> STM Text
 newCreateContractForm db (profile, Employment.CreateContractAll' gi ty ld rs inv)
   = do
     key <- Core.genRandomText db
-    STM.modifyTVar (Data._dbFormCreateContractAll db) (add key)
+    STM.modifyTVar (Store._dbFormCreateContractAll db) (add key)
     pure key
  where
   add key =
@@ -1055,7 +1055,7 @@ readCreateContractForm
   -> (User.UserProfile, Text)
   -> STM (Either () Employment.CreateContractAll)
 readCreateContractForm db (profile, key) = do
-  m <- STM.readTVar $ Data._dbFormCreateContractAll db
+  m <- STM.readTVar $ Store._dbFormCreateContractAll db
   let mform = M.lookup (username, key) m
   pure $ maybe (Left ()) Right mform
   where username = User._userCredsName $ User._userProfileCreds profile
@@ -1066,7 +1066,7 @@ writeCreateContractForm
   -> STM Text
 writeCreateContractForm db (profile, key, Employment.CreateContractAll' gi ty ld rs inv)
   = do
-    STM.modifyTVar (Data._dbFormCreateContractAll db) save
+    STM.modifyTVar (Store._dbFormCreateContractAll db) save
     pure key
  where
   -- TODO Return an error when the key is not found.
@@ -1080,7 +1080,7 @@ writeCreateContractForm db (profile, key, Employment.CreateContractAll' gi ty ld
 addExpenseToContractForm
   :: Core.StmDb -> (User.UserProfile, Text, Employment.AddExpense) -> STM () -- TODO Possible errors
 addExpenseToContractForm db (profile, key, expense) = do
-  STM.modifyTVar (Data._dbFormCreateContractAll db) save
+  STM.modifyTVar (Store._dbFormCreateContractAll db) save
  where
   save = M.adjust
     (\(Employment.CreateContractAll gi ty ld rs inv es) ->
@@ -1094,7 +1094,7 @@ writeExpenseToContractForm
   -> (User.UserProfile, Text, Int, Employment.AddExpense)
   -> STM () -- TODO Possible errors
 writeExpenseToContractForm db (profile, key, idx, expense) = do
-  STM.modifyTVar (Data._dbFormCreateContractAll db) save
+  STM.modifyTVar (Store._dbFormCreateContractAll db) save
  where
   save = M.adjust
     (\(Employment.CreateContractAll gi ty ld rs inv es) ->
@@ -1108,7 +1108,7 @@ writeExpenseToContractForm db (profile, key, idx, expense) = do
 removeExpenseFromContractForm
   :: Core.StmDb -> (User.UserProfile, Text, Int) -> STM () -- TODO Possible errors
 removeExpenseFromContractForm db (profile, key, idx) = do
-  STM.modifyTVar (Data._dbFormCreateContractAll db) save
+  STM.modifyTVar (Store._dbFormCreateContractAll db) save
  where
   save = M.adjust
     (\(Employment.CreateContractAll gi ty ld rs inv es) ->
@@ -1168,7 +1168,7 @@ newCreateQuotationForm
   :: Core.StmDb -> (User.UserProfile, Quotation.CreateQuotationAll) -> STM Text
 newCreateQuotationForm db (profile, form) = do
   key <- Core.genRandomText db
-  STM.modifyTVar (Data._dbFormCreateQuotationAll db) (add key)
+  STM.modifyTVar (Store._dbFormCreateQuotationAll db) (add key)
   pure key
  where
   add key = M.insert (username, key) form
@@ -1221,7 +1221,7 @@ readCreateQuotationForm
   :: Core.StmDb
   -> (User.UserProfile, Text)
   -> STM (Either () Quotation.CreateQuotationAll)
-readCreateQuotationForm = readForm Data._dbFormCreateQuotationAll
+readCreateQuotationForm = readForm Store._dbFormCreateQuotationAll
 
 readCreateQuotationForms'
   :: User.UserProfile -> RunM (Either () [(Text, Quotation.CreateQuotationAll)])
@@ -1233,14 +1233,14 @@ readCreateQuotationForms
   :: Core.StmDb
   -> User.UserProfile
   -> STM (Either () [(Text, Quotation.CreateQuotationAll)])
-readCreateQuotationForms = readForms Data._dbFormCreateQuotationAll
+readCreateQuotationForms = readForms Store._dbFormCreateQuotationAll
 
 writeCreateQuotationForm
   :: Core.StmDb
   -> (User.UserProfile, Text, Quotation.CreateQuotationAll)
   -> STM Text
 writeCreateQuotationForm db (profile, key, form) = do
-  STM.modifyTVar (Data._dbFormCreateQuotationAll db) save
+  STM.modifyTVar (Store._dbFormCreateQuotationAll db) save
   pure key
  where
   -- TODO Return an error when the key is not found.
@@ -1248,7 +1248,7 @@ writeCreateQuotationForm db (profile, key, form) = do
   username = User._userCredsName $ User._userProfileCreds profile
 
 deleteCreateQuotationForm :: Core.StmDb -> (User.UserProfile, Text) -> STM () -- TODO Error
-deleteCreateQuotationForm = deleteForm Data._dbFormCreateQuotationAll
+deleteCreateQuotationForm = deleteForm Store._dbFormCreateQuotationAll
 
 -- | Fetch the quotation form from the staging area, then attempt to validate
 -- and create it. If successfull, the form is deleted.
@@ -1427,7 +1427,7 @@ setQuotationAsRejected db id mcomment = do
 --------------------------------------------------------------------------------
 filterOrders :: Core.StmDb -> Order.Predicate -> STM [Order.Order]
 filterOrders db predicate = do
-  let tvar = Data._dbOrders db
+  let tvar = Store._dbOrders db
   records <- STM.readTVar tvar
   pure $ filter (Order.applyPredicate predicate) records
 
@@ -1446,7 +1446,7 @@ newCreateSimpleContractForm
 newCreateSimpleContractForm db (profile, SimpleContract.CreateContractAll' ty rs cl inv)
   = do
     key <- Core.genRandomText db
-    STM.modifyTVar (Data._dbFormCreateSimpleContractAll db) (add key)
+    STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) (add key)
     pure key
  where
   add key = M.insert (username, key)
@@ -1457,7 +1457,7 @@ readCreateSimpleContractForm
   :: Core.StmDb
   -> (User.UserProfile, Text)
   -> STM (Either () SimpleContract.CreateContractAll)
-readCreateSimpleContractForm = readForm Data._dbFormCreateSimpleContractAll
+readCreateSimpleContractForm = readForm Store._dbFormCreateSimpleContractAll
 
 writeCreateSimpleContractForm
   :: Core.StmDb
@@ -1465,7 +1465,7 @@ writeCreateSimpleContractForm
   -> STM Text
 writeCreateSimpleContractForm db (profile, key, SimpleContract.CreateContractAll' ty rs cl inv)
   = do
-    STM.modifyTVar (Data._dbFormCreateSimpleContractAll db) save
+    STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
     pure key
  where
   -- TODO Return an error when the key is not found.
@@ -1480,7 +1480,7 @@ addRoleToSimpleContractForm
   :: Core.StmDb -> (User.UserProfile, Text, SimpleContract.SelectRole) -> STM () -- TODO Possible errors
 addRoleToSimpleContractForm db (profile, key, SimpleContract.SelectRole role) =
   do
-    STM.modifyTVar (Data._dbFormCreateSimpleContractAll db) save
+    STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
   save = M.adjust
     (\(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
@@ -1493,7 +1493,7 @@ addRoleToSimpleContractForm db (profile, key, SimpleContract.SelectRole role) =
 addDateToSimpleContractForm
   :: Core.StmDb -> (User.UserProfile, Text, SimpleContract.AddDate) -> STM () -- TODO Possible errors
 addDateToSimpleContractForm db (profile, key, date) = do
-  STM.modifyTVar (Data._dbFormCreateSimpleContractAll db) save
+  STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
   save = M.adjust
     (\(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
@@ -1507,7 +1507,7 @@ writeDateToSimpleContractForm
   -> (User.UserProfile, Text, Int, SimpleContract.AddDate)
   -> STM () -- TODO Possible errors
 writeDateToSimpleContractForm db (profile, key, idx, date) = do
-  STM.modifyTVar (Data._dbFormCreateSimpleContractAll db) save
+  STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
   save = M.adjust
     (\(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
@@ -1521,7 +1521,7 @@ writeDateToSimpleContractForm db (profile, key, idx, date) = do
 removeDateFromSimpleContractForm
   :: Core.StmDb -> (User.UserProfile, Text, Int) -> STM () -- TODO Possible errors
 removeDateFromSimpleContractForm db (profile, key, idx) = do
-  STM.modifyTVar (Data._dbFormCreateSimpleContractAll db) save
+  STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
   save = M.adjust
     (\(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
@@ -1535,7 +1535,7 @@ addVATToSimpleContractForm
   :: Core.StmDb -> (User.UserProfile, Text, SimpleContract.SelectVAT) -> STM () -- TODO Possible errors
 addVATToSimpleContractForm db (profile, key, SimpleContract.SelectVAT rate) =
   do
-    STM.modifyTVar (Data._dbFormCreateSimpleContractAll db) save
+    STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
   save = M.adjust
     (\(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
@@ -1548,7 +1548,7 @@ addVATToSimpleContractForm db (profile, key, SimpleContract.SelectVAT rate) =
 addExpenseToSimpleContractForm
   :: Core.StmDb -> (User.UserProfile, Text, SimpleContract.AddExpense) -> STM () -- TODO Possible errors
 addExpenseToSimpleContractForm db (profile, key, expense) = do
-  STM.modifyTVar (Data._dbFormCreateSimpleContractAll db) save
+  STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
   save = M.adjust
     (\(SimpleContract.CreateContractAll ty ld cl rs inv es) ->
@@ -1562,7 +1562,7 @@ writeExpenseToSimpleContractForm
   -> (User.UserProfile, Text, Int, SimpleContract.AddExpense)
   -> STM () -- TODO Possible errors
 writeExpenseToSimpleContractForm db (profile, key, idx, expense) = do
-  STM.modifyTVar (Data._dbFormCreateSimpleContractAll db) save
+  STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
   save = M.adjust
     (\(SimpleContract.CreateContractAll ty ld rs cl inv es) ->
@@ -1576,7 +1576,7 @@ writeExpenseToSimpleContractForm db (profile, key, idx, expense) = do
 removeExpenseFromSimpleContractForm
   :: Core.StmDb -> (User.UserProfile, Text, Int) -> STM () -- TODO Possible errors
 removeExpenseFromSimpleContractForm db (profile, key, idx) = do
-  STM.modifyTVar (Data._dbFormCreateSimpleContractAll db) save
+  STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
   save = M.adjust
     (\(SimpleContract.CreateContractAll ty ld rs cl inv es) ->
@@ -1593,7 +1593,7 @@ createInvoice db = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    newId <- C.newIdOf @Invoice.InvoiceId (Data._dbNextInvoiceId db)
+    newId <- C.newIdOf @Invoice.InvoiceId (Store._dbNextInvoiceId db)
     let new = Invoice.Invoice newId
     createInvoiceFull db new >>= either STM.throwSTM pure
 
@@ -1605,7 +1605,7 @@ createInvoiceFull db new = do
 
 modifyInvoices
   :: Core.StmDb -> ([Invoice.Invoice] -> [Invoice.Invoice]) -> STM ()
-modifyInvoices db f = let tvar = Data._dbInvoices db in STM.modifyTVar tvar f
+modifyInvoices db f = let tvar = Store._dbInvoices db in STM.modifyTVar tvar f
 
 matchPayment
   :: Core.StmDb
@@ -1626,7 +1626,7 @@ createTwoRemittanceAdvs db = do
     _ -> STM.throwSTM $ Invoice.Err "Failed to create remittance advices."
 
 selectUserByIdResolved db id = do
-  let usersTVar = Data._dbUserProfiles db
+  let usersTVar = Store._dbUserProfiles db
   users' <- STM.readTVar usersTVar
   case find ((== id) . User._userProfileId) users' of
     Just user -> do
@@ -1648,7 +1648,7 @@ selectUserByUsernameResolved db username = do
 
 filterUsers :: Core.StmDb -> User.Predicate -> STM [User.UserProfile]
 filterUsers db predicate = do
-  let tvar = Data._dbUserProfiles db
+  let tvar = Store._dbUserProfiles db
   records <- STM.readTVar tvar
   pure $ filter (User.applyPredicate predicate) records
 
@@ -1706,7 +1706,7 @@ setUserEmailAddrAsVerified db username = do
 selectEntityBySlugResolved
   :: Core.StmDb -> Text -> STM (Maybe (Legal.Entity, [Legal.ActingUser]))
 selectEntityBySlugResolved db name = do
-  let tvar = Data._dbLegalEntities db
+  let tvar = Store._dbLegalEntities db
   records <- STM.readTVar tvar
   case find ((== name) . Legal._entitySlug) records of
     Just entity -> do
@@ -1723,7 +1723,7 @@ selectEntityBySlugResolved db name = do
 
 readLegalEntities :: Core.StmDb -> STM [Legal.Entity]
 readLegalEntities db = do
-  let tvar = Data._dbLegalEntities db
+  let tvar = Store._dbLegalEntities db
   STM.readTVar tvar
 
 withRuntimeAtomically f a = ask >>= \rt -> atomicallyM $ f rt a
