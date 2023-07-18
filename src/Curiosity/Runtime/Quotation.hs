@@ -8,13 +8,13 @@ module Curiosity.Runtime.Quotation
   , createOrderForQuotation
   ) where
 
-import qualified Curiosity.Data.Counter as C
 import qualified Control.Concurrent.STM        as STM
 import qualified Curiosity.Core                as Core
 import qualified Curiosity.Data                as Data
-import qualified Curiosity.Data.Order          as Order
-import qualified Curiosity.Data.Quotation      as Quotation
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Counter       as C
+import qualified Curiosity.Types.Order         as Order
+import qualified Curiosity.Types.Quotation     as Quotation
+import qualified Curiosity.Types.User          as User
 import           Curiosity.Runtime.Order        ( createOrder )
 import           Curiosity.Runtime.Type        as RType
 import           Curiosity.STM.Helpers          ( atomicallyM )

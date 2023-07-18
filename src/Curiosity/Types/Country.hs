@@ -1,9 +1,9 @@
 {- |
-Module: Curiosity.Data.Country
+Module: Curiosity.Types.Country
 Description: A list of countries, as used in the simple contract form.
 
 -}
-module Curiosity.Data.Country
+module Curiosity.Types.Country
   ( countries
   , lookupCountry
   ) where

@@ -5,8 +5,8 @@ module Curiosity.Run
 import qualified Commence.Runtime.Errors       as Errs
 import qualified Curiosity.Command             as Command
 import qualified Curiosity.Data                as Data
-import qualified Curiosity.Data.Email          as Email
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Email         as Email
+import qualified Curiosity.Types.User          as User
 import qualified Curiosity.Interpret           as Inter
 import qualified Curiosity.Parse               as P
 import qualified Curiosity.Process             as P

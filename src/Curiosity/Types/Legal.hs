@@ -1,10 +1,10 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {- |
-Module: Curiosity.Data.Legal
+Module: Curiosity.Types.Legal
 Description: Legal entities related datatypes
 -}
-module Curiosity.Data.Legal
+module Curiosity.Types.Legal
   ( Entity(..)
   , Create(..)
   , Update(..)
@@ -20,9 +20,9 @@ module Curiosity.Data.Legal
   , toUBL
   ) where
 
-import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Commence.Types.Wrapped        as W
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.PrefixedId    as Pre
+import qualified Curiosity.Types.User          as User
 import           Data.Aeson
 import qualified Data.ByteString.Lazy          as LB
 import qualified Text.Blaze.Html5              as H

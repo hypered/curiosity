@@ -8,8 +8,8 @@ module Curiosity.Html.User
   , PublicProfileView(..)
   ) where
 
-import qualified Curiosity.Data.Legal          as Legal
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Legal         as Legal
+import qualified Curiosity.Types.User          as User
 import           Curiosity.Html.Misc
 import           Curiosity.Html.Navbar          ( navbar )
 import qualified Data.Text                     as T

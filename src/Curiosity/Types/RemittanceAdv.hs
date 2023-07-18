@@ -1,21 +1,21 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {- |
-Module: Curiosity.Data.RemittanceAdv
+Module: Curiosity.Types.RemittanceAdv
 Description: RemittanceAdv -related data types.
 
 This module contains data types used to represent remittance advices.
 
 -}
-module Curiosity.Data.RemittanceAdv
+module Curiosity.Types.RemittanceAdv
   ( -- * Main data representation
     RemittanceAdv(..)
   , RemittanceAdvId(..)
   , Err(..)
   ) where
 
-import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Commence.Types.Wrapped        as W
+import qualified Curiosity.Types.PrefixedId    as Pre
 import           Data.Aeson
 import qualified Text.Blaze.Html5              as H
 import           Web.FormUrlEncoded             ( FromForm(..)

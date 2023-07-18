@@ -94,20 +94,20 @@ library
     Curiosity.Command
     Curiosity.Core
     Curiosity.Data
-    Curiosity.Data.PrefixedId
-    Curiosity.Data.Business
-    Curiosity.Data.Command
-    Curiosity.Data.Counter
-    Curiosity.Data.Country
-    Curiosity.Data.Email
-    Curiosity.Data.Employment
-    Curiosity.Data.Invoice
-    Curiosity.Data.Legal
-    Curiosity.Data.Order
-    Curiosity.Data.Quotation
-    Curiosity.Data.RemittanceAdv
-    Curiosity.Data.SimpleContract
-    Curiosity.Data.User
+    Curiosity.Types.PrefixedId
+    Curiosity.Types.Business
+    Curiosity.Types.Command
+    Curiosity.Types.Counter
+    Curiosity.Types.Country
+    Curiosity.Types.Email
+    Curiosity.Types.Employment
+    Curiosity.Types.Invoice
+    Curiosity.Types.Legal
+    Curiosity.Types.Order
+    Curiosity.Types.Quotation
+    Curiosity.Types.RemittanceAdv
+    Curiosity.Types.SimpleContract
+    Curiosity.Types.User
     Curiosity.Dsl
     Curiosity.Form.Login
     Curiosity.Form.Signup

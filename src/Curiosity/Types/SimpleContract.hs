@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {- |
-Module: Curiosity.Data.SimpleContract
+Module: Curiosity.Types.SimpleContract
 Description: Simple contract (also called 3in1) related datatypes
 
 This module contains data types used to represent simple contracts, both as
@@ -10,7 +10,7 @@ used when filling a form, and used as proper validated data.
 See also the [related documentation page](/documentation/objects/invoices).
 
 -}
-module Curiosity.Data.SimpleContract
+module Curiosity.Types.SimpleContract
   ( -- * Form data representation
     --
     -- $formDataTypes
@@ -57,7 +57,7 @@ module Curiosity.Data.SimpleContract
   ) where
 
 import qualified Commence.Types.Wrapped        as W
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.User          as User
 import           Data.Aeson
 import           Data.List                      ( lookup )
 import qualified Text.Blaze.Html5              as H

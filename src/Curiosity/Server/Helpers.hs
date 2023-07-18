@@ -10,7 +10,7 @@ module Curiosity.Server.Helpers
   ) where
 
 import           Commence.Server.Auth           ( PostAuthHeaders )
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.User          as User
 import           Servant.API
 import qualified Servant.Auth.Server           as SAuth
 import           Servant.HTML.Blaze             ( HTML )

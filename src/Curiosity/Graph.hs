@@ -4,9 +4,9 @@ module Curiosity.Graph
   ) where
 
 import qualified Curiosity.Data                as Data
-import qualified Curiosity.Data.Business       as Business
-import qualified Curiosity.Data.Legal          as Legal
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Business      as Business
+import qualified Curiosity.Types.Legal         as Legal
+import qualified Curiosity.Types.User          as User
 import qualified Data.Text                     as T
 import           System.Process                 ( readProcess )
 

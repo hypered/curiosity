@@ -22,8 +22,8 @@ import qualified Control.Concurrent.STM        as STM
 import qualified Curiosity.Core                as Core
 import qualified Curiosity.Data                as Data
 import           Curiosity.Data                 ( HaskDb )
-import qualified Curiosity.Data.Email          as Email
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Email         as Email
+import qualified Curiosity.Types.User          as User
 import qualified Language.Haskell.TH.Syntax    as Syntax
 import           Prelude                 hiding ( state )
 

@@ -4,7 +4,7 @@ module Curiosity.RuntimeSpec
 
 import           Curiosity.Core
 import           Curiosity.Data
-import           Curiosity.Data.User
+import           Curiosity.Types.User
 import           Curiosity.Runtime.IO           ( bootDbAndLogFile )
 import           Curiosity.Runtime.Type         ( _rDb )
 import           Test.Hspec

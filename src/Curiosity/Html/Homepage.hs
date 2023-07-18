@@ -6,10 +6,10 @@ module Curiosity.Html.Homepage
   ( WelcomePage(..)
   ) where
 
-import qualified Curiosity.Data.Email          as Email
-import qualified Curiosity.Data.Order          as Order
-import qualified Curiosity.Data.Quotation      as Quotation
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Email         as Email
+import qualified Curiosity.Types.Order         as Order
+import qualified Curiosity.Types.Quotation     as Quotation
+import qualified Curiosity.Types.User          as User
 import           Curiosity.Html.Email
 import           Curiosity.Html.Misc
 import           Curiosity.Html.Order           ( panelOrders )

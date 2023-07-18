@@ -1,11 +1,11 @@
 -- | This is an alternative employment contract demand (or proposal)
 -- representation, focusing on the generic nature of "contracts", i.e. they can
 -- represent employment contracts, service or good sales, ... 
-module Curiosity.Data.Demand where
+module Curiosity.Types.Demand where
 
-import qualified Curiosity.Data.Business as Business
-import qualified Curiosity.Data.Legal as Legal
-import qualified Curiosity.Data.User as User
+import qualified Curiosity.Types.Business as Business
+import qualified Curiosity.Types.Legal as Legal
+import qualified Curiosity.Types.User as User
 
 
 --------------------------------------------------------------------------------

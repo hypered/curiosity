@@ -8,7 +8,7 @@ module Curiosity.Runtime.Email
 import qualified Control.Concurrent.STM        as STM
 import qualified Curiosity.Core                as Core
 import qualified Curiosity.Data                as Data
-import qualified Curiosity.Data.Email          as Email
+import qualified Curiosity.Types.Email         as Email
 import           Curiosity.Runtime.Type
 import           Curiosity.STM.Helpers          ( atomicallyM )
 

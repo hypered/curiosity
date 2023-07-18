@@ -7,8 +7,8 @@ module Curiosity.Html.Legal
   , CreateEntityPage(..)
   ) where
 
-import qualified Curiosity.Data.Legal          as Legal
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Legal         as Legal
+import qualified Curiosity.Types.User          as User
 import           Curiosity.Html.Misc
 import qualified Text.Blaze.Html5              as H
 import           Text.Blaze.Html5               ( (!) )

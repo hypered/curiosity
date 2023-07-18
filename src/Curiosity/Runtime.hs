@@ -75,7 +75,6 @@ module Curiosity.Runtime
   , module Runtime.E
   ) where
 
-import qualified Curiosity.Data.Counter as C
 import qualified Commence.Multilogging         as ML
 import qualified Commence.Runtime.Errors       as Errs
 import qualified Control.Concurrent.STM        as STM
@@ -87,17 +86,18 @@ import "exceptions" Control.Monad.Catch         ( MonadCatch
 import qualified Curiosity.Command             as Command
 import qualified Curiosity.Core                as Core
 import qualified Curiosity.Data                as Data
-import qualified Curiosity.Data.Business       as Business
-import qualified Curiosity.Data.Email          as Email
-import qualified Curiosity.Data.Employment     as Employment
-import qualified Curiosity.Data.Invoice        as Invoice
-import qualified Curiosity.Data.Legal          as Legal
-import qualified Curiosity.Data.Order          as Order
-import           Curiosity.Data.PrefixedId      ( showWithPrefix )
-import qualified Curiosity.Data.Quotation      as Quotation
-import qualified Curiosity.Data.RemittanceAdv  as RemittanceAdv
-import qualified Curiosity.Data.SimpleContract as SimpleContract
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Business       as Business
+import qualified Curiosity.Types.Counter        as C
+import qualified Curiosity.Types.Email          as Email
+import qualified Curiosity.Types.Employment     as Employment
+import qualified Curiosity.Types.Invoice        as Invoice
+import qualified Curiosity.Types.Legal          as Legal
+import qualified Curiosity.Types.Order          as Order
+import           Curiosity.Types.PrefixedId      ( showWithPrefix )
+import qualified Curiosity.Types.Quotation      as Quotation
+import qualified Curiosity.Types.RemittanceAdv  as RemittanceAdv
+import qualified Curiosity.Types.SimpleContract as SimpleContract
+import qualified Curiosity.Types.User           as User
 import qualified Curiosity.Graph               as Graph
 import           Curiosity.Runtime.Email       as Runtime.E
 import           Curiosity.Runtime.Error       as RErr

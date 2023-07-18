@@ -2,10 +2,10 @@ module Curiosity.CoreSpec
   ( spec
   ) where
 
-import qualified Curiosity.Data.Counter as C 
 import           Curiosity.Core
-import qualified           Curiosity.Data as Data 
-import           Curiosity.Data.User
+import qualified Curiosity.Data as Data 
+import qualified Curiosity.Types.Counter as C 
+import           Curiosity.Types.User
 import           Test.Hspec
 
 

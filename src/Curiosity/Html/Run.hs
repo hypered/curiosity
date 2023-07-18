@@ -6,7 +6,7 @@ module Curiosity.Html.Run
   ( RunPage(..)
   ) where
 
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.User          as User
 import           Curiosity.Html.Misc
 import qualified Text.Blaze.Html5              as H
 

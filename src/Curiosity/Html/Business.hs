@@ -7,8 +7,8 @@ module Curiosity.Html.Business
   , CreateUnitPage(..)
   ) where
 
-import qualified Curiosity.Data.Business       as Business
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.Business      as Business
+import qualified Curiosity.Types.User          as User
 import           Curiosity.Html.Misc
 import qualified Text.Blaze.Html5              as H
 import           Text.Blaze.Html5               ( (!) )

@@ -3,10 +3,10 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DataKinds #-}
 {- |
-Module: Curiosity.Data.User
+Module: Curiosity.Types.User
 Description: User related datatypes
 -}
-module Curiosity.Data.User
+module Curiosity.Types.User
   ( Signup(..)
   , Invite(..)
   , Login(..)
@@ -68,8 +68,8 @@ import           Commence.Types.Secret          ( (=:=) )
 import qualified Commence.Types.Secret         as Secret
 import qualified Commence.Types.Wrapped        as W
 import           Control.Lens
-import qualified Curiosity.Data.PrefixedId     as Pre
 import qualified Curiosity.Html.Errors         as Pages
+import qualified Curiosity.Types.PrefixedId    as Pre
 import           Data.Aeson
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT

@@ -4,11 +4,11 @@ module Curiosity.Runtime.Order
   , modifyOrders
   ) where
 
-import qualified Curiosity.Data.Counter as C 
 import qualified Control.Concurrent.STM        as STM
 import qualified Curiosity.Core                as Core
 import qualified Curiosity.Data                as Data
-import qualified Curiosity.Data.Order          as Order
+import qualified Curiosity.Types.Counter       as C 
+import qualified Curiosity.Types.Order         as Order
 
 createOrder :: Core.StmDb -> STM (Either Order.Err Order.OrderId)
 createOrder db = do

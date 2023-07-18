@@ -3,10 +3,10 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DataKinds #-}
 {- |
-Module: Curiosity.Data.Command
+Module: Curiosity.Types.Command
 Description: A command received from the web interface.
 -}
-module Curiosity.Data.Command
+module Curiosity.Types.Command
   ( Command(..)
   ) where
 

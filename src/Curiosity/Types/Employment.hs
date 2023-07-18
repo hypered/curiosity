@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {- |
-Module: Curiosity.Data.Employment
+Module: Curiosity.Types.Employment
 Description: Employment related datatypes
 
 This module contains data types used to represent contracts, both as used when
@@ -10,7 +10,7 @@ filling a form, and used as proper validated data.
 See also the [related documentation page](/documentation/objects/invoices).
 
 -}
-module Curiosity.Data.Employment
+module Curiosity.Types.Employment
   ( -- * Form data representation
     --
     -- $formDataTypes
@@ -44,8 +44,8 @@ module Curiosity.Data.Employment
 
 import qualified Commence.Types.Wrapped        as W
 import           Control.Lens                  
-import qualified Curiosity.Data.PrefixedId     as Pre
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.PrefixedId    as Pre
+import qualified Curiosity.Types.User          as User
 import           Data.Aeson
 import qualified Text.Blaze.Html5              as H
 import           Web.FormUrlEncoded             ( FromForm(..)

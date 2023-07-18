@@ -4,12 +4,12 @@ module CuriositySpec
 
 import qualified Curiosity.Command             as Command
 import qualified Curiosity.Data                as Data
-import qualified Curiosity.Data.Business       as Business
-import qualified Curiosity.Data.Counter        as C
-import qualified Curiosity.Data.Email          as Email
-import qualified Curiosity.Data.Legal          as Legal
-import qualified Curiosity.Data.User           as User
 import qualified Curiosity.Run                 as Run
+import qualified Curiosity.Types.Business      as Business
+import qualified Curiosity.Types.Counter       as C
+import qualified Curiosity.Types.Email         as Email
+import qualified Curiosity.Types.Legal         as Legal
+import qualified Curiosity.Types.User          as User
 import qualified Data.Aeson                    as Aeson
 import qualified Data.Text                     as T
 import qualified Data.Text.Encoding            as T

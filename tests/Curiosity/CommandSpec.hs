@@ -3,7 +3,7 @@ module Curiosity.CommandSpec
   ) where
 
 import           Curiosity.Command
-import qualified Curiosity.Data.User           as User
+import qualified Curiosity.Types.User          as User
 import qualified Data.Text                     as T
 import qualified Options.Applicative           as A
 import           Test.Hspec
