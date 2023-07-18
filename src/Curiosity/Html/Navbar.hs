@@ -7,9 +7,9 @@ module Curiosity.Html.Navbar
   , navbar
   ) where
 
+import qualified Curiosity.Html.LandingPage    as Pages
 import           Smart.Html.Avatar
 import qualified Smart.Html.Navbar             as Navbar
-import qualified Smart.Html.Pages.LandingPage  as Pages
 import           Smart.Html.Shared.Html.Icons
 
 

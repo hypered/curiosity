@@ -58,10 +58,3 @@ Bob
 ## Authorizations
 
 See the [library documentation](/haddock/Curiosity-Data-User.html#t:Authorization).
-
-## Questions
-
-- The Completion levels are mostly about using Smart services. But what about
-  clients, or advisors ?
-- When a social share is bought, is "member" another Completion level ?
-- We don't talk yet about a public profile.

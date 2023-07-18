@@ -168,7 +168,7 @@ make it quicker to interact with or observe it.
 
 Maybe this is a stretch, but even if you're not a developer, imagining a new
 command, its parameters, its effect on the system, and its outputs can be done
-by someone close to the developement teams.
+by someone close to the development teams.
 
 It's hard to quantify the success of this initiative. But since developers have
 practiced it, some of them, even some that were reluctant at first, now turn to
