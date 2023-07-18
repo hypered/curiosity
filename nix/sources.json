@@ -77,10 +77,10 @@
         "homepage": "https://monohs.hypered.design",
         "owner": "hypered",
         "repo": "smart-design-hs",
-        "rev": "ea580f708773edc291de813104ec293f55a83221",
-        "sha256": "0qqzip6kqbx7bp1ig6j01pa7x1i99hw45x37hbmp6y5ax6z0m6gp",
+        "rev": "ef92c12b726cc094535d46db1c7664f1121e4e2f",
+        "sha256": "0iab9p50kdr7czbiqmwmj7nai0850fvbid4q0y0nwn2gh38lv4dg",
         "type": "tarball",
-        "url": "https://github.com/hypered/smart-design-hs/archive/ea580f708773edc291de813104ec293f55a83221.tar.gz",
+        "url": "https://github.com/hypered/smart-design-hs/archive/ef92c12b726cc094535d46db1c7664f1121e4e2f.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }

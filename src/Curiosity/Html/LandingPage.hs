@@ -5,6 +5,7 @@ Description: A landing page (when the user is not logged in) for Curiosity.
 -}
 module Curiosity.Html.LandingPage
   ( LandingPage(..)
+  , navigation
   ) where
 
 import           Smart.Html.Alert
