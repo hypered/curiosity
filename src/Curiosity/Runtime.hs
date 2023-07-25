@@ -687,7 +687,7 @@ handleCommand runtime@Runtime {..} user command = do
       -- TODO Check this is the "system" user ?
                                   atomicallyM $ do
       Core.createEmail _rDb
-                       Email.InvoiceReminderEmail
+                       (Email.EmailTemplate Email.InvoiceReminderEmail)
                        "TODO sender email addr"
                        "TODO client email addr"
       pure
@@ -968,7 +968,7 @@ invoiceOrder db (profile, _) = do
     Right (id0, id1, id2, id3) -> do
       -- Invoices and remittance advices created, do the rest of the atomic process.
       Core.createEmail db
-                       Email.InvoiceEmail
+                       (Email.EmailTemplate Email.InvoiceEmail)
                        (User._userProfileEmailAddr profile)
                        (User._userProfileEmailAddr profile)
       -- TODO The email address should be the one from the client.
@@ -1266,7 +1266,7 @@ submitCreateQuotationForm db (profile, Quotation.SubmitQuotation key) = do
           -- Quotation created, do the rest of the atomic process.
           deleteCreateQuotationForm db (profile, key)
           Core.createEmail db
-                           Email.QuotationEmail
+                           (Email.EmailTemplate Email.QuotationEmail)
                            (User._userProfileEmailAddr profile)
                            (User._userProfileEmailAddr resolvedClient)
           pure $ Right id

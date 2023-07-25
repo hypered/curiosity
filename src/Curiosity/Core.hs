@@ -243,7 +243,7 @@ signup db@Db{..} input@User.Signup {..} = do
       pure (User.validateSignup now newId input)
         >>= either (STM.throwSTM . User.ValidationErrs) pure
     emailId <-
-      createEmail db Email.SignupConfirmationEmail Email.systemEmailAddr email
+      createEmail db (Email.EmailTemplate Email.SignupConfirmationEmail) Email.systemEmailAddr email
         >>= either STM.throwSTM pure
     -- We fail the transaction if createUserFull returns an error,
     -- so that we don't increment _dbNextUserId.
@@ -278,7 +278,7 @@ inviteUser db@Db {..} User.Invite {..} = do
           [User.AuthorizedAsEmployee]
           Nothing
     emailId <-
-      createEmail db (Email.InviteEmail token) Email.systemEmailAddr email
+      createEmail db (Email.EmailTemplate $ Email.InviteEmail token) Email.systemEmailAddr email
         >>= either STM.throwSTM pure
     -- We fail the transaction if createUserFull returns an error,
     -- so that we don't increment _dbNextUserId.

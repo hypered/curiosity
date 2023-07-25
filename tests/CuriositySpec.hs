@@ -103,7 +103,7 @@ spec = do
               , Store._dbNextEmailId  = C.CounterValue 2
               , Store._dbEmails       = Identity
                                          [ Email.Email "EMAIL-1"
-                                                       Email.SignupConfirmationEmail
+                                                       (Email.EmailTemplate Email.SignupConfirmationEmail)
                                                        Email.systemEmailAddr
                                                        "alice@example.com"
                                                        Email.EmailTodo
@@ -118,7 +118,7 @@ spec = do
               , Store._dbNextEmailId  = C.CounterValue 2
               , Store._dbEmails       = Identity
                                          [ Email.Email "EMAIL-1"
-                                                       Email.SignupConfirmationEmail
+                                                       (Email.EmailTemplate Email.SignupConfirmationEmail)
                                                        Email.systemEmailAddr
                                                        "alice@example.com"
                                                        Email.EmailDone
