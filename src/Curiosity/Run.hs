@@ -26,6 +26,7 @@ import qualified System.Console.Haskeline      as HL
 import           System.Directory               ( doesFileExist )
 import           System.Environment             ( lookupEnv )
 import           System.Posix.User              ( getLoginName )
+import qualified System.Posix.User             as PU
 
 
 --------------------------------------------------------------------------------
@@ -240,12 +241,21 @@ run (Command.CommandWithTarget command target (Command.User user)) = do
 
 --------------------------------------------------------------------------------
 handleServe :: P.Conf -> P.ServerConf -> IO ExitCode
-handleServe conf serverConf = do
+handleServe conf serverConf@P.ServerConf{..} = do
+  muserEntry <- mapM (PU.getUserEntryForName . T.unpack) _serverUserName
+  mgroupEntry <- mapM (PU.getGroupEntryForName . T.unpack) _serverGroupName
+  let muid = PU.userID <$> muserEntry
+  let mgid = PU.groupID <$> mgroupEntry
+  -- Note: setOwnerAndGroup won't change a uid/gid if it's set to -1.
+  let uid = fromMaybe (-1) muid
+  let gid = fromMaybe (-1) mgid
+
   threads <- Rt.emptyHttpThreads
   runtime@Rt.Runtime {..} <- Rt.bootConf conf threads >>= either throwIO pure
   Rt.runRunM runtime Rt.spawnEmailThread
+  let unixSocketConf = Rt.UnixSocket _serverUnixSocketPath uid gid
   when (P._serverUnixDomain serverConf) $
-    void $ Rt.runRunM runtime Rt.spawnUnixThread
+    void $ Rt.runRunM runtime $ Rt.spawnUnixThread unixSocketConf
   P.startServer serverConf runtime >>= P.endServer _rLoggers
   mPowerdownErrs <- Rt.powerdown runtime
   maybe exitSuccess throwIO mPowerdownErrs
@@ -256,7 +266,7 @@ handleSock :: P.Conf -> IO ExitCode
 handleSock conf = do
   putStrLn @Text "Creating runtime..."
   runtime <- Rt.bootConf conf Rt.NoThreads >>= either throwIO pure
-  Rt.runWithRuntime runtime
+  Rt.runWithRuntime runtime $ Rt.UnixSocket "./curiosity.sock" (-1) (-1)
   exitSuccess
 
 
