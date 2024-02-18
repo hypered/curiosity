@@ -127,8 +127,8 @@ data Command =
     -- ^ Report or set the simulated time.
     -- If True, advance the time by a second.
     -- If True, advance the time to the next minute.
-  | Log Text P.Conf
-    -- Log a line of text to the logs.
+  | Log P.Conf Text
+    -- ^ Log a line of text to the logs.
   | ShowId Text
     -- ^ If not a command per se, assume it's an ID to be looked up.
   deriving (Eq, Show)
@@ -1058,8 +1058,8 @@ parserTime =
 parserLog :: A.Parser Command
 parserLog =
   Log
-    <$> A.argument A.str (A.metavar "MESSAGE" <> A.help "A line of text")
-    <*> P.confParser
+    <$> P.confParser
+    <*> A.argument A.str (A.metavar "MESSAGE" <> A.help "A line of text")
 
 parserShowId :: A.Parser Command
 parserShowId =

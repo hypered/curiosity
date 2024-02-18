@@ -209,7 +209,7 @@ run (Command.CommandWithTarget (Command.Step isAll dryRun) target (Command.User 
       putStrLn @Text "TODO"
       exitFailure
 
-run (Command.CommandWithTarget (Command.Log msg conf) (Command.StateFileTarget path) _)
+run (Command.CommandWithTarget (Command.Log conf msg) (Command.StateFileTarget path) _)
   = do
     runtime <-
       Rt.bootConf conf { P._confDbFile = Just path } Rt.NoThreads >>= either throwIO pure
