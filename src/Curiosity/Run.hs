@@ -2,6 +2,7 @@ module Curiosity.Run
   ( run
   ) where
 
+import qualified Commence.Multilogging         as ML
 import qualified Commence.Runtime.Errors       as Errs
 import qualified Curiosity.Command             as Command
 import qualified Curiosity.Types.Store         as Store
@@ -213,7 +214,7 @@ run (Command.CommandWithTarget (Command.Log conf msg) (Command.StateFileTarget p
   = do
     runtime <-
       Rt.bootConf conf { P._confDbFile = Just path } Rt.NoThreads >>= either throwIO pure
-    P.logInfo (<> "CLI" <> "Log") (Rt._rLoggers runtime) msg
+    ML.logInfo (<> "CLI" <> "Log") (Rt._rLoggers runtime) msg
     Rt.powerdown runtime
     exitSuccess
 

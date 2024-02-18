@@ -4,12 +4,10 @@ module Curiosity.Process
   , endServer
   , shutdown
   , startupLogInfo
-  , logInfo
   ) where
 
 import qualified Commence.Multilogging         as ML
 import qualified Commence.Runtime.Errors       as Errs
-import qualified Control.Monad.Log             as L
 import qualified Curiosity.Parse               as Command
 import qualified Curiosity.Runtime             as Rt
 import qualified Curiosity.Server              as Srv
@@ -38,16 +36,7 @@ The implementation is simple: if there are no loggers, we don't output anything.
 FIXME: check if the logger is not using STDOUT, or, find the first non-STDOUT logger and log on that.
 -}
 startupLogInfo :: MonadIO m => ML.AppNameLoggers -> Text -> m ()
-startupLogInfo loggers = logInfo (<> "Boot") loggers
-
-logInfo
-  :: MonadIO m
-  => (ML.AppName -> ML.AppName)
-  -> ML.AppNameLoggers
-  -> Text
-  -> m ()
-logInfo env (ML.AppNameLoggers loggers) msg = mapM_ logOver loggers
-  where logOver l = L.runLogT' l . L.localEnv env $ L.info msg
+startupLogInfo loggers = ML.logInfo (<> "Boot") loggers
 
 
 --------------------------------------------------------------------------------

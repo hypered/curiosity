@@ -40,8 +40,7 @@ common common-dependencies
     , protolude
 
     -- Our dependencies
-    , commence-core
-    , commence-interactive-state
+    , commence
     , design-hs-lib
 
     -- control

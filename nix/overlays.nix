@@ -12,7 +12,7 @@ let
 
   # We can overlay haskell packages here.
   haskellOverlays =
-          getOverlays commence # we get 2 packages: commence-core and commence-interactive-state
+          getOverlays commence
        ++ getOverlays smart-design-hs
        ;
 

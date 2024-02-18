@@ -73,7 +73,7 @@ noLoggingConf = ML.LoggingConf ML.NoLogging
 confParser :: A.Parser Conf
 confParser = do
   _confDbFile  <- dbFileParser
-  _confLogging <- ML.parseLoggingConf
+  _confLogging <- ML.parseLoggingConf "./curiosity.log" "Curiosity"
   pure Conf {..}
 
 serverParser :: A.Parser ServerConf
