@@ -176,5 +176,3 @@ instance Errs.IsRuntimeErr PrefixParseErr where
   errCode PrefixAbsent{} = "ERR.PREFIXED_ID.PREFIX_ABSENT"
   httpStatus PrefixAbsent{} = unprocessableEntity422
   userMessage (PrefixAbsent msg) = Just msg
-
-
