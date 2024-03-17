@@ -32,7 +32,6 @@ module Curiosity.Interpret
   , pad
   , listScenarios
   , wordsq
-  , help
   ) where
 
 import qualified Curiosity.Command             as Command
@@ -50,6 +49,8 @@ import qualified System.FilePath.Glob          as Glob
 
 
 --------------------------------------------------------------------------------
+
+-- | Interpret a script.
 handleRun :: P.Conf -> User.UserName -> FilePath -> Bool -> IO ExitCode
 handleRun conf user scriptPath withFinal = do
   runtime <- Rt.bootConf conf Rt.NoThreads >>= either throwIO pure
@@ -212,17 +213,6 @@ interpretLines runtime user dir content nesting acc0 accumulate = go user acc0 0
             let t    = trace' ["Shouldn't happen."] (ExitFailure 1) [] st
                 acc' = accumulate t acc
             go user' acc' nbr' rest
-
-
---------------------------------------------------------------------------------
--- A Text with the same content as `cty --help`.
-help :: Text
-help =
-  let result =
-        A.execParserPure A.defaultPrefs Command.parserInfo ["--help"]
-  in case result of
-        A.Failure (A.ParserFailure f) -> let (err, _, _) = f "" in show err
-        _ -> "Can't happen."
 
 
 --------------------------------------------------------------------------------

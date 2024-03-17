@@ -15,6 +15,7 @@ module Curiosity.Command
   , parserInfo
   , parserInfoWithTarget
   , commandToString
+  , help
   ) where
 
 import qualified Data.String as Str
@@ -1088,3 +1089,14 @@ commandToString = \case
       <> (if useHs then " --hs" else "")
       <> (if isShort then " --short" else "")
   _           -> Left "Unimplemented"
+
+
+--------------------------------------------------------------------------------
+-- A Text with the same content as `cty --help`.
+help :: Text
+help =
+  let result =
+        A.execParserPure A.defaultPrefs parserInfo ["--help"]
+  in case result of
+        A.Failure (A.ParserFailure f) -> let (err, _, _) = f "" in show err
+        _ -> "Can't happen."

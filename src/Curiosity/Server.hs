@@ -34,6 +34,7 @@ import qualified Commence.Runtime.Errors       as Errs
 import qualified Commence.Server.Auth          as CAuth
 import           Control.Lens
 import "exceptions" Control.Monad.Catch         ( MonadMask )
+import qualified Curiosity.Command             as Command
 import qualified Curiosity.Core                as Core
 import qualified Curiosity.Types.Business       as Business
 import qualified Curiosity.Types.Country        as Country
@@ -2692,7 +2693,7 @@ showStateAsSvg = do
 
 --------------------------------------------------------------------------------
 showHelpTxt :: ServerC m => m Text
-showHelpTxt = pure Inter.help
+showHelpTxt = pure Command.help
 
 
 --------------------------------------------------------------------------------
