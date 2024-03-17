@@ -4,8 +4,8 @@ title: Curiosity
 
 # Test scenarios
 
-One the main goal of Curiosity is to precisely describe its behavior in terms
-of test scenarios. To do so, Curiosity supports running scripts: they are
+One of the main goal of Curiosity is to precisely describe its behavior in
+terms of test scenarios. To do so, Curiosity supports running scripts: they are
 textual sequences of commands that mimic closely what can be done through the
 web interface.
 
