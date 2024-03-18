@@ -17,9 +17,9 @@
 -- feeding (possibly) very long scripts.
 module Curiosity.Interpret
   ( Trace (..)
-  , handleRun
-  , handleRunNoTrace
-  , handleRun'
+  , run
+  , runNoTrace
+  , run'
   , interpret
   , interpretFile
   , interpretLines
@@ -47,26 +47,26 @@ import System.FilePath.Glob qualified as Glob
 --------------------------------------------------------------------------------
 
 -- | Interpret a script.
-handleRun :: P.Conf -> User.UserName -> FilePath -> Bool -> IO ExitCode
-handleRun conf user scriptPath withFinal = do
+run :: P.Conf -> User.UserName -> FilePath -> Bool -> IO ExitCode
+run conf user scriptPath withFinal = do
   runtime <- Rt.bootConf conf Rt.NoThreads >>= either throwIO pure
   (code, output) <- interpret runtime user scriptPath
   Rt.powerdown runtime
   when withFinal $ print output
   exitWith code
 
-handleRunNoTrace :: P.Conf -> User.UserName -> FilePath -> Bool -> IO ExitCode
-handleRunNoTrace conf user scriptPath withFinal = do
+runNoTrace :: P.Conf -> User.UserName -> FilePath -> Bool -> IO ExitCode
+runNoTrace conf user scriptPath withFinal = do
   runtime <- Rt.bootConf conf Rt.NoThreads >>= either throwIO pure
   output <- interpretFile' runtime user scriptPath 0
   Rt.powerdown runtime
   when withFinal $ print output
   exitSuccess
 
--- | Similar to `handleRun`, but capturing the output, and logging elsewhere
+-- | Similar to `run`, but capturing the output, and logging elsewhere
 -- than normally: this is used in tests and in the `/scenarios` handler.
-handleRun' :: FilePath -> IO [Trace]
-handleRun' scriptPath = do
+run' :: FilePath -> IO [Trace]
+run' scriptPath = do
   let conf =
         P.Conf
           { P._confLogging = P.noLoggingConf

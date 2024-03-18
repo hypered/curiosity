@@ -49,6 +49,6 @@ mkGoldenTest path = do
   pure $ Silver.goldenVsAction testName goldenPath action convert
  where
   action :: IO [Text]
-  action = snd . Interpret.formatOutput <$> Interpret.handleRun' path
+  action = snd . Interpret.formatOutput <$> Interpret.run' path
 
   convert = T.unlines

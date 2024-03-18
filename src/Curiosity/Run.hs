@@ -104,13 +104,13 @@ run (Command.CommandWithTarget (Command.Run conf scriptPath runOutput) target (C
     Command.MemoryTarget ->
       let Command.RunOutput withTraces withFinal = runOutput
        in if withTraces
-            then Interpret.handleRun conf user scriptPath withFinal
-            else Interpret.handleRunNoTrace conf user scriptPath withFinal
+            then Interpret.run conf user scriptPath withFinal
+            else Interpret.runNoTrace conf user scriptPath withFinal
     Command.StateFileTarget path ->
       let Command.RunOutput withTraces withFinal = runOutput
        in if withTraces
-            then Interpret.handleRun conf {P._confDbFile = Just path} user scriptPath withFinal
-            else Interpret.handleRunNoTrace conf {P._confDbFile = Just path} user scriptPath withFinal
+            then Interpret.run conf {P._confDbFile = Just path} user scriptPath withFinal
+            else Interpret.runNoTrace conf {P._confDbFile = Just path} user scriptPath withFinal
     Command.UnixDomainTarget _ -> do
       putStrLn @Text "TODO"
       exitFailure
