@@ -32,7 +32,7 @@ module Curiosity.Interpret
 
 import Curiosity.Command qualified as Command
 import Curiosity.Parse qualified as P
-import Curiosity.Runtime qualified as Rt
+import Curiosity.Runtime qualified as Runtime
 import Curiosity.Types.Store qualified as Store
 import Curiosity.Types.User qualified as User
 import Data.List (isInfixOf, last)
@@ -47,30 +47,30 @@ import System.FilePath.Glob qualified as Glob
 --------------------------------------------------------------------------------
 
 -- | Interpret a script.
-run :: Rt.Runtime -> User.UserName -> FilePath -> Bool -> IO ExitCode
+run :: Runtime.Runtime -> User.UserName -> FilePath -> Bool -> IO ExitCode
 run runtime user scriptPath withFinal = do
   (code, output) <- interpret runtime user scriptPath
-  Rt.powerdown runtime
+  Runtime.powerdown runtime
   when withFinal $ print output
   exitWith code
 
-runNoTrace :: Rt.Runtime -> User.UserName -> FilePath -> Bool -> IO ExitCode
+runNoTrace :: Runtime.Runtime -> User.UserName -> FilePath -> Bool -> IO ExitCode
 runNoTrace runtime user scriptPath withFinal = do
   output <- interpretFile' runtime user scriptPath 0
-  Rt.powerdown runtime
+  Runtime.powerdown runtime
   when withFinal $ print output
   exitSuccess
 
 -- | Similar to `run`, but capturing the output, and logging elsewhere
 -- than normally: this is used in tests and in the `/scenarios` handler.
-run' :: Rt.Runtime -> FilePath -> IO [Trace]
+run' :: Runtime.Runtime -> FilePath -> IO [Trace]
 run' runtime scriptPath = do
   output <- interpretFile runtime "system" scriptPath 0
   -- TODO the boot/powerdone should be done in a withRuntime or similar.
-  Rt.powerdown runtime
+  Runtime.powerdown runtime
   pure output
 
-interpret :: Rt.Runtime -> User.UserName -> FilePath -> IO (ExitCode, Store.HaskDb)
+interpret :: Runtime.Runtime -> User.UserName -> FilePath -> IO (ExitCode, Store.HaskDb)
 interpret runtime user path = do
   output <- interpretFile runtime user path 0
   let (exitCode, ls) = formatOutput output
@@ -101,26 +101,26 @@ flatten :: [Trace] -> [Trace]
 flatten [] = []
 flatten (t : ts) = t {traceNested = []} : flatten (traceNested t) ++ flatten ts
 
-interpretFile :: Rt.Runtime -> User.UserName -> FilePath -> Int -> IO [Trace]
+interpretFile :: Runtime.Runtime -> User.UserName -> FilePath -> Int -> IO [Trace]
 interpretFile runtime user path nesting = do
   let dir = takeDirectory path
   content <- T.lines <$> readFile path
   interpretLines runtime user dir content nesting [] (\t acc -> acc ++ [t])
 
 -- | TODO This is similar to `interpretFile` but this doesn't collect the
--- individual traces. Still, a call to `Rt.state` is done after each command
+-- individual traces. Still, a call to `Runtime.state` is done after each command
 -- and maybe this could be avoided.
 -- The idea is to be able to use this function on some large script to
 -- benchmark the system and make sure it can process each supported operation
 -- quickly.
-interpretFile' :: Rt.Runtime -> User.UserName -> FilePath -> Int -> IO Store.HaskDb
+interpretFile' :: Runtime.Runtime -> User.UserName -> FilePath -> Int -> IO Store.HaskDb
 interpretFile' runtime user path nesting = do
   let dir = takeDirectory path
   content <- T.lines <$> readFile path
   interpretLines runtime user dir content nesting Store.emptyHask (\t _ -> traceState t)
 
 interpretLines
-  :: Rt.Runtime
+  :: Runtime.Runtime
   -> User.UserName
   -> FilePath
   -> [Text]
@@ -150,12 +150,12 @@ interpretLines runtime user dir content nesting acc0 accumulate =
     case separated of
       [] -> go user' acc nbr rest
       ["as", username] -> do
-        st <- Rt.runRunM runtime Rt.state
+        st <- Runtime.runRunM runtime Runtime.state
         let t = trace' ["Modifying default user."] ExitSuccess [] st
             acc' = accumulate t acc
         go (User.UserName username) acc' nbr' rest
       ["quit"] -> do
-        st <- Rt.runRunM runtime Rt.state
+        st <- Runtime.runRunM runtime Runtime.state
         let t = trace' ["Exiting."] ExitSuccess [] st
             acc' = accumulate t acc
         go user' acc' nbr' rest
@@ -180,12 +180,12 @@ interpretLines runtime user dir content nesting acc0 accumulate =
                           user
                           scriptPath'
                           (succ nesting)
-                    st <- Rt.runRunM runtime Rt.state
+                    st <- Runtime.runRunM runtime Runtime.state
                     let t = trace' [] ExitSuccess output' st
                         acc' = accumulate t acc
                     go user' acc' nbr' rest
                   else do
-                    st <- Rt.runRunM runtime Rt.state
+                    st <- Runtime.runRunM runtime Runtime.state
                     let t =
                           trace'
                             ["Script path can't be outside initial directory."]
@@ -195,18 +195,18 @@ interpretLines runtime user dir content nesting acc0 accumulate =
                         acc' = accumulate t acc
                     go user' acc' nbr' rest
               _ -> do
-                (_, output) <- Rt.handleCommand runtime user' command
-                st <- Rt.runRunM runtime Rt.state
+                (_, output) <- Runtime.handleCommand runtime user' command
+                st <- Runtime.runRunM runtime Runtime.state
                 let t = trace' output ExitSuccess [] st
                     acc' = accumulate t acc
                 go user' acc' nbr' rest
           A.Failure err -> do
-            st <- Rt.runRunM runtime Rt.state
+            st <- Runtime.runRunM runtime Runtime.state
             let t = trace' [show err] (ExitFailure 1) [] st
                 acc' = accumulate t acc
             go user' acc' nbr' rest
           A.CompletionInvoked _ -> do
-            st <- Rt.runRunM runtime Rt.state
+            st <- Runtime.runRunM runtime Runtime.state
             let t = trace' ["Shouldn't happen."] (ExitFailure 1) [] st
                 acc' = accumulate t acc
             go user' acc' nbr' rest

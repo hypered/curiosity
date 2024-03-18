@@ -10,12 +10,12 @@ module Curiosity.Process
 import Commence.Multilogging qualified as ML
 import Commence.Runtime.Errors qualified as Errs
 import Curiosity.Parse qualified as Command
-import Curiosity.Runtime qualified as Rt
+import Curiosity.Runtime qualified as Runtime
 import Curiosity.Server qualified as Srv
 
 --------------------------------------------------------------------------------
-startServer :: Command.ServerConf -> Rt.Runtime -> IO Errs.RuntimeErr
-startServer conf runtime@Rt.Runtime {..} = do
+startServer :: Command.ServerConf -> Runtime.Runtime -> IO Errs.RuntimeErr
+startServer conf runtime@Runtime.Runtime {..} = do
   let Command.ServerConf port _ _ _ _ _ = conf
   startupLogInfo _rLoggers $ "Starting up server on port " <> show port <> "..."
   try @SomeException (Srv.run conf runtime)
@@ -41,8 +41,8 @@ startupLogInfo :: MonadIO m => ML.AppNameLoggers -> Text -> m ()
 startupLogInfo = ML.logInfo (<> "Boot")
 
 --------------------------------------------------------------------------------
-shutdown :: Rt.Runtime -> Maybe SomeException -> IO ExitCode
-shutdown Rt.Runtime {..} mException = do
+shutdown :: Runtime.Runtime -> Maybe SomeException -> IO ExitCode
+shutdown Runtime.Runtime {..} mException = do
   startupLogInfo _rLoggers $
     "Shutting down: "
       <> maybe "graceful exit" show mException

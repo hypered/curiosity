@@ -8,7 +8,7 @@ import Curiosity.Command qualified as Command
 import Curiosity.Interpret qualified as Interpret
 import Curiosity.Parse qualified as P
 import Curiosity.Process qualified as P
-import Curiosity.Runtime qualified as Rt
+import Curiosity.Runtime qualified as Runtime
 import Curiosity.Server qualified as Srv
 import Curiosity.Types.Email qualified as Email
 import Curiosity.Types.Store qualified as Store
@@ -58,15 +58,15 @@ run (Command.CommandWithTarget (Command.Init mode) (Command.StateFileTarget path
 run (Command.CommandWithTarget Command.Reset (Command.StateFileTarget path) _) =
   do
     runtime <-
-      Rt.bootConf P.defaultConf {P._confDbFile = Just path} Rt.NoThreads >>= either throwIO pure
-    Rt.runRunM runtime Rt.reset
-    Rt.powerdown runtime
+      Runtime.bootConf P.defaultConf {P._confDbFile = Just path} Runtime.NoThreads >>= either throwIO pure
+    Runtime.runRunM runtime Runtime.reset
+    Runtime.powerdown runtime
     putStrLn @Text "State is now empty."
     exitSuccess
 run (Command.CommandWithTarget (Command.Repl conf) (Command.StateFileTarget _) (Command.User user)) =
   do
-    threads <- Rt.emptyReplThreads
-    runtime <- Rt.bootConf conf threads >>= either throwIO pure
+    threads <- Runtime.emptyReplThreads
+    runtime <- Runtime.bootConf conf threads >>= either throwIO pure
     let handleExceptions = (`catch` P.shutdown runtime . Just)
     handleExceptions $ do
       repl runtime user
@@ -102,13 +102,13 @@ run (Command.CommandWithTarget (Command.Sock conf) target _) = do
 run (Command.CommandWithTarget (Command.Run conf scriptPath runOutput) target (Command.User user)) =
   case target of
     Command.MemoryTarget -> do
-      runtime <- Rt.bootConf conf Rt.NoThreads >>= either throwIO pure
+      runtime <- Runtime.bootConf conf Runtime.NoThreads >>= either throwIO pure
       let Command.RunOutput withTraces withFinal = runOutput
        in if withTraces
             then Interpret.run runtime user scriptPath withFinal
             else Interpret.runNoTrace runtime user scriptPath withFinal
     Command.StateFileTarget path -> do
-      runtime <- Rt.bootConf conf {P._confDbFile = Just path} Rt.NoThreads >>= either throwIO pure
+      runtime <- Runtime.bootConf conf {P._confDbFile = Just path} Runtime.NoThreads >>= either throwIO pure
       let Command.RunOutput withTraces withFinal = runOutput
        in if withTraces
             then Interpret.run runtime user scriptPath withFinal
@@ -205,9 +205,9 @@ run (Command.CommandWithTarget (Command.Step isAll dryRun) target (Command.User 
 run (Command.CommandWithTarget (Command.Log conf msg) (Command.StateFileTarget path) _) =
   do
     runtime <-
-      Rt.bootConf conf {P._confDbFile = Just path} Rt.NoThreads >>= either throwIO pure
-    ML.logInfo (<> "CLI" <> "Log") (Rt._rLoggers runtime) msg
-    Rt.powerdown runtime
+      Runtime.bootConf conf {P._confDbFile = Just path} Runtime.NoThreads >>= either throwIO pure
+    ML.logInfo (<> "CLI" <> "Log") (Runtime._rLoggers runtime) msg
+    Runtime.powerdown runtime
     exitSuccess
 run (Command.CommandWithTarget (Command.ShowId i) target (Command.User user)) =
   do
@@ -231,22 +231,22 @@ run (Command.CommandWithTarget command target (Command.User user)) = do
 --------------------------------------------------------------------------------
 handleServe :: P.Conf -> P.ServerConf -> IO ExitCode
 handleServe conf serverConf = do
-  threads <- Rt.emptyHttpThreads
-  runtime@Rt.Runtime {..} <- Rt.bootConf conf threads >>= either throwIO pure
-  Rt.runRunM runtime Rt.spawnEmailThread
+  threads <- Runtime.emptyHttpThreads
+  runtime@Runtime.Runtime {..} <- Runtime.bootConf conf threads >>= either throwIO pure
+  Runtime.runRunM runtime Runtime.spawnEmailThread
   when (P._serverUnixDomain serverConf) $
     void $
-      Rt.runRunM runtime Rt.spawnUnixThread
+      Runtime.runRunM runtime Runtime.spawnUnixThread
   P.startServer serverConf runtime >>= P.endServer _rLoggers
-  mPowerdownErrs <- Rt.powerdown runtime
+  mPowerdownErrs <- Runtime.powerdown runtime
   maybe exitSuccess throwIO mPowerdownErrs
 
 --------------------------------------------------------------------------------
 handleSock :: P.Conf -> IO ExitCode
 handleSock conf = do
   putStrLn @Text "Creating runtime..."
-  runtime <- Rt.bootConf conf Rt.NoThreads >>= either throwIO pure
-  Rt.runWithRuntime runtime
+  runtime <- Runtime.bootConf conf Runtime.NoThreads >>= either throwIO pure
+  Runtime.runWithRuntime runtime
   exitSuccess
 
 --------------------------------------------------------------------------------
@@ -279,12 +279,12 @@ handleShowId conf user i = do
 
 --------------------------------------------------------------------------------
 handleCommand conf user command = do
-  runtime <- Rt.bootConf conf Rt.NoThreads >>= either handleError pure
+  runtime <- Runtime.bootConf conf Runtime.NoThreads >>= either handleError pure
 
-  (exitCode, output) <- Rt.handleCommand runtime user command
+  (exitCode, output) <- Runtime.handleCommand runtime user command
   mapM_ putStrLn output
 
-  Rt.powerdown runtime
+  Runtime.powerdown runtime
   -- TODO shutdown runtime, loggers, save state, ...
   exitWith exitCode
 
@@ -326,7 +326,7 @@ client path command = do
   exitSuccess
 
 --------------------------------------------------------------------------------
-repl :: Rt.Runtime -> User.UserName -> IO ()
+repl :: Runtime.Runtime -> User.UserName -> IO ()
 repl runtime user = HL.runInputT settings loop
  where
   settings =
@@ -358,14 +358,14 @@ repl runtime user = HL.runInputT settings loop
           A.Success command -> do
             case command of
               -- We ignore the Configuration here. Probably this should be moved
-              -- to Rt.handleCommand too.
+              -- to Runtime.handleCommand too.
               Command.Run _ scriptPath _ -> do
                 (code, _) <- liftIO $ Interpret.interpret runtime user scriptPath
                 case code of
                   ExitSuccess -> pure ()
                   ExitFailure _ -> output' "Script failed."
               _ -> do
-                (_, output) <- Rt.handleCommand runtime user command
+                (_, output) <- Runtime.handleCommand runtime user command
                 mapM_ output' output
           A.Failure (A.ParserFailure f) -> let (err, _, _) = f "" in output' $ show err
           A.CompletionInvoked _ -> output' "Shouldn't happen"

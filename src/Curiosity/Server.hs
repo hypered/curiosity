@@ -58,7 +58,7 @@ import Curiosity.Html.SimpleContract qualified as Pages
 import Curiosity.Html.User qualified as Pages
 import Curiosity.Interpret qualified as Interpret
 import Curiosity.Parse qualified as Parse
-import Curiosity.Runtime qualified as Rt
+import Curiosity.Runtime qualified as Runtime
 import Curiosity.Server.Helpers qualified as H
 import Curiosity.Types.Business qualified as Business
 import Curiosity.Types.Country qualified as Country
@@ -906,7 +906,7 @@ type ServerC m =
   ( MonadMask m
   , ML.MonadAppNameLogMulti m
   , MonadError Errs.RuntimeErr m
-  , MonadReader Rt.Runtime m
+  , MonadReader Runtime.Runtime m
   , MonadIO m
   )
 
@@ -920,7 +920,7 @@ run
   :: forall m
    . MonadIO m
   => Parse.ServerConf
-  -> Rt.Runtime
+  -> Runtime.Runtime
   -- ^ Runtime to use for running the server.
   -> m ()
 run conf@Parse.ServerConf {..} runtime = liftIO $ do
@@ -935,8 +935,8 @@ run conf@Parse.ServerConf {..} runtime = liftIO $ do
   Warp.runSettings warpSettings $ waiApp jwtSettings
  where
   waiApp jwtS =
-    serve @Rt.AppM
-      (Rt.appMHandlerNatTrans runtime)
+    serve @Runtime.AppM
+      (Runtime.appMHandlerNatTrans runtime)
       conf
       (ctx jwtS)
       jwtS
@@ -986,10 +986,10 @@ routingLayout = do
   pure $ layoutWithContext (Proxy @App) ctx
 
 -- | Call a `Curiosity.Runtime` operation in a handler.
-withRuntime :: ServerC m => Rt.RunM a -> m a
+withRuntime :: ServerC m => Runtime.RunM a -> m a
 withRuntime f = do
   runtime <- ask
-  Rt.runRunM runtime f
+  Runtime.runRunM runtime f
 
 --------------------------------------------------------------------------------
 
@@ -1006,7 +1006,7 @@ showHomePage authResult =
     authResult
     (\_ -> pure $ SS.P.PageL Pages.LandingPage)
     ( \profile -> do
-        Rt.Runtime {..} <- ask
+        Runtime.Runtime {..} <- ask
         -- TODO canPerform and filterUsers should be called in the same atomically.
         b <-
           liftIO . atomically $
@@ -1019,22 +1019,22 @@ showHomePage authResult =
             then
               Just
                 <$> withRuntime
-                  ( Rt.filterUsers'
+                  ( Runtime.filterUsers'
                       User.PredicateEmailAddrToVerify
                   )
             else pure Nothing
         mquotationForms <-
-          withRuntime $ Rt.readCreateQuotationForms' profile
+          withRuntime $ Runtime.readCreateQuotationForms' profile
         emails <-
           withRuntime $
-            Rt.filterEmails'
+            Runtime.filterEmails'
               ( Email.AndEmails
                   [ Email.EmailsFor $ User._userProfileEmailAddr profile
                   , Email.EmailsDone
                   ]
               )
-        quotations <- withRuntime $ Rt.filterQuotations' Quotation.AllQuotations
-        orders <- withRuntime $ Rt.filterOrders' Order.AllOrders
+        quotations <- withRuntime $ Runtime.filterQuotations' Quotation.AllQuotations
+        orders <- withRuntime $ Runtime.filterOrders' Order.AllOrders
         let quotationForms = either (const []) identity mquotationForms
         pure . SS.P.PageR $ Pages.WelcomePage profile profiles quotationForms quotations orders emails
     )
@@ -1134,8 +1134,8 @@ partialPermissionsAsJson = pure User.permissions
 --------------------------------------------------------------------------------
 partialLegalEntities :: ServerC m => m Html
 partialLegalEntities = do
-  db <- asks Rt._rDb
-  entities <- liftIO . atomically $ Rt.readLegalEntities db
+  db <- asks Runtime._rDb
+  entities <- liftIO . atomically $ Runtime.readLegalEntities db
   pure . H.ul $ mapM_ displayEntity entities
  where
   displayEntity Legal.Entity {..} = H.li $ do
@@ -1145,8 +1145,8 @@ partialLegalEntities = do
 
 partialLegalEntitiesAsJson :: ServerC m => m [Legal.Entity]
 partialLegalEntitiesAsJson = do
-  db <- asks Rt._rDb
-  liftIO . atomically $ Rt.readLegalEntities db
+  db <- asks Runtime._rDb
+  liftIO . atomically $ Runtime.readLegalEntities db
 
 --------------------------------------------------------------------------------
 
@@ -1209,7 +1209,7 @@ handleSignup input@User.Signup {..} =
   ML.localEnv (<> "HTTP" <> "Signup") $
     do
       ML.info $ "Signing up new user: " <> show username <> "..."
-      withRuntime $ Rt.signup input
+      withRuntime $ Runtime.signup input
       >>= \case
         Right _ -> do
           ML.info "Sending success result."
@@ -1238,7 +1238,7 @@ handleLogin conf jwtSettings input =
             User.Credentials
               (User._loginUsername input)
               (User._loginPassword input)
-      db <- asks Rt._rDb
+      db <- asks Runtime._rDb
       liftIO
         . atomically
         $ Core.checkCredentials db credentials
@@ -1458,7 +1458,7 @@ showCreateInvoicePage profile =
 showEditQuotationPage
   :: ServerC m => Text -> User.UserProfile -> m Pages.CreateQuotationPage
 showEditQuotationPage key profile = do
-  output <- withRuntime $ Rt.readCreateQuotationForm' profile key
+  output <- withRuntime $ Runtime.readCreateQuotationForm' profile key
   case output of
     Right quotationAll ->
       pure $
@@ -1467,12 +1467,12 @@ showEditQuotationPage key profile = do
           (Just key)
           quotationAll
           (H.toValue $ "/a/save-quotation/" <> key)
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 showConfirmQuotationPage
   :: ServerC m => Text -> User.UserProfile -> m Pages.ConfirmQuotationPage
 showConfirmQuotationPage key profile = do
-  output <- withRuntime $ Rt.readCreateQuotationFormResolved' profile key
+  output <- withRuntime $ Runtime.readCreateQuotationFormResolved' profile key
   case output of
     Right (quotationAll, clientProfile, sellerEntity, sellerUnit, buyerEntity, buyerUnit) -> do
       let
@@ -1486,7 +1486,7 @@ showConfirmQuotationPage key profile = do
           errors
           (Just . H.toValue $ "/edit/quotation/" <> key)
           "/a/submit-quotation"
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 --------------------------------------------------------------------------------
 handleUserProfileUpdate
@@ -1496,12 +1496,12 @@ handleUserProfileUpdate
   -> User.UserProfile
   -> m (Headers '[Header "Location" Text] NoContent)
 handleUserProfileUpdate update _ = do
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   b <- liftIO . atomically $ Core.updateUser db update
   case b of
     Right () ->
       pure $ addHeader @"Location" "/settings/profile" NoContent
-    _ -> Errs.throwError' $ Rt.UnspecifiedErr "Cannot update the user."
+    _ -> Errs.throwError' $ Runtime.UnspecifiedErr "Cannot update the user."
 
 --------------------------------------------------------------------------------
 handleSetUserEmailAddrAsVerified
@@ -1512,10 +1512,10 @@ handleSetUserEmailAddrAsVerified
   -> m Pages.ActionResult
 handleSetUserEmailAddrAsVerified (User.SetUserEmailAddrAsVerified username) profile =
   do
-    db <- asks Rt._rDb
+    db <- asks Runtime._rDb
     output <-
       liftIO . atomically $
-        Rt.setUserEmailAddrAsVerifiedFull
+        Runtime.setUserEmailAddrAsVerifiedFull
           db
           (profile, username)
     pure $ Pages.ActionResult "Set email address as verified" $ case output of
@@ -1529,8 +1529,8 @@ handleSetQuotationAsSigned
   -> User.UserProfile
   -> m Pages.ActionResult
 handleSetQuotationAsSigned (Quotation.SetQuotationAsSigned qid) profile = do
-  db <- asks Rt._rDb
-  output <- liftIO . atomically $ Rt.setQuotationAsSignedFull db (profile, qid)
+  db <- asks Runtime._rDb
+  output <- liftIO . atomically $ Runtime.setQuotationAsSignedFull db (profile, qid)
   pure $ Pages.ActionResult "Set quotation as signed" $ case output of
     Right id -> "Success. Order created: " <> Order.unOrderId id
     Left err -> "Failure: " <> show err
@@ -1542,8 +1542,8 @@ handleSetQuotationAsRejected
   -> User.UserProfile
   -> m Pages.ActionResult
 handleSetQuotationAsRejected (Quotation.SetQuotationAsRejected qid mcomment) profile = do
-  db <- asks Rt._rDb
-  output <- liftIO . atomically $ Rt.setQuotationAsRejectedFull db profile qid mcomment
+  db <- asks Runtime._rDb
+  output <- liftIO . atomically $ Runtime.setQuotationAsRejectedFull db profile qid mcomment
   pure $ Pages.ActionResult "Set quotation as rejected" $ case output of
     Right _ -> "Success."
     Left err -> "Failure: " <> show err
@@ -1557,7 +1557,7 @@ handleNewQuotation'
 handleNewQuotation' quotation profile =
   ML.localEnv (<> "HTTP" <> "CreateQuotationAll") $ do
     ML.info "Instantiating new quotation form..."
-    key <- withRuntime $ Rt.formNewQuotation' profile quotation
+    key <- withRuntime $ Runtime.formNewQuotation' profile quotation
     ML.info $ "New quotation form instanciated: " <> key
     pure key
 
@@ -1580,11 +1580,11 @@ handleSaveQuotation'
   -> User.UserProfile
   -> m ()
 handleSaveQuotation' key quotation profile = do
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   -- TODO Take care of the returned value.
   _ <-
     liftIO . atomically $
-      Rt.writeCreateQuotationForm
+      Runtime.writeCreateQuotationForm
         db
         (profile, key, quotation)
   pure ()
@@ -1609,12 +1609,12 @@ handleSubmitQuotation input@(Quotation.SubmitQuotation key) profile =
   ML.localEnv (<> "HTTP" <> "Quotation" <> "SubmitQuotation") $ do
     ML.info $ "Submitting new quotation: " <> key <> "..."
     mid <-
-      Rt.withRuntimeAtomically
-        (Rt.submitCreateQuotationForm . Rt._rDb)
+      Runtime.withRuntimeAtomically
+        (Runtime.submitCreateQuotationForm . Runtime._rDb)
         (profile, input)
     case mid of
       Right id -> do
-        let logs = Rt.submitQuotationSuccess id
+        let logs = Runtime.submitQuotationSuccess id
         mapM_ ML.info logs
         pure . Pages.EchoPage Nothing $ unlines logs
       Left err -> pure . Pages.EchoPage Nothing $ Quotation.unErr err
@@ -1649,7 +1649,7 @@ documentEditQuotationPage
   :: ServerC m => FilePath -> Text -> m Pages.CreateQuotationPage
 documentEditQuotationPage dataDir key = do
   profile <- readJson $ dataDir </> "alice.json"
-  output <- withRuntime $ Rt.readCreateQuotationForm' profile key
+  output <- withRuntime $ Runtime.readCreateQuotationForm' profile key
   case output of
     Right quotationAll ->
       pure $
@@ -1658,7 +1658,7 @@ documentEditQuotationPage dataDir key = do
           (Just key)
           quotationAll
           (H.toValue $ "/echo/save-quotation/" <> key)
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 documentCreateContractPage
   :: ServerC m => FilePath -> m Pages.CreateContractPage
@@ -1678,8 +1678,8 @@ documentEditContractPage
   :: ServerC m => FilePath -> Text -> m Pages.CreateContractPage
 documentEditContractPage dataDir key = do
   profile <- readJson $ dataDir </> "alice.json"
-  db <- asks Rt._rDb
-  output <- liftIO . atomically $ Rt.readCreateContractForm db (profile, key)
+  db <- asks Runtime._rDb
+  output <- liftIO . atomically $ Runtime.readCreateContractForm db (profile, key)
   case output of
     Right contractAll ->
       pure $
@@ -1689,14 +1689,14 @@ documentEditContractPage dataDir key = do
           contractAll
           (H.toValue $ "/echo/save-contract/" <> key)
           (H.toValue $ "/echo/save-contract-and-add-expense/" <> key)
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 documentAddExpensePage
   :: ServerC m => FilePath -> Text -> m Pages.AddExpensePage
 documentAddExpensePage dataDir key = do
   profile <- readJson $ dataDir </> "alice.json"
-  db <- asks Rt._rDb
-  output <- liftIO . atomically $ Rt.readCreateContractForm db (profile, key)
+  db <- asks Runtime._rDb
+  output <- liftIO . atomically $ Runtime.readCreateContractForm db (profile, key)
   case output of
     Right _ ->
       pure $
@@ -1706,19 +1706,19 @@ documentAddExpensePage dataDir key = do
           Nothing
           Employment.emptyAddExpense
           (H.toValue $ "/echo/add-expense/" <> key)
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 -- | Same as documentAddExpensePage, but use an existing form.
 documentEditExpensePage
   :: ServerC m => FilePath -> Text -> Int -> m Pages.AddExpensePage
 documentEditExpensePage dataDir key idx = do
   profile <- readJson $ dataDir </> "alice.json"
-  db <- asks Rt._rDb
-  output <- liftIO . atomically $ Rt.readCreateContractForm db (profile, key)
+  db <- asks Runtime._rDb
+  output <- liftIO . atomically $ Runtime.readCreateContractForm db (profile, key)
   case output of
     Right (Employment.CreateContractAll _ _ _ _ _ expenses) ->
       if idx > length expenses - 1
-        then Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+        then Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
         else
           pure $
             Pages.AddExpensePage
@@ -1727,18 +1727,18 @@ documentEditExpensePage dataDir key idx = do
               (Just idx)
               (expenses !! idx)
               (H.toValue $ "/echo/save-expense/" <> key <> "/" <> show idx)
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 documentRemoveExpensePage
   :: ServerC m => FilePath -> Text -> Int -> m Pages.RemoveExpensePage
 documentRemoveExpensePage dataDir key idx = do
   profile <- readJson $ dataDir </> "alice.json"
-  db <- asks Rt._rDb
-  output <- liftIO . atomically $ Rt.readCreateContractForm db (profile, key)
+  db <- asks Runtime._rDb
+  output <- liftIO . atomically $ Runtime.readCreateContractForm db (profile, key)
   case output of
     Right (Employment.CreateContractAll _ _ _ _ _ expenses) ->
       if idx > length expenses - 1
-        then Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+        then Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
         else
           pure $
             Pages.RemoveExpensePage
@@ -1747,7 +1747,7 @@ documentRemoveExpensePage dataDir key idx = do
               idx
               (expenses !! idx)
               (H.toValue $ "/echo/remove-expense/" <> key <> "/" <> show idx)
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 -- | Create a form, generating a new key. This is normally used with a
 -- \"Location" header.
@@ -1755,7 +1755,7 @@ echoNewQuotation'
   :: ServerC m => FilePath -> Quotation.CreateQuotationAll -> m Text
 echoNewQuotation' dataDir quotation = do
   profile <- readJson $ dataDir </> "alice.json"
-  withRuntime $ Rt.formNewQuotation' profile quotation
+  withRuntime $ Runtime.formNewQuotation' profile quotation
 
 -- | Create a form, generating a new key.
 echoNewQuotation
@@ -1776,11 +1776,11 @@ echoSaveQuotation'
   :: ServerC m => FilePath -> Text -> Quotation.CreateQuotationAll -> m ()
 echoSaveQuotation' dataDir key quotation = do
   profile <- readJson $ dataDir </> "alice.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   -- TODO Take care of the returned value.
   _ <-
     liftIO . atomically $
-      Rt.writeCreateQuotationForm
+      Runtime.writeCreateQuotationForm
         db
         (profile, key, quotation)
   pure ()
@@ -1803,7 +1803,7 @@ documentConfirmQuotationPage
   :: ServerC m => FilePath -> Text -> m Pages.ConfirmQuotationPage
 documentConfirmQuotationPage dataDir key = do
   profile <- readJson $ dataDir </> "alice.json"
-  output <- withRuntime $ Rt.readCreateQuotationFormResolved' profile key
+  output <- withRuntime $ Runtime.readCreateQuotationFormResolved' profile key
   case output of
     Right (quotationAll, clientProfile, sellerEntity, sellerUnit, buyerEntity, buyerUnit) -> do
       let
@@ -1817,13 +1817,13 @@ documentConfirmQuotationPage dataDir key = do
           errors
           (Just . H.toValue $ "/forms/edit/quotation/" <> key)
           "/echo/submit-quotation"
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 echoSubmitQuotation
   :: ServerC m => FilePath -> Quotation.SubmitQuotation -> m Pages.EchoPage
 echoSubmitQuotation dataDir (Quotation.SubmitQuotation key) = do
   profile <- readJson $ dataDir </> "alice.json"
-  output <- withRuntime $ Rt.readCreateQuotationFormResolved' profile key
+  output <- withRuntime $ Runtime.readCreateQuotationFormResolved' profile key
   case output of
     Right (quotation, resovedClient, resolvedSellerEntity, resolvedSellerUnit, resolvedBuyerEntity, resolvedBuyerUnit) ->
       pure . Pages.EchoPage (Just profile) $
@@ -1831,7 +1831,7 @@ echoSubmitQuotation dataDir (Quotation.SubmitQuotation key) = do
           ( quotation
           , Quotation.validateCreateQuotation profile quotation resovedClient resolvedSellerEntity resolvedSellerUnit resolvedBuyerEntity resolvedBuyerUnit
           )
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 -- | Create a form, generating a new key. This is normally used with a
 -- \"Location" header.
@@ -1839,8 +1839,8 @@ echoNewContract'
   :: ServerC m => FilePath -> Employment.CreateContractAll' -> m Text
 echoNewContract' dataDir contract = do
   profile <- readJson $ dataDir </> "alice.json"
-  db <- asks Rt._rDb
-  liftIO . atomically $ Rt.newCreateContractForm db (profile, contract)
+  db <- asks Runtime._rDb
+  liftIO . atomically $ Runtime.newCreateContractForm db (profile, contract)
 
 -- | Create a form, generating a new key.
 echoNewContract
@@ -1872,11 +1872,11 @@ echoSaveContract'
   :: ServerC m => FilePath -> Text -> Employment.CreateContractAll' -> m ()
 echoSaveContract' dataDir key contract = do
   profile <- readJson $ dataDir </> "alice.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   -- TODO Take care of the returned value.
   _ <-
     liftIO . atomically $
-      Rt.writeCreateContractForm
+      Runtime.writeCreateContractForm
         db
         (profile, key, contract)
   pure ()
@@ -1915,8 +1915,8 @@ echoAddExpense
   -> m (Headers '[Header "Location" Text] NoContent)
 echoAddExpense dataDir key expense = do
   profile <- readJson $ dataDir </> "alice.json"
-  db <- asks Rt._rDb
-  liftIO . atomically $ Rt.addExpenseToContractForm db (profile, key, expense)
+  db <- asks Runtime._rDb
+  liftIO . atomically $ Runtime.addExpenseToContractForm db (profile, key, expense)
   pure $
     addHeader @"Location"
       ("/forms/edit/contract/" <> key <> "#panel-expenses")
@@ -1932,11 +1932,11 @@ echoSaveExpense
   -> m (Headers '[Header "Location" Text] NoContent)
 echoSaveExpense dataDir key idx expense = do
   profile <- readJson $ dataDir </> "alice.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   -- TODO Take care of the returned value.
   _ <-
     liftIO . atomically $
-      Rt.writeExpenseToContractForm
+      Runtime.writeExpenseToContractForm
         db
         (profile, key, idx, expense)
   pure $
@@ -1952,11 +1952,11 @@ echoRemoveExpense
   -> m (Headers '[Header "Location" Text] NoContent)
 echoRemoveExpense dataDir key idx = do
   profile <- readJson $ dataDir </> "alice.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   -- TODO Take care of the returned value.
   _ <-
     liftIO . atomically $
-      Rt.removeExpenseFromContractForm
+      Runtime.removeExpenseFromContractForm
         db
         (profile, key, idx)
   pure $
@@ -1968,8 +1968,8 @@ documentConfirmContractPage
   :: ServerC m => FilePath -> Text -> m Pages.ConfirmContractPage
 documentConfirmContractPage dataDir key = do
   profile <- readJson $ dataDir </> "alice.json"
-  db <- asks Rt._rDb
-  output <- liftIO . atomically $ Rt.readCreateContractForm db (profile, key)
+  db <- asks Runtime._rDb
+  output <- liftIO . atomically $ Runtime.readCreateContractForm db (profile, key)
   case output of
     Right contractAll ->
       pure $
@@ -1978,20 +1978,20 @@ documentConfirmContractPage dataDir key = do
           key
           contractAll
           "/echo/submit-contract"
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 echoSubmitContract
   :: ServerC m => FilePath -> Employment.SubmitContract -> m Pages.EchoPage
 echoSubmitContract dataDir (Employment.SubmitContract key) = do
   profile <- readJson $ dataDir </> "alice.json"
-  db <- asks Rt._rDb
-  output <- liftIO . atomically $ Rt.readCreateContractForm db (profile, key)
+  db <- asks Runtime._rDb
+  output <- liftIO . atomically $ Runtime.readCreateContractForm db (profile, key)
   case output of
     Right contract ->
       pure . Pages.EchoPage (Just profile) $
         show
           (contract, Employment.validateCreateContract profile contract)
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 --------------------------------------------------------------------------------
 
@@ -2001,9 +2001,9 @@ echoNewSimpleContract'
   :: ServerC m => FilePath -> SimpleContract.CreateContractAll' -> m Text
 echoNewSimpleContract' dataDir contract = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   liftIO . atomically $
-    Rt.newCreateSimpleContractForm
+    Runtime.newCreateSimpleContractForm
       db
       (profile, contract)
 
@@ -2078,11 +2078,11 @@ echoSaveSimpleContract'
   :: ServerC m => FilePath -> Text -> SimpleContract.CreateContractAll' -> m ()
 echoSaveSimpleContract' dataDir key contract = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   -- TODO Take care of the returned value.
   _ <-
     liftIO . atomically $
-      Rt.writeCreateSimpleContractForm
+      Runtime.writeCreateSimpleContractForm
         db
         (profile, key, contract)
   pure ()
@@ -2165,8 +2165,8 @@ echoSelectRole
   -> m (Headers '[Header "Location" Text] NoContent)
 echoSelectRole dataDir key role = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
-  liftIO . atomically $ Rt.addRoleToSimpleContractForm db (profile, key, role)
+  db <- asks Runtime._rDb
+  liftIO . atomically $ Runtime.addRoleToSimpleContractForm db (profile, key, role)
   pure $ addHeader @"Location" ("/forms/edit/simple-contract/" <> key) NoContent
 
 echoAddDate
@@ -2177,8 +2177,8 @@ echoAddDate
   -> m (Headers '[Header "Location" Text] NoContent)
 echoAddDate dataDir key date = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
-  liftIO . atomically $ Rt.addDateToSimpleContractForm db (profile, key, date)
+  db <- asks Runtime._rDb
+  liftIO . atomically $ Runtime.addDateToSimpleContractForm db (profile, key, date)
   pure $
     addHeader @"Location"
       ("/forms/edit/simple-contract/" <> key <> "#panel-dates")
@@ -2194,11 +2194,11 @@ echoSaveDate
   -> m (Headers '[Header "Location" Text] NoContent)
 echoSaveDate dataDir key idx date = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   -- TODO Take care of the returned value.
   _ <-
     liftIO . atomically $
-      Rt.writeDateToSimpleContractForm
+      Runtime.writeDateToSimpleContractForm
         db
         (profile, key, idx, date)
   pure $
@@ -2214,11 +2214,11 @@ echoRemoveDate
   -> m (Headers '[Header "Location" Text] NoContent)
 echoRemoveDate dataDir key idx = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   -- TODO Take care of the returned value.
   _ <-
     liftIO . atomically $
-      Rt.removeDateFromSimpleContractForm
+      Runtime.removeDateFromSimpleContractForm
         db
         (profile, key, idx)
   pure $
@@ -2234,8 +2234,8 @@ echoSelectVAT
   -> m (Headers '[Header "Location" Text] NoContent)
 echoSelectVAT dataDir key rate = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
-  liftIO . atomically $ Rt.addVATToSimpleContractForm db (profile, key, rate)
+  db <- asks Runtime._rDb
+  liftIO . atomically $ Runtime.addVATToSimpleContractForm db (profile, key, rate)
   pure $ addHeader @"Location" ("/forms/edit/simple-contract/" <> key) NoContent
 
 echoSimpleContractAddExpense
@@ -2246,9 +2246,9 @@ echoSimpleContractAddExpense
   -> m (Headers '[Header "Location" Text] NoContent)
 echoSimpleContractAddExpense dataDir key expense = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   liftIO . atomically $
-    Rt.addExpenseToSimpleContractForm
+    Runtime.addExpenseToSimpleContractForm
       db
       (profile, key, expense)
   pure $
@@ -2266,11 +2266,11 @@ echoSimpleContractSaveExpense
   -> m (Headers '[Header "Location" Text] NoContent)
 echoSimpleContractSaveExpense dataDir key idx expense = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   -- TODO Take care of the return value.
   _ <-
     liftIO . atomically $
-      Rt.writeExpenseToSimpleContractForm
+      Runtime.writeExpenseToSimpleContractForm
         db
         (profile, key, idx, expense)
   pure $
@@ -2286,11 +2286,11 @@ echoSimpleContractRemoveExpense
   -> m (Headers '[Header "Location" Text] NoContent)
 echoSimpleContractRemoveExpense dataDir key idx = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   -- TODO Take care of the returned value.
   _ <-
     liftIO . atomically $
-      Rt.removeExpenseFromSimpleContractForm
+      Runtime.removeExpenseFromSimpleContractForm
         db
         (profile, key, idx)
   pure $
@@ -2326,16 +2326,16 @@ documentCreateSimpleContractPage dataDir = do
           "/echo/new-simple-contract-and-add-expense"
           "#" -- Should not appear
           "#" -- Should not appear
-    Nothing -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack role -- TODO Specific error.
+    Nothing -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack role -- TODO Specific error.
 
 documentEditSimpleContractPage
   :: ServerC m => FilePath -> Text -> m Pages.CreateSimpleContractPage
 documentEditSimpleContractPage dataDir key = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   output <-
     liftIO . atomically $
-      Rt.readCreateSimpleContractForm
+      Runtime.readCreateSimpleContractForm
         db
         (profile, key)
   case output of
@@ -2360,17 +2360,17 @@ documentEditSimpleContractPage dataDir key = do
               (H.toValue $ "/echo/save-simple-contract-and-add-expense/" <> key)
               "/forms/edit/simple-contract/edit-expense/"
               "/forms/edit/simple-contract/remove-expense/"
-        Nothing -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack role -- TODO Specific error.
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+        Nothing -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack role -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 documentSelectRolePage
   :: ServerC m => FilePath -> Text -> m Pages.SelectRolePage
 documentSelectRolePage dataDir key = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   output <-
     liftIO . atomically $
-      Rt.readCreateSimpleContractForm
+      Runtime.readCreateSimpleContractForm
         db
         (profile, key)
   case output of
@@ -2380,16 +2380,16 @@ documentSelectRolePage dataDir key = do
           profile
           key
           "/forms/edit/simple-contract/confirm-role/"
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 documentConfirmRolePage
   :: ServerC m => FilePath -> Text -> Text -> m Pages.ConfirmRolePage
 documentConfirmRolePage dataDir key role = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   output <-
     liftIO . atomically $
-      Rt.readCreateSimpleContractForm
+      Runtime.readCreateSimpleContractForm
         db
         (profile, key)
   case output of
@@ -2404,16 +2404,16 @@ documentConfirmRolePage dataDir key role = do
               roleLabel
               (H.toValue $ "/forms/edit/simple-contract/" <> key <> "#panel-type")
               (H.toValue $ "/echo/select-role/" <> key)
-        Nothing -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack role -- TODO Specific error.
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+        Nothing -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack role -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 documentAddDatePage :: ServerC m => FilePath -> Text -> m Pages.AddDatePage
 documentAddDatePage dataDir key = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   output <-
     liftIO . atomically $
-      Rt.readCreateSimpleContractForm
+      Runtime.readCreateSimpleContractForm
         db
         (profile, key)
   case output of
@@ -2426,23 +2426,23 @@ documentAddDatePage dataDir key = do
           SimpleContract.emptyAddDate
           (H.toValue $ "/forms/edit/simple-contract/" <> key <> "#panel-dates")
           (H.toValue $ "/echo/add-date/" <> key)
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 -- | Same as documentAddDatePage, but use an existing form.
 documentEditDatePage
   :: ServerC m => FilePath -> Text -> Int -> m Pages.AddDatePage
 documentEditDatePage dataDir key idx = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   output <-
     liftIO . atomically $
-      Rt.readCreateSimpleContractForm
+      Runtime.readCreateSimpleContractForm
         db
         (profile, key)
   case output of
     Right (SimpleContract.CreateContractAll _ _ _ _ dates _) ->
       if idx > length dates - 1
-        then Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+        then Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
         else
           pure $
             Pages.AddDatePage
@@ -2452,22 +2452,22 @@ documentEditDatePage dataDir key idx = do
               (dates !! idx)
               (H.toValue $ "/forms/edit/simple-contract/" <> key <> "#panel-dates")
               (H.toValue $ "/echo/save-date/" <> key <> "/" <> show idx)
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 documentRemoveDatePage
   :: ServerC m => FilePath -> Text -> Int -> m Pages.RemoveDatePage
 documentRemoveDatePage dataDir key idx = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   output <-
     liftIO . atomically $
-      Rt.readCreateSimpleContractForm
+      Runtime.readCreateSimpleContractForm
         db
         (profile, key)
   case output of
     Right (SimpleContract.CreateContractAll _ _ _ _ dates _) ->
       if idx > length dates - 1
-        then Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+        then Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
         else
           pure $
             Pages.RemoveDatePage
@@ -2476,15 +2476,15 @@ documentRemoveDatePage dataDir key idx = do
               idx
               (dates !! idx)
               (H.toValue $ "/echo/remove-date/" <> key <> "/" <> show idx)
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 documentSelectVATPage :: ServerC m => FilePath -> Text -> m Pages.SelectVATPage
 documentSelectVATPage dataDir key = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   output <-
     liftIO . atomically $
-      Rt.readCreateSimpleContractForm
+      Runtime.readCreateSimpleContractForm
         db
         (profile, key)
   case output of
@@ -2494,16 +2494,16 @@ documentSelectVATPage dataDir key = do
           profile
           key
           "/forms/edit/simple-contract/confirm-vat/"
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 documentConfirmVATPage
   :: ServerC m => FilePath -> Text -> Int -> m Pages.ConfirmVATPage
 documentConfirmVATPage dataDir key rate = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   output <-
     liftIO . atomically $
-      Rt.readCreateSimpleContractForm
+      Runtime.readCreateSimpleContractForm
         db
         (profile, key)
   case output of
@@ -2516,16 +2516,16 @@ documentConfirmVATPage dataDir key rate = do
           ( H.toValue $ "/forms/edit/simple-contract/" <> key <> "#panel-invoicing"
           )
           (H.toValue $ "/echo/select-vat/" <> key)
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 documentSimpleContractAddExpensePage
   :: ServerC m => FilePath -> Text -> m Pages.SimpleContractAddExpensePage
 documentSimpleContractAddExpensePage dataDir key = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   output <-
     liftIO . atomically $
-      Rt.readCreateSimpleContractForm
+      Runtime.readCreateSimpleContractForm
         db
         (profile, key)
   case output of
@@ -2538,7 +2538,7 @@ documentSimpleContractAddExpensePage dataDir key = do
           SimpleContract.emptyAddExpense
           (H.toValue $ "/forms/edit/simple-contract/" <> key <> "#panel-expenses")
           (H.toValue $ "/echo/simple-contract/add-expense/" <> key)
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 -- | Same as documentSimpleContractAddExpensePage, but use an existing form.
 documentSimpleContractEditExpensePage
@@ -2549,16 +2549,16 @@ documentSimpleContractEditExpensePage
   -> m Pages.SimpleContractAddExpensePage
 documentSimpleContractEditExpensePage dataDir key idx = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   output <-
     liftIO . atomically $
-      Rt.readCreateSimpleContractForm
+      Runtime.readCreateSimpleContractForm
         db
         (profile, key)
   case output of
     Right (SimpleContract.CreateContractAll _ _ _ _ _ expenses) ->
       if idx > length expenses - 1
-        then Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+        then Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
         else
           pure $
             Pages.SimpleContractAddExpensePage
@@ -2577,7 +2577,7 @@ documentSimpleContractEditExpensePage dataDir key idx = do
                     <> "/"
                     <> show idx
               )
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 documentSimpleContractRemoveExpensePage
   :: ServerC m
@@ -2587,16 +2587,16 @@ documentSimpleContractRemoveExpensePage
   -> m Pages.SimpleContractRemoveExpensePage
 documentSimpleContractRemoveExpensePage dataDir key idx = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   output <-
     liftIO . atomically $
-      Rt.readCreateSimpleContractForm
+      Runtime.readCreateSimpleContractForm
         db
         (profile, key)
   case output of
     Right (SimpleContract.CreateContractAll _ _ _ _ _ expenses) ->
       if idx > length expenses - 1
-        then Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+        then Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
         else
           pure $
             Pages.SimpleContractRemoveExpensePage
@@ -2610,16 +2610,16 @@ documentSimpleContractRemoveExpensePage dataDir key idx = do
                     <> "/"
                     <> show idx
               )
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 documentConfirmSimpleContractPage
   :: ServerC m => FilePath -> Text -> m Pages.ConfirmSimpleContractPage
 documentConfirmSimpleContractPage dataDir key = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   output <-
     liftIO . atomically $
-      Rt.readCreateSimpleContractForm
+      Runtime.readCreateSimpleContractForm
         db
         (profile, key)
   case output of
@@ -2641,17 +2641,17 @@ documentConfirmSimpleContractPage dataDir key = do
               roleLabel
               (Just . H.toValue $ "/forms/edit/simple-contract/" <> key)
               "/echo/submit-simple-contract"
-        Nothing -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack role -- TODO Specific error.
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+        Nothing -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack role -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 echoSubmitSimpleContract
   :: ServerC m => FilePath -> SimpleContract.SubmitContract -> m Pages.EchoPage
 echoSubmitSimpleContract dataDir (SimpleContract.SubmitContract key) = do
   profile <- readJson $ dataDir </> "mila.json"
-  db <- asks Rt._rDb
+  db <- asks Runtime._rDb
   output <-
     liftIO . atomically $
-      Rt.readCreateSimpleContractForm
+      Runtime.readCreateSimpleContractForm
         db
         (profile, key)
   case output of
@@ -2659,7 +2659,7 @@ echoSubmitSimpleContract dataDir (SimpleContract.SubmitContract key) = do
       pure . Pages.EchoPage (Just profile) $
         show
           (contract, SimpleContract.validateCreateSimpleContract profile contract)
-    Left _ -> Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
+    Left _ -> Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack key -- TODO Specific error.
 
 --------------------------------------------------------------------------------
 -- TODO Validate the filename (e.g. this can't be a path going up).
@@ -2707,7 +2707,7 @@ readJson path = do
   case ma of
     Right a -> pure a
     -- TODO Be more specific, e.g. the error can also be malformed JSON.
-    Left _ -> Errs.throwError' $ Rt.FileDoesntExistErr path
+    Left _ -> Errs.throwError' $ Runtime.FileDoesntExistErr path
 
 --------------------------------------------------------------------------------
 
@@ -2739,7 +2739,7 @@ withMaybeUser
   -> m a
 withMaybeUser authResult a f = case authResult of
   SAuth.Authenticated userId -> do
-    db <- asks Rt._rDb
+    db <- asks Runtime._rDb
     b <- liftIO . atomically $ Core.selectUserById db userId
     case b of
       Nothing -> do
@@ -2780,8 +2780,8 @@ withMaybeUserResolved
 withMaybeUserResolved authResult a f = case authResult of
   SAuth.Authenticated userId -> do
     mprofile <-
-      Rt.withRuntimeAtomically
-        (Rt.selectUserByIdResolved . Rt._rDb)
+      Runtime.withRuntimeAtomically
+        (Runtime.selectUserByIdResolved . Runtime._rDb)
         userId
     case mprofile of
       Nothing -> do
@@ -2823,8 +2823,8 @@ withMaybeUserFromUsername
   -> (User.UserProfile -> m a)
   -> m a
 withMaybeUserFromUsername username a f = do
-  db <- asks Rt._rDb
-  mprofile <- liftIO $ Rt.selectUserByUsername db username
+  db <- asks Runtime._rDb
+  mprofile <- liftIO $ Runtime.selectUserByUsername db username
   maybe (a username) f mprofile
 
 withMaybeUserFromUsernameResolved
@@ -2835,8 +2835,8 @@ withMaybeUserFromUsernameResolved
   -> (User.UserProfile -> [Legal.EntityAndRole] -> m a)
   -> m a
 withMaybeUserFromUsernameResolved username a f = do
-  db <- asks Rt._rDb
-  mprofile <- liftIO $ Rt.selectUserByUsernameResolved db username
+  db <- asks Runtime._rDb
+  mprofile <- liftIO $ Runtime.selectUserByUsernameResolved db username
   maybe (a username) (uncurry f) mprofile
 
 -- | Run a handler, ensuring a quotation can be obtained from the given id, or
@@ -2868,8 +2868,8 @@ withMaybeQuotationFromId
   -> (Quotation.Quotation -> m a)
   -> m a
 withMaybeQuotationFromId id a f = do
-  db <- asks Rt._rDb
-  mquotation <- liftIO $ Rt.selectQuotationById db id
+  db <- asks Runtime._rDb
+  mquotation <- liftIO $ Runtime.selectQuotationById db id
   maybe (a id) f mquotation
 
 --------------------------------------------------------------------------------
@@ -2904,8 +2904,8 @@ withMaybeEntityFromName
   -> m a
 withMaybeEntityFromName name a f = do
   mentity <-
-    Rt.withRuntimeAtomically
-      (Rt.selectEntityBySlugResolved . Rt._rDb)
+    Runtime.withRuntimeAtomically
+      (Runtime.selectEntityBySlugResolved . Runtime._rDb)
       name
   maybe (a name) (uncurry f) mentity
 
@@ -2936,7 +2936,7 @@ withMaybeUnitFromName
   -> (Business.Unit -> m a)
   -> m a
 withMaybeUnitFromName slug a f = do
-  munit <- withRuntime $ Rt.selectUnitBySlug slug
+  munit <- withRuntime $ Runtime.selectUnitBySlug slug
   maybe (a slug) f munit
 
 --------------------------------------------------------------------------------
@@ -2992,7 +2992,7 @@ partialScenarioState :: ServerC m => FilePath -> FilePath -> Int -> m Html
 partialScenarioState scenariosDir name nbr = do
   let path = scenariosDir </> name <> ".txt"
   ts <- liftIO $ do
-    runtime <- Rt.bootForTests >>= either throwIO pure
+    runtime <- Runtime.bootForTests >>= either throwIO pure
     Interpret.run' runtime path
   let ts' = Interpret.flatten ts
       db = Interpret.traceState $ ts' !! nbr -- TODO Proper input validation
@@ -3007,7 +3007,7 @@ partialScenarioStateAsJson
 partialScenarioStateAsJson scenariosDir name nbr = do
   let path = scenariosDir </> name <> ".txt"
   ts <- liftIO $ do
-    runtime <- Rt.bootForTests >>= either throwIO pure
+    runtime <- Runtime.bootForTests >>= either throwIO pure
     Interpret.run' runtime path
   let ts' = Interpret.flatten ts
       db = Interpret.traceState $ ts' !! nbr -- TODO Proper input validation
@@ -3022,7 +3022,7 @@ partialScenarioStateAsSvg
 partialScenarioStateAsSvg scenariosDir name nbr = do
   let path = scenariosDir </> name <> ".txt"
   ts <- liftIO $ do
-    runtime <- Rt.bootForTests >>= either throwIO pure
+    runtime <- Runtime.bootForTests >>= either throwIO pure
     Interpret.run' runtime path
   let ts' = Interpret.flatten ts
       db = Interpret.traceState $ ts' !! nbr -- TODO Proper input validation
@@ -3046,7 +3046,7 @@ partialScenario :: ServerC m => FilePath -> FilePath -> m Html
 partialScenario scenariosDir name = do
   let path = scenariosDir </> name <> ".txt"
   ts <- liftIO $ do
-    runtime <- Rt.bootForTests >>= either throwIO pure
+    runtime <- Runtime.bootForTests >>= either throwIO pure
     Interpret.run' runtime path
   let ts' = Interpret.flatten ts
   pure $ do
@@ -3119,7 +3119,7 @@ listScenarioNames scenariosDir = do
 --------------------------------------------------------------------------------
 showState :: ServerC m => SAuth.AuthResult User.UserId -> m Pages.EchoPage
 showState authResult = do
-  db <- withRuntime Rt.state
+  db <- withRuntime Runtime.state
   withMaybeUser
     authResult
     (\_ -> pure . Pages.EchoPage Nothing $ show db)
@@ -3129,14 +3129,14 @@ showState authResult = do
 -- to hide/show them.
 showStateAsJson :: ServerC m => m (JP.PrettyJSON '[ 'JP.DropNulls] HaskDb)
 showStateAsJson = do
-  db <- withRuntime Rt.state
+  db <- withRuntime Runtime.state
   pure $ JP.PrettyJSON db
 
 -- TODO This calls `dot` each time. Maybe this could be cached depending on a
 -- hash of the state.
 showStateAsSvg :: ServerC m => m Text
 showStateAsSvg = do
-  db <- withRuntime Rt.state
+  db <- withRuntime Runtime.state
   liftIO $ Graph.graphSvg db
 
 --------------------------------------------------------------------------------
@@ -3146,7 +3146,7 @@ showHelpTxt = pure Command.help
 --------------------------------------------------------------------------------
 showEmails :: ServerC m => SAuth.AuthResult User.UserId -> m Pages.EmailsPage
 showEmails authResult = do
-  emails <- withRuntime $ Rt.filterEmails' Email.AllEmails
+  emails <- withRuntime $ Runtime.filterEmails' Email.AllEmails
   withMaybeUser
     authResult
     (const $ pure $ Pages.EmailsPage Nothing emails)
@@ -3155,15 +3155,15 @@ showEmails authResult = do
 showEmailsAsJson
   :: ServerC m => m (JP.PrettyJSON '[ 'JP.DropNulls] [Email.Email])
 showEmailsAsJson = do
-  emails <- withRuntime $ Rt.filterEmails' Email.AllEmails
+  emails <- withRuntime $ Runtime.filterEmails' Email.AllEmails
   pure $ JP.PrettyJSON emails
 
 showEmail :: ServerC m => SAuth.AuthResult User.UserId -> Email.EmailId -> m Pages.EmailPage
 showEmail authResult eid = do
-  memail <- withRuntime $ Rt.selectEmailById eid
+  memail <- withRuntime $ Runtime.selectEmailById eid
   case memail of
     Nothing ->
-      Errs.throwError' . Rt.FileDoesntExistErr $ show eid -- TODO Specific error.
+      Errs.throwError' . Runtime.FileDoesntExistErr $ show eid -- TODO Specific error.
     Just email ->
       withMaybeUser
         authResult
@@ -3174,7 +3174,7 @@ showEmail authResult eid = do
 showQuotations
   :: ServerC m => SAuth.AuthResult User.UserId -> m Pages.QuotationPage
 showQuotations authResult = do
-  emails <- withRuntime $ Rt.filterQuotations' Quotation.AllQuotations
+  emails <- withRuntime $ Runtime.filterQuotations' Quotation.AllQuotations
   withMaybeUser
     authResult
     (const $ pure $ Pages.QuotationPage Nothing emails)
@@ -3183,13 +3183,13 @@ showQuotations authResult = do
 showQuotationsAsJson
   :: ServerC m => m (JP.PrettyJSON '[ 'JP.DropNulls] [Quotation.Quotation])
 showQuotationsAsJson = do
-  emails <- withRuntime $ Rt.filterQuotations' Quotation.AllQuotations
+  emails <- withRuntime $ Runtime.filterQuotations' Quotation.AllQuotations
   pure $ JP.PrettyJSON emails
 
 --------------------------------------------------------------------------------
 showOrders :: ServerC m => SAuth.AuthResult User.UserId -> m Pages.OrderPage
 showOrders authResult = do
-  emails <- withRuntime $ Rt.filterOrders' Order.AllOrders
+  emails <- withRuntime $ Runtime.filterOrders' Order.AllOrders
   withMaybeUser
     authResult
     (const $ pure $ Pages.OrderPage Nothing emails)
@@ -3198,7 +3198,7 @@ showOrders authResult = do
 showOrdersAsJson
   :: ServerC m => m (JP.PrettyJSON '[ 'JP.DropNulls] [Order.Order])
 showOrdersAsJson = do
-  emails <- withRuntime $ Rt.filterOrders' Order.AllOrders
+  emails <- withRuntime $ Runtime.filterOrders' Order.AllOrders
   pure $ JP.PrettyJSON emails
 
 --------------------------------------------------------------------------------
@@ -3239,7 +3239,7 @@ serveUBL dataDir "PartyLegalEntity" filename = do
   value <- readJson $ dataDir </> filename
   pure . Legal.toUBL $ value
 serveUBL _ schema _ =
-  Errs.throwError' . Rt.FileDoesntExistErr $ T.unpack schema -- TODO Specific error.
+  Errs.throwError' . Runtime.FileDoesntExistErr $ T.unpack schema -- TODO Specific error.
 
 --------------------------------------------------------------------------------
 
