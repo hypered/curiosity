@@ -214,27 +214,28 @@ parserInfoWithTarget =
             \the current UNIX login name."
           <> A.metavar "USERNAME"
     target <-
-      ( A.flag' MemoryTarget $
-          A.short 'm'
+      A.flag'
+        MemoryTarget
+        ( A.short 'm'
             <> A.long "memory"
             <> A.help
               "Don't use a state file or a UNIX-domain socket."
         )
         <|> StateFileTarget
-          <$> ( A.strOption $
-                  A.short 's'
-                    <> A.long "state"
-                    <> A.value "state.json"
-                    <> A.help "A state file. Default is 'state.json'."
-                    <> A.metavar "FILEPATH"
-              )
+          <$> A.strOption
+            ( A.short 's'
+                <> A.long "state"
+                <> A.value "state.json"
+                <> A.help "A state file. Default is 'state.json'."
+                <> A.metavar "FILEPATH"
+            )
         <|> UnixDomainTarget
-          <$> ( A.strOption $
-                  A.short 't'
-                    <> A.long "socket"
-                    <> A.help "A UNIX-domain socket"
-                    <> A.metavar "FILEPATH"
-              )
+          <$> A.strOption
+            ( A.short 't'
+                <> A.long "socket"
+                <> A.help "A UNIX-domain socket"
+                <> A.metavar "FILEPATH"
+            )
     command <- parser
     pure $ CommandWithTarget command target user
 
@@ -394,22 +395,25 @@ parserLayout = pure Layout
 parserInit :: A.Parser Command
 parserInit =
   Init
-    <$> ( ( A.flag' Store.Normal $
-              A.long "normal"
+    <$> ( A.flag'
+            Store.Normal
+            ( A.long "normal"
                 <> A.help
                   "Select normal stepping mode (default)."
-          )
-            <|> ( A.flag' Store.Stepped $
-                    A.long "stepped"
-                      <> A.help
-                        "Select stepped stepping mode."
-                )
-            <|> ( A.flag' Store.Mixed $
-                    A.long "mixed"
-                      <> A.help
-                        "Select mixed stepping mode."
-                )
-            <|> (pure Store.Normal)
+            )
+            <|> A.flag'
+              Store.Stepped
+              ( A.long "stepped"
+                  <> A.help
+                    "Select stepped stepping mode."
+              )
+            <|> A.flag'
+              Store.Mixed
+              ( A.long "mixed"
+                  <> A.help
+                    "Select mixed stepping mode."
+              )
+            <|> pure Store.Normal
         )
 
 parserReset :: A.Parser Command
@@ -425,11 +429,12 @@ parserRun =
     <*> A.argument
       A.str
       (A.metavar "FILE" <> A.action "file" <> A.help "Script to run.")
-    <*> ( ( A.flag' (RunOutput False False) $
-              A.long "silent"
+    <*> ( A.flag'
+            (RunOutput False False)
+            ( A.long "silent"
                 <> A.help
                   "Don't display traces, nor the final state."
-          )
+            )
             <|> ( A.flag' (RunOutput False True) $
                     A.long "final-only"
                       <> A.help
@@ -437,16 +442,19 @@ parserRun =
                         -- Showing the final state ensures that the effect of the commands
                         -- are applied.
                 )
-            <|> ( A.flag' (RunOutput True True) $
-                    A.long "final"
-                      <> A.help
-                        "Display both traces and the final state."
-                )
-            <|> ( A.flag (RunOutput True False) (RunOutput True False) $
-                    A.long "traces-only"
-                      <> A.help
-                        "Display traces but not the final state. This is the default."
-                )
+            <|> A.flag'
+              (RunOutput True True)
+              ( A.long "final"
+                  <> A.help
+                    "Display both traces and the final state."
+              )
+            <|> A.flag
+              (RunOutput True False)
+              (RunOutput True False)
+              ( A.long "traces-only"
+                  <> A.help
+                    "Display traces but not the final state. This is the default."
+              )
         )
 
 parserServe :: A.Parser Command
@@ -567,11 +575,10 @@ parserBusinessUnitLinkUser = do
   slug <- argumentUnitSlug
   uid <- argumentUserId
   role <-
-    ( A.flag' Business.Holder $
-        A.long "holder"
-          <> A.help
-            "TODO Add a description for the holder flag"
-      )
+    A.flag' Business.Holder $
+      A.long "holder"
+        <> A.help
+          "TODO Add a description for the holder flag"
   pure $ LinkBusinessUnitToUser slug uid role
 
 argumentUnitSlug = A.argument A.str metavarUnitSlug
@@ -656,11 +663,10 @@ parserLegalEntityLinkUser = do
   slug <- argumentEntitySlug
   uid <- argumentUserId
   role <-
-    ( A.flag' Legal.Validator $
-        A.long "validator"
-          <> A.help
-            "TODO Add a description for the validator flag"
-      )
+    A.flag' Legal.Validator $
+      A.long "validator"
+        <> A.help
+          "TODO Add a description for the validator flag"
   pure $ LinkLegalEntityToUser slug uid role
 
 parserUpdateLegalEntityIsSupervised :: Bool -> A.Parser Command
@@ -714,18 +720,21 @@ parserUser =
 parserUsers :: A.Parser Command
 parserUsers = do
   predicate <-
-    ( A.flag' User.PredicateEmailAddrToVerify $
-        A.long "email-addr-to-verify"
+    A.flag'
+      User.PredicateEmailAddrToVerify
+      ( A.long "email-addr-to-verify"
           <> A.help "Show users with an email address to verify."
       )
-      <|> ( A.flag' (User.PredicateHas User.CanCreateContracts) $
-              A.long "can-create-contracts"
-                <> A.help "Show users with the right to create contracts."
-          )
-      <|> ( A.flag' (User.PredicateHas User.CanVerifyEmailAddr) $
-              A.long "can-verify-email-addr"
-                <> A.help "Show users with the right to verify email addresses."
-          )
+      <|> A.flag'
+        (User.PredicateHas User.CanCreateContracts)
+        ( A.long "can-create-contracts"
+            <> A.help "Show users with the right to create contracts."
+        )
+      <|> A.flag'
+        (User.PredicateHas User.CanVerifyEmailAddr)
+        ( A.long "can-verify-email-addr"
+            <> A.help "Show users with the right to verify email addresses."
+        )
   pure $ FilterUsers predicate
 
 parserSignup :: A.Parser Command
@@ -1087,33 +1096,37 @@ parserQueue =
 parserQueues :: A.Parser Command
 parserQueues =
   ViewQueues
-    <$> ( ( A.flag' CurrentUserQueues $
-              A.long "current-user"
+    <$> ( A.flag'
+            CurrentUserQueues
+            ( A.long "current-user"
                 <> A.help
                   "Display the queues of the current user. This is the default."
-          )
-            <|> ( A.flag' AllQueues $
-                    A.long "all"
-                      <> A.help
-                        "Display all the queues of the system."
-                )
-            <|> ( A.flag' AutomatedQueues $
-                    A.long "automated"
-                      <> A.help
-                        "Display the queues that can be handled automatically by the system."
-                )
-            <|> ( A.flag' ManualQueues $
-                    A.long "manual"
-                      <> A.help
-                        "Display the queues that can be handled by users."
-                )
-            <|> ( A.option
-                    (A.eitherReader (Right . UserQueues . User.UserName . T.pack))
-                    $ A.long "from"
-                      <> A.value CurrentUserQueues
-                      <> A.help "Display the queues of the give user."
-                      <> A.metavar "USERNAME"
-                )
+            )
+            <|> A.flag'
+              AllQueues
+              ( A.long "all"
+                  <> A.help
+                    "Display all the queues of the system."
+              )
+            <|> A.flag'
+              AutomatedQueues
+              ( A.long "automated"
+                  <> A.help
+                    "Display the queues that can be handled automatically by the system."
+              )
+            <|> A.flag'
+              ManualQueues
+              ( A.long "manual"
+                  <> A.help
+                    "Display the queues that can be handled by users."
+              )
+            <|> A.option
+              (A.eitherReader (Right . UserQueues . User.UserName . T.pack))
+              ( A.long "from"
+                  <> A.value CurrentUserQueues
+                  <> A.help "Display the queues of the give user."
+                  <> A.metavar "USERNAME"
+              )
         )
 
 parserStep :: A.Parser Command
