@@ -8,30 +8,30 @@ let
   nixpkgs = import sources.nixpkgs { };
   hp = nixpkgs-overlayed.haskellPackages;
 
-  inherit (nixpkgs.lib.attrsets) getAttrFromPath;
-
   contents = import ./nix/contents.nix { inherit nixpkgs; };
 
-  # Brittany, as the formatter, is just here as an example.
-  # I personally prefer to have the formatters pinned to a version and then
-  # made available via direnv to avoid unnecessary diff pollution across upgrades.
+  tooling =
+    [
+      # Niv is great at pinning dependencies in sources.json and computing SHA's etc.
+      (hp.callCabal2nix "niv" sources.niv { })
 
-  # Niv is great at pinning dependencies in sources.json and computing SHA's etc.
-  nix-tooling = with hp; [ (callCabal2nix "niv" sources.niv { }) ];
+      # Haskell tools
+      hp.cabal-install
+      hp.ghcid
+      hp.hlint
+      hp.hasktags
+      hp.fourmolu
 
-  # Haskell tools
-  haskell-tooling = with hp; [ cabal-install ghcid hlint hasktags ];
+      # Add more as we need them.
+      nixpkgs.ormolu
+      nixpkgs.treefmt
 
-  # Add more as we need them.
-  formatters = [ nixpkgs.ormolu nixpkgs.treefmt ] ;
-
-  system-tooling = with nixpkgs; [
-    graphviz # needed for the dot command
-    inotify-tools # needed for HotExe.sh (filesystem notifs.)
-    psmisc # needed for HotExe.sh: (kill processes by port.)
-  ];
+      nixpkgs.graphviz # needed for the dot command
+      nixpkgs.inotify-tools # needed for HotExe.sh (filesystem notifs.)
+      nixpkgs.psmisc # needed for HotExe.sh: (kill processes by port.)
+    ];
 
 in hp.shellFor {
   packages = p: map (contents.getPkg p) (builtins.attrNames contents.pkgList);
-  buildInputs = nix-tooling ++ haskell-tooling ++ system-tooling ++ formatters;
+  buildInputs = tooling;
 }
