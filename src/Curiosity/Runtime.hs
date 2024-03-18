@@ -433,9 +433,7 @@ handleCommand runtime@Runtime {..} user command = do
       pure (ExitSuccess, [value'])
     Command.Graph out format -> do
       value <- runRunM runtime state
-      output <- case format of
-        True -> pure $ Graph.graphDot value
-        False -> lines <$> liftIO (Graph.graphSvg value)
+      output <- (if format then pure $ Graph.graphDot value else lines <$> liftIO (Graph.graphSvg value))
       case out of
         Command.GraphStdOut -> pure (ExitSuccess, output)
         Command.GraphFileName fn -> do

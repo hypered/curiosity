@@ -21,6 +21,7 @@ let
       hp.hlint
       hp.hasktags
       hp.fourmolu
+      hp.apply-refact
 
       # Add more as we need them.
       nixpkgs.ormolu

@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
-
 module Curiosity.Form.Signup
   ( Page (..)
   , SignupResultPage (..)
@@ -145,7 +143,7 @@ instance H.ToMarkup SignupResultPage where
     SignupFailed msg -> withText $ "Failed sign up: " <> msg
    where
     withText msg =
-      H.toMarkup @Dsl.HtmlCanvas $ Dsl.SingletonCanvas (HTypes.Title $ msg)
+      H.toMarkup @Dsl.HtmlCanvas $ Dsl.SingletonCanvas (HTypes.Title msg)
 
 withMessage :: Text -> Html -> Html
 withMessage title msg =

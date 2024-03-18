@@ -7,7 +7,9 @@
 
 
 # Warnings currently triggered by your code
-- ignore: {name: "Parse error"}
+- ignore: {name: "Use <$>"} # 2 hints
+- ignore: {name: "Use <&>"} # 1 hint
+- ignore: {name: "Use list comprehension"} # 2 hints
 
 
 # Specify additional command line arguments
@@ -17,26 +19,9 @@
 
 # Control which extensions/flags/modules/functions can be used
 #
-- extensions:
-  # - default: false # all extension are banned by default
-  - name:
-    - Arrows
-    - DeriveGeneric
-    - FlexibleContexts
-    - FlexibleInstances
-    - GADTs
-    - InstanceSigs
-    - LambdaCase
-    - MultiParamTypeClasses
-    - NoImplicitPrelude
-    - OverloadedStrings
-    - RecordWildCards
-    - ScopedTypeVariables
-    - TupleSections
-    - TypeApplications
-    - UnicodeSyntax
-    - ViewPatterns
-
+# - extensions:
+#   - default: false # all extension are banned by default
+#   - name: [PatternGuards, ViewPatterns] # only these listed extensions can be used
 #   - {name: CPP, within: CrossPlatform} # CPP can only be used in a given module
 #
 # - flags:
@@ -55,6 +40,12 @@
 # Will suggest replacing "wibbleMany [myvar]" with "wibbleOne myvar"
 # - error: {lhs: "wibbleMany [x]", rhs: wibbleOne x}
 
+# The hints are named by the string they display in warning messages.
+# For example, if you see a warning starting like
+#
+# Main.hs:116:51: Warning: Redundant ==
+#
+# You can refer to that hint with `{name: Redundant ==}` (see below).
 
 # Turn on hints that are off by default
 #
@@ -75,3 +66,7 @@
 
 # Define some custom infix operators
 # - fixity: infixr 3 ~^#^~
+
+
+# To generate a suitable file for HLint do:
+# $ hlint --default > .hlint.yaml

@@ -210,13 +210,11 @@ panelStandard s content = H.div ! A.class_ "c-panel u-spacer-bottom-l" $ do
         s
   H.div ! A.class_ "c-panel__body" $ groupLayoutStandard content
 
-groupLayout content =
+groupLayout =
   H.div
     ! A.class_ "o-form-group-layout o-form-group-layout--horizontal"
-    $ content
 
-groupLayoutStandard content =
-  H.div ! A.class_ "o-form-group-layout o-form-group-layout--standard" $ content
+groupLayoutStandard = H.div ! A.class_ "o-form-group-layout o-form-group-layout--standard"
 
 --------------------------------------------------------------------------------
 title :: Text -> Html

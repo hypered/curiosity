@@ -72,7 +72,7 @@ panelEmailAddrToVerify profiles =
             , "/action/set-email-addr-as-verified/" <> n
             )
           ]
-        , (Just $ "/" <> n)
+        , Just $ "/" <> n
         )
 
 panelQuotationForms :: [(Text, Quotation.CreateQuotationAll)] -> Html
@@ -83,5 +83,5 @@ panelQuotationForms forms =
   display (key, Quotation.CreateQuotationAll {..}) =
     ( [key, maybe "" User.unUserName _createQuotationClientUsername]
     , []
-    , (Just $ "/edit/quotation/confirm/" <> key)
+    , Just $ "/edit/quotation/confirm/" <> key
     )

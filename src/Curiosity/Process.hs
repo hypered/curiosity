@@ -38,7 +38,7 @@ endServer loggers =
 --
 --FIXME: check if the logger is not using STDOUT, or, find the first non-STDOUT logger and log on that.
 startupLogInfo :: MonadIO m => ML.AppNameLoggers -> Text -> m ()
-startupLogInfo loggers = ML.logInfo (<> "Boot") loggers
+startupLogInfo = ML.logInfo (<> "Boot")
 
 --------------------------------------------------------------------------------
 shutdown :: Rt.Runtime -> Maybe SomeException -> IO ExitCode

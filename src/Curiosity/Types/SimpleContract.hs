@@ -313,14 +313,14 @@ validateCreateSimpleContract profile CreateContractAll {..} =
  where
   contract = Contract {_contractId = ContractId "TODO-DUMMY"}
   errors =
-    concat
-      [ if User.CanCreateContracts `elem` User._userProfileRights profile
-          then []
-          else [Err "User has not the right CanCreateContracts."]
-      , if _createContractAmount _createContractInvoice < 1
-          then [Err "Amount to invoice must be strictly positive."]
-          else []
-      ]
+    ( if User.CanCreateContracts `elem` User._userProfileRights profile
+        then []
+        else [Err "User has not the right CanCreateContracts."]
+    )
+      ++ ( if _createContractAmount _createContractInvoice < 1
+            then [Err "Amount to invoice must be strictly positive."]
+            else []
+         )
 
 -- | Similar to `validateCreateSimpleContract` but throw away the returned
 -- contract, i.e. keep only the errors.

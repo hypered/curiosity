@@ -1,5 +1,4 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TupleSections #-}
 
 -- |
 --Module: Curiosity.Html.SimpleContract
@@ -82,7 +81,7 @@ instance H.ToMarkup CreateSimpleContractPage where
             contract
             roleLabel
             selectRoleUrl
-      panel "Risks" $ groupRisks
+      panel "Risks" groupRisks
       (! A.id "panel-dates") $
         panelStandard "Work dates" $
           groupDates
@@ -216,7 +215,7 @@ groupDates editDateBaseUrl removeDateBaseUrl mkey dates submitUrl = do
         | not (null dates) ->
             Misc.table "dates" titles (uncurry $ display key) $ zip [0 ..] dates
       _ -> pure ()
-    when (not $ null dates) $ buttonGroup $ buttonAdd submitUrl "Add date"
+    unless (null dates) $ buttonGroup $ buttonAdd submitUrl "Add date"
  where
   titles = ["Date"]
   display
@@ -233,13 +232,13 @@ groupDates editDateBaseUrl removeDateBaseUrl mkey dates submitUrl = do
         , removeDateBaseUrl <> key <> "/" <> show i
         )
       ]
-    , (Just $ editDateBaseUrl <> key <> "/" <> show i)
+    , Just $ editDateBaseUrl <> key <> "/" <> show i
     )
 
 groupClient SimpleContract.CreateContractClient {..} = do
   inputText "Client" "client-username" musername (Just "The client username.")
  where
-  musername = (H.toValue . User.unUserName) <$> _createContractClientUsername
+  musername = H.toValue . User.unUserName <$> _createContractClientUsername
 
 groupInvoicing inv selectVATUrl = do
   let vat = SimpleContract._createContractVAT inv
@@ -323,7 +322,7 @@ groupExpenses editExpenseBaseUrl removeExpenseBaseUrl mkey expenses submitUrl = 
         | not (null expenses) ->
             Misc.table "expenses" titles (uncurry $ display key) $ zip [0 ..] expenses
       _ -> pure ()
-    when (not $ null expenses) $ buttonGroup $ buttonAdd submitUrl "Add expense"
+    unless (null expenses) $ buttonGroup $ buttonAdd submitUrl "Add expense"
  where
   titles = ["Amount"]
   display
@@ -340,7 +339,7 @@ groupExpenses editExpenseBaseUrl removeExpenseBaseUrl mkey expenses submitUrl = 
         , removeExpenseBaseUrl <> key <> "/" <> show i
         )
       ]
-    , (Just $ editExpenseBaseUrl <> key <> "/" <> show i)
+    , Just $ editExpenseBaseUrl <> key <> "/" <> show i
     )
 
 --------------------------------------------------------------------------------

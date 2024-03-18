@@ -101,13 +101,9 @@ entityNode Legal.Entity {..} =
   id = Legal.unEntityId _entityId
   slug = _entitySlug
   supervised =
-    if _entityIsSupervised
-      then ["    <tr> <td align=\"left\">Supervised</td> </tr>"]
-      else []
+    ["    <tr> <td align=\"left\">Supervised</td> </tr>" | _entityIsSupervised]
   host =
-    if _entityIsHost
-      then ["    <tr> <td align=\"left\">Host</td> </tr>"]
-      else []
+    ["    <tr> <td align=\"left\">Host</td> </tr>" | _entityIsHost]
 
 entityUsersNodes :: Store.HaskDb -> [Text]
 entityUsersNodes state' =

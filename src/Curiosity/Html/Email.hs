@@ -60,7 +60,7 @@ panelSentEmails emails =
       , displayEmailState _emailState
       ]
     , []
-    , (Just $ "/emails/" <> Email.unEmailId _emailId)
+    , Just $ "/emails/" <> Email.unEmailId _emailId
     )
 
 -- | Display an email.

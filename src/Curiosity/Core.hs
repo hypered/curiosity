@@ -257,8 +257,7 @@ signup db@Db {..} input@User.Signup {..} = do
     now <- readTime db
     newId <- C.newIdOf @User.UserId _dbNextUserId
     newProfile <-
-      pure (User.validateSignup now newId input)
-        >>= either (STM.throwSTM . User.ValidationErrs) pure
+      either (STM.throwSTM . User.ValidationErrs) pure (User.validateSignup now newId input)
     emailId <-
       createEmail db Email.SignupConfirmationEmail Email.systemEmailAddr email
         >>= either STM.throwSTM pure

@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveAnyClass #-}
-
 module Curiosity.Form.Login
   ( Page (..)
   ) where

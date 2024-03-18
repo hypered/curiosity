@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-
 -- |
 -- Module: Curiosity.Interpret
 -- Description: This module defines the core of the Curiosity interpreter: it
@@ -63,7 +61,7 @@ handleRunNoTrace conf user scriptPath withFinal = do
   output <- interpretFile' runtime user scriptPath 0
   Rt.powerdown runtime
   when withFinal $ print output
-  exitWith ExitSuccess
+  exitSuccess
 
 -- | Similar to `handleRun`, but capturing the output, and logging elsewhere
 -- than normally: this is used in tests and in the `/scenarios` handler.
@@ -184,7 +182,7 @@ interpretLines runtime user dir content nesting acc0 accumulate =
                 let scriptPath' = dir </> scriptPath
                 if dir
                   `isPrefixOf` scriptPath'
-                  && (not $ ".." `isInfixOf` scriptPath')
+                  && not (".." `isInfixOf` scriptPath')
                   then do
                     output' <-
                       liftIO $
@@ -265,6 +263,6 @@ outside res xs = case xs of
 inside res xs = case xs of
   ' ' : ' ' : ys -> inside res $ ' ' : ys
   '\"' : ' ' : ys -> res ++ outside [] (' ' : ys)
-  '\"' : [] -> res
+  ['\"'] -> res
   c : ys -> inside (add c res) ys
   _ -> res

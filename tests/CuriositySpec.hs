@@ -81,8 +81,8 @@ spec = do
                   T.unpack
                     <$> words arguments
 
-          ( Run.run $
-              Command.CommandWithTarget
+          Run.run
+            ( Command.CommandWithTarget
                 command
                 (Command.StateFileTarget stateFile)
                 (Command.User $ User.UserName "alice")

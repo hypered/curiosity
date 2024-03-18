@@ -150,7 +150,7 @@ actionResultPanel title_ msg =
 
 --------------------------------------------------------------------------------
 data EchoPage = EchoPage
-  { _echoPageUserProfile :: (Maybe User.UserProfile)
+  { _echoPageUserProfile :: Maybe User.UserProfile
   -- ^ The logged in user, if any
   , _echoPageContent :: Text
   -- ^ Text, displayed as code
@@ -166,7 +166,7 @@ instance H.ToMarkup EchoPage where
 
 -- | Similar to `EchoPage` but also shows validation errors
 data EchoPage' = EchoPage'
-  { _echoPage'UserProfile :: (Maybe User.UserProfile)
+  { _echoPage'UserProfile :: Maybe User.UserProfile
   -- ^ The logged in user, if any
   , _echoPage'Content :: Text
   -- ^ Text, displayed as code

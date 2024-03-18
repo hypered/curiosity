@@ -80,12 +80,12 @@ instance H.ToMarkup CreateContractPage where
           "Describe your work (minimum 10 characters)"
           _createContractDescription
           True
-      panel "Employment type" $ groupEmployment
+      panel "Employment type" groupEmployment
       panel "Location and dates" $ do
         inputText "Work country" "country" Nothing Nothing
         inputText "Work dates" "dates" Nothing Nothing
-      panel "Risks" $ groupRisks
-      panel "Invoicing" $ groupInvoicing
+      panel "Risks" groupRisks
+      panel "Invoicing" groupInvoicing
       (! A.id "panel-expenses") $
         panelStandard "Expenses" $
           groupExpenses
@@ -157,7 +157,7 @@ groupExpenses mkey expenses submitUrl = do
         | not (null expenses) ->
             Misc.table "expenses" titles (uncurry $ display key) $ zip [0 ..] expenses
       _ -> pure ()
-    when (not $ null expenses) $ buttonGroup $ buttonAdd submitUrl "Add expense"
+    unless (null expenses) $ buttonGroup $ buttonAdd submitUrl "Add expense"
  where
   titles = ["Amount"]
   display
@@ -174,7 +174,7 @@ groupExpenses mkey expenses submitUrl = do
         , "/forms/remove-expense/" <> key <> "/" <> show i
         )
       ]
-    , (Just $ "/forms/edit-expense/" <> key <> "/" <> show i)
+    , Just $ "/forms/edit-expense/" <> key <> "/" <> show i
     )
 
 groupEmployment = do

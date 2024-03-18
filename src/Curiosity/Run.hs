@@ -59,7 +59,7 @@ run (Command.CommandWithTarget Command.Reset (Command.StateFileTarget path) _) =
   do
     runtime <-
       Rt.bootConf P.defaultConf {P._confDbFile = Just path} Rt.NoThreads >>= either throwIO pure
-    Rt.runRunM runtime $ Rt.reset
+    Rt.runRunM runtime Rt.reset
     Rt.powerdown runtime
     putStrLn @Text "State is now empty."
     exitSuccess
@@ -334,7 +334,7 @@ repl runtime user = HL.runInputT settings loop
       }
   complete begin str = do
     let begin' = S.words (reverse begin)
-        cmd = "cty" : begin' ++ if null str then [] else [str]
+        cmd = "cty" : begin' ++ ([str | not (null str)])
         cmd' =
           [ "--bash-completion-index"
           , show (length begin' + 1)

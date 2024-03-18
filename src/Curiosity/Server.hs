@@ -34,6 +34,7 @@ import Commence.Multilogging qualified as ML
 import Commence.Runtime.Errors qualified as Errs
 import Commence.Server.Auth qualified as CAuth
 import Control.Lens
+import Control.Monad (void)
 import "exceptions" Control.Monad.Catch (MonadMask)
 import Curiosity.Command qualified as Command
 import Curiosity.Core qualified as Core
@@ -929,7 +930,7 @@ run conf@Parse.ServerConf {..} runtime = liftIO $ do
       warpSettings =
         Warp.setPort _serverPort $
           Warp.setBeforeMainLoop
-            (SD.notifyReady >> pure ())
+            (void SD.notifyReady)
             Warp.defaultSettings
   Warp.runSettings warpSettings $ waiApp jwtSettings
  where

@@ -56,7 +56,7 @@ toWellFormedness errs = if null errs' then WellFormed else IllFormed errs'
 
 -- | If the condition is `False`, returns the error message, otherwise returns
 -- nothing.
-(-->) bool msg = if bool then [] else [msg]
+(-->) bool msg = [msg | not bool]
 
 type Err = Text
 
