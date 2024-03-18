@@ -1,6 +1,7 @@
 module Curiosity.Runtime.IO
   ( -- * managing runtimes: boot, shutdown etc.
     bootConf
+  , bootForTests
   , bootDbAndLogFile
   , instantiateDb
   , readDb
@@ -16,7 +17,7 @@ import Commence.Runtime.Errors qualified as Errs
 import Control.Concurrent.STM qualified as STM
 import Control.Lens
 import Curiosity.Core qualified as Core
-import Curiosity.Parse qualified as Command
+import Curiosity.Parse qualified as Parse
 import Curiosity.Runtime.Error qualified as RErr
 import Curiosity.Runtime.Type
 import Curiosity.Types.Store qualified as Store
@@ -31,7 +32,7 @@ import System.Directory (doesFileExist)
 -- | Boot up a runtime.
 bootConf
   :: MonadIO m
-  => Command.Conf
+  => Parse.Conf
   -- ^ configuration to bootConf with.
   -> Threads
   -> m (Either Errs.RuntimeErr Runtime)
@@ -40,7 +41,7 @@ bootConf _rConf _rThreads =
     ( try @SomeException
         . ML.makeDefaultLoggersWithConf
         $ _rConf
-          ^. Command.confLogging
+          ^. Parse.confLogging
     )
     >>= \case
       Left loggerErrs ->
@@ -55,11 +56,28 @@ bootConf _rConf _rThreads =
           Left err -> Left err
           Right _rDb -> Right Runtime {..}
 
+-- | Create a specific runtime with capturing the output, and logging elsewhere
+-- than normally: this is used in tests and in the `/scenarios` handler.
+bootForTests
+  :: MonadIO m
+  => m (Either Errs.RuntimeErr Runtime)
+bootForTests = do
+  let conf =
+        Parse.Conf
+          { Parse._confLogging = Parse.noLoggingConf
+          , -- P.mkLoggingConf "/tmp/cty-serve-explore.log"
+            -- TOOD Multiple concurrent calls to the same log file
+            -- end up with
+            -- RuntimeException openFile: resource busy (file is locked)
+            Parse._confDbFile = Nothing
+          }
+  bootConf conf NoThreads
+
 -- | Create a runtime from a given state.
 bootDbAndLogFile :: MonadIO m => Store.HaskDb -> FilePath -> m Runtime
 bootDbAndLogFile db logsPath = do
-  let loggingConf = Command.mkLoggingConf logsPath
-      _rConf = Command.defaultConf {Command._confLogging = loggingConf}
+  let loggingConf = Parse.mkLoggingConf logsPath
+      _rConf = Parse.defaultConf {Parse._confLogging = loggingConf}
   _rDb <- liftIO . STM.atomically $ Core.instantiateStmDb db
   _rLoggers <- ML.makeDefaultLoggersWithConf loggingConf
   let _rThreads = NoThreads
@@ -75,9 +93,9 @@ bootDbAndLogFile db logsPath = do
 instantiateDb
   :: forall m
    . MonadIO m
-  => Command.Conf
+  => Parse.Conf
   -> m (Either Errs.RuntimeErr Core.StmDb)
-instantiateDb Command.Conf {..} = readDbSafe _confDbFile
+instantiateDb Parse.Conf {..} = readDbSafe _confDbFile
 
 readDb
   :: forall m
@@ -157,7 +175,7 @@ powerdown runtime@Runtime {..} = do
 
 saveDb :: MonadIO m => Runtime -> m (Maybe Errs.RuntimeErr)
 saveDb runtime =
-  maybe (pure Nothing) (saveDbAs runtime) $ _rConf runtime ^. Command.confDbFile
+  maybe (pure Nothing) (saveDbAs runtime) $ _rConf runtime ^. Parse.confDbFile
 
 saveDbAs :: MonadIO m => Runtime -> FilePath -> m (Maybe Errs.RuntimeErr)
 saveDbAs runtime fpath = do

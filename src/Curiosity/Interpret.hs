@@ -47,17 +47,15 @@ import System.FilePath.Glob qualified as Glob
 --------------------------------------------------------------------------------
 
 -- | Interpret a script.
-run :: P.Conf -> User.UserName -> FilePath -> Bool -> IO ExitCode
-run conf user scriptPath withFinal = do
-  runtime <- Rt.bootConf conf Rt.NoThreads >>= either throwIO pure
+run :: Rt.Runtime -> User.UserName -> FilePath -> Bool -> IO ExitCode
+run runtime user scriptPath withFinal = do
   (code, output) <- interpret runtime user scriptPath
   Rt.powerdown runtime
   when withFinal $ print output
   exitWith code
 
-runNoTrace :: P.Conf -> User.UserName -> FilePath -> Bool -> IO ExitCode
-runNoTrace conf user scriptPath withFinal = do
-  runtime <- Rt.bootConf conf Rt.NoThreads >>= either throwIO pure
+runNoTrace :: Rt.Runtime -> User.UserName -> FilePath -> Bool -> IO ExitCode
+runNoTrace runtime user scriptPath withFinal = do
   output <- interpretFile' runtime user scriptPath 0
   Rt.powerdown runtime
   when withFinal $ print output
@@ -65,19 +63,10 @@ runNoTrace conf user scriptPath withFinal = do
 
 -- | Similar to `run`, but capturing the output, and logging elsewhere
 -- than normally: this is used in tests and in the `/scenarios` handler.
-run' :: FilePath -> IO [Trace]
-run' scriptPath = do
-  let conf =
-        P.Conf
-          { P._confLogging = P.noLoggingConf
-          , -- P.mkLoggingConf "/tmp/cty-serve-explore.log"
-            -- TOOD Multiple concurrent calls to the same log file
-            -- end up with
-            -- RuntimeException openFile: resource busy (file is locked)
-            P._confDbFile = Nothing
-          }
-  runtime <- Rt.bootConf conf Rt.NoThreads >>= either throwIO pure
+run' :: Rt.Runtime -> FilePath -> IO [Trace]
+run' runtime scriptPath = do
   output <- interpretFile runtime "system" scriptPath 0
+  -- TODO the boot/powerdone should be done in a withRuntime or similar.
   Rt.powerdown runtime
   pure output
 

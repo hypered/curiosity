@@ -2991,7 +2991,9 @@ handleRun path authResult (Data.Command cmd) =
 partialScenarioState :: ServerC m => FilePath -> FilePath -> Int -> m Html
 partialScenarioState scenariosDir name nbr = do
   let path = scenariosDir </> name <> ".txt"
-  ts <- liftIO $ Interpret.run' path
+  ts <- liftIO $ do
+    runtime <- Rt.bootForTests >>= either throwIO pure
+    Interpret.run' runtime path
   let ts' = Interpret.flatten ts
       db = Interpret.traceState $ ts' !! nbr -- TODO Proper input validation
   pure . H.code . H.pre . H.text $ show db
@@ -3004,7 +3006,9 @@ partialScenarioStateAsJson
   -> m (JP.PrettyJSON '[ 'JP.DropNulls] HaskDb)
 partialScenarioStateAsJson scenariosDir name nbr = do
   let path = scenariosDir </> name <> ".txt"
-  ts <- liftIO $ Interpret.run' path
+  ts <- liftIO $ do
+    runtime <- Rt.bootForTests >>= either throwIO pure
+    Interpret.run' runtime path
   let ts' = Interpret.flatten ts
       db = Interpret.traceState $ ts' !! nbr -- TODO Proper input validation
   pure $ JP.PrettyJSON db
@@ -3017,7 +3021,9 @@ partialScenarioStateAsSvg
   -> m Text
 partialScenarioStateAsSvg scenariosDir name nbr = do
   let path = scenariosDir </> name <> ".txt"
-  ts <- liftIO $ Interpret.run' path
+  ts <- liftIO $ do
+    runtime <- Rt.bootForTests >>= either throwIO pure
+    Interpret.run' runtime path
   let ts' = Interpret.flatten ts
       db = Interpret.traceState $ ts' !! nbr -- TODO Proper input validation
   liftIO $ Graph.graphSvg db
@@ -3039,7 +3045,9 @@ partialScenariosAsJson = listScenarioNames
 partialScenario :: ServerC m => FilePath -> FilePath -> m Html
 partialScenario scenariosDir name = do
   let path = scenariosDir </> name <> ".txt"
-  ts <- liftIO $ Interpret.run' path
+  ts <- liftIO $ do
+    runtime <- Rt.bootForTests >>= either throwIO pure
+    Interpret.run' runtime path
   let ts' = Interpret.flatten ts
   pure $ do
     H.style

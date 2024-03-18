@@ -101,16 +101,18 @@ run (Command.CommandWithTarget (Command.Sock conf) target _) = do
       exitFailure
 run (Command.CommandWithTarget (Command.Run conf scriptPath runOutput) target (Command.User user)) =
   case target of
-    Command.MemoryTarget ->
+    Command.MemoryTarget -> do
+      runtime <- Rt.bootConf conf Rt.NoThreads >>= either throwIO pure
       let Command.RunOutput withTraces withFinal = runOutput
        in if withTraces
-            then Interpret.run conf user scriptPath withFinal
-            else Interpret.runNoTrace conf user scriptPath withFinal
-    Command.StateFileTarget path ->
+            then Interpret.run runtime user scriptPath withFinal
+            else Interpret.runNoTrace runtime user scriptPath withFinal
+    Command.StateFileTarget path -> do
+      runtime <- Rt.bootConf conf {P._confDbFile = Just path} Rt.NoThreads >>= either throwIO pure
       let Command.RunOutput withTraces withFinal = runOutput
        in if withTraces
-            then Interpret.run conf {P._confDbFile = Just path} user scriptPath withFinal
-            else Interpret.runNoTrace conf {P._confDbFile = Just path} user scriptPath withFinal
+            then Interpret.run runtime user scriptPath withFinal
+            else Interpret.runNoTrace runtime user scriptPath withFinal
     Command.UnixDomainTarget _ -> do
       putStrLn @Text "TODO"
       exitFailure

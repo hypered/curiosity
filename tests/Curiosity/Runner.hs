@@ -12,6 +12,7 @@ import Curiosity.DataSpec qualified
 import Curiosity.DslSpec qualified
 import Curiosity.Interpret qualified as Interpret
 import Curiosity.RunSpec qualified
+import Curiosity.Runtime qualified as Runtime
 import Curiosity.RuntimeSpec qualified
 import CuriositySpec qualified
 import Data.Text qualified as T
@@ -49,6 +50,8 @@ mkGoldenTest path = do
   pure $ Silver.goldenVsAction testName goldenPath action convert
  where
   action :: IO [Text]
-  action = snd . Interpret.formatOutput <$> Interpret.run' path
+  action = do
+    runtime <- Runtime.bootForTests >>= either throwIO pure
+    snd . Interpret.formatOutput <$> Interpret.run' runtime path
 
   convert = T.unlines
