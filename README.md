@@ -71,6 +71,8 @@ The same thing can be accomplished with a convenience script:
 The test suite uses `hspec`, so its [command-line
 options](https://hspec.github.io/options.html) apply.
 
+In GHCi, two convenience functions are defined: `runSpec` and `runScenarios`.
+
 Integration tests, which use the [Nix testing
 infrastructure](https://nix.dev/tutorials/integration-testing-using-virtual-machines),
 can be run by building a specific attribute (see below for an interactive

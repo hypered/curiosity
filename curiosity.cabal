@@ -6,6 +6,7 @@ category:           web
 common common-extensions
   default-language: Haskell2010
   default-extensions:
+    ImportQualifiedPost
     StrictData
     MultiParamTypeClasses
     DerivingStrategies
@@ -188,12 +189,16 @@ test-suite curiosity-tests
     , hspec
     , optparse-applicative
     , QuickCheck
+    , tasty
+    , tasty-silver
   other-modules:
       CuriositySpec
     , Curiosity.CommandSpec
     , Curiosity.CoreSpec
     , Curiosity.DataSpec
     , Curiosity.DslSpec
+    , Curiosity.GHCi
+    , Curiosity.Runner
     , Curiosity.RunSpec
     , Curiosity.RuntimeSpec
   type: exitcode-stdio-1.0
@@ -206,10 +211,24 @@ test-suite curiosity-scenarios
   build-depends:
       bytestring
     , curiosity
+    , directory
     , filepath
+    , hspec
     , lens
+    , optparse-applicative
+    , QuickCheck
     , tasty
     , tasty-silver
+  other-modules:
+      CuriositySpec
+    , Curiosity.CommandSpec
+    , Curiosity.CoreSpec
+    , Curiosity.DataSpec
+    , Curiosity.DslSpec
+    , Curiosity.GHCi
+    , Curiosity.Runner
+    , Curiosity.RunSpec
+    , Curiosity.RuntimeSpec
   type: exitcode-stdio-1.0
   main-is: run-scenarios.hs
   hs-source-dirs:

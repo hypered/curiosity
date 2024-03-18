@@ -11,7 +11,9 @@ ghc --interactive \
   -i../smart-design-hs/lib/src/ \
   -ibin/ \
   -isrc/ \
+  -itests/ \
   -hide-package base \
+  -XImportQualifiedPost \
   -XNoImplicitPrelude \
   -XHaskell2010 \
   -XStrictData \
