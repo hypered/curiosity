@@ -8,7 +8,7 @@ import qualified Curiosity.Command             as Command
 import qualified Curiosity.Types.Store         as Store
 import qualified Curiosity.Types.Email         as Email
 import qualified Curiosity.Types.User          as User
-import qualified Curiosity.Interpret           as Inter
+import qualified Curiosity.Interpret           as Interpret
 import qualified Curiosity.Parse               as P
 import qualified Curiosity.Process             as P
 import qualified Curiosity.Runtime             as Rt
@@ -110,13 +110,13 @@ run (Command.CommandWithTarget (Command.Run conf scriptPath runOutput) target (C
     Command.MemoryTarget ->
       let  Command.RunOutput withTraces withFinal = runOutput in
       if withTraces
-      then Inter.handleRun conf user scriptPath withFinal
-      else Inter.handleRunNoTrace conf user scriptPath withFinal
+      then Interpret.handleRun conf user scriptPath withFinal
+      else Interpret.handleRunNoTrace conf user scriptPath withFinal
     Command.StateFileTarget path ->
       let Command.RunOutput withTraces withFinal = runOutput in
       if withTraces
-      then Inter.handleRun conf { P._confDbFile = Just path } user scriptPath withFinal
-      else Inter.handleRunNoTrace conf { P._confDbFile = Just path } user scriptPath withFinal
+      then Interpret.handleRun conf { P._confDbFile = Just path } user scriptPath withFinal
+      else Interpret.handleRunNoTrace conf { P._confDbFile = Just path } user scriptPath withFinal
     Command.UnixDomainTarget _ -> do
       putStrLn @Text "TODO"
       exitFailure
@@ -363,14 +363,14 @@ repl runtime user = HL.runInputT settings loop
     Just "quit" -> pure ()
     Just input  -> do
       let result =
-            A.execParserPure A.defaultPrefs Command.parserInfo $ Inter.wordsq input
+            A.execParserPure A.defaultPrefs Command.parserInfo $ Interpret.wordsq input
       case result of
         A.Success command -> do
           case command of
             -- We ignore the Configuration here. Probably this should be moved
             -- to Rt.handleCommand too.
             Command.Run _ scriptPath _ -> do
-              (code, _) <- liftIO $ Inter.interpret runtime user scriptPath
+              (code, _) <- liftIO $ Interpret.interpret runtime user scriptPath
               case code of
                 ExitSuccess   -> pure ()
                 ExitFailure _ -> output' "Script failed."

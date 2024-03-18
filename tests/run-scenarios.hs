@@ -5,7 +5,7 @@
 --
 -- Use e.g. @scripts/run-tests.sh@ to execute this program.
 
-import qualified Curiosity.Interpret           as Inter
+import qualified Curiosity.Interpret           as Interpret
 import qualified Data.Text                     as T
 import           System.FilePath
 
@@ -17,7 +17,7 @@ import qualified Test.Tasty.Silver             as Silver
 main :: IO ()
 main = do
   -- List all scenarios, comparing them to their corresponding golden files.
-  goldens <- Inter.listScenarios "scenarios/" >>= mapM mkGoldenTest
+  goldens <- Interpret.listScenarios "scenarios/" >>= mapM mkGoldenTest
   defaultMain $ testGroup "Tests" goldens
 
 
@@ -32,6 +32,6 @@ mkGoldenTest path = do
   pure $ Silver.goldenVsAction testName goldenPath action convert
  where
   action :: IO [Text]
-  action = snd . Inter.formatOutput <$> Inter.handleRun' path
+  action = snd . Interpret.formatOutput <$> Interpret.handleRun' path
 
   convert = T.unlines

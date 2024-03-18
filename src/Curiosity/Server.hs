@@ -65,7 +65,7 @@ import qualified Curiosity.Html.Quotation      as Pages
 import qualified Curiosity.Html.Run            as Pages
 import qualified Curiosity.Html.SimpleContract as Pages
 import qualified Curiosity.Html.User           as Pages
-import qualified Curiosity.Interpret           as Inter
+import qualified Curiosity.Interpret           as Interpret
 import qualified Curiosity.Parse               as Parse
 import qualified Curiosity.Runtime             as Rt
 import qualified Curiosity.Server.Helpers      as H
@@ -2525,14 +2525,14 @@ handleRun path authResult (Data.Command cmd) = withMaybeUser
  where
   run' mprofile = do
     runtime <- ask
-    output  <- liftIO $ Inter.interpretLines runtime
+    output  <- liftIO $ Interpret.interpretLines runtime
                                              username
                                              path
                                              [cmd]
                                              0
                                              []
                                              (\t acc -> acc ++ [t])
-    let (_, ls) = Inter.formatOutput output
+    let (_, ls) = Interpret.formatOutput output
     pure $ unlines ls
    where
     username = maybe (User.UserName "nobody")
@@ -2550,9 +2550,9 @@ handleRun path authResult (Data.Command cmd) = withMaybeUser
 partialScenarioState :: ServerC m => FilePath -> FilePath -> Int -> m Html
 partialScenarioState scenariosDir name nbr = do
   let path = scenariosDir </> name <> ".txt"
-  ts <- liftIO $ Inter.handleRun' path
-  let ts' = Inter.flatten ts
-      db  = Inter.traceState $ ts' !! nbr -- TODO Proper input validation
+  ts <- liftIO $ Interpret.handleRun' path
+  let ts' = Interpret.flatten ts
+      db  = Interpret.traceState $ ts' !! nbr -- TODO Proper input validation
   pure . H.code . H.pre . H.text $ show db
 
 partialScenarioStateAsJson
@@ -2563,9 +2563,9 @@ partialScenarioStateAsJson
   -> m (JP.PrettyJSON '[ 'JP.DropNulls] HaskDb)
 partialScenarioStateAsJson scenariosDir name nbr = do
   let path = scenariosDir </> name <> ".txt"
-  ts <- liftIO $ Inter.handleRun' path
-  let ts' = Inter.flatten ts
-      db  = Inter.traceState $ ts' !! nbr -- TODO Proper input validation
+  ts <- liftIO $ Interpret.handleRun' path
+  let ts' = Interpret.flatten ts
+      db  = Interpret.traceState $ ts' !! nbr -- TODO Proper input validation
   pure $ JP.PrettyJSON db
 
 partialScenarioStateAsSvg
@@ -2576,9 +2576,9 @@ partialScenarioStateAsSvg
   -> m Text
 partialScenarioStateAsSvg scenariosDir name nbr = do
   let path = scenariosDir </> name <> ".txt"
-  ts <- liftIO $ Inter.handleRun' path
-  let ts' = Inter.flatten ts
-      db  = Inter.traceState $ ts' !! nbr -- TODO Proper input validation
+  ts <- liftIO $ Interpret.handleRun' path
+  let ts' = Interpret.flatten ts
+      db  = Interpret.traceState $ ts' !! nbr -- TODO Proper input validation
   liftIO $ Graph.graphSvg db
 
 partialScenarios :: ServerC m => FilePath -> m Html
@@ -2598,8 +2598,8 @@ partialScenariosAsJson = listScenarioNames
 partialScenario :: ServerC m => FilePath -> FilePath -> m Html
 partialScenario scenariosDir name = do
   let path = scenariosDir </> name <> ".txt"
-  ts <- liftIO $ Inter.handleRun' path
-  let ts' = Inter.flatten ts
+  ts <- liftIO $ Interpret.handleRun' path
+  let ts' = Interpret.flatten ts
   pure $ do
     H.style
       ".c-content table code {\n\
@@ -2621,10 +2621,10 @@ partialScenario scenariosDir name = do
         H.th ""
       H.tbody $ mapM_ displayTrace $ zip ts' [0..]
  where
-  displayTrace :: (Inter.Trace, Int) -> Html
-  displayTrace (Inter.Trace {..}, n) = do
+  displayTrace :: (Interpret.Trace, Int) -> Html
+  displayTrace (Interpret.Trace {..}, n) = do
     H.tr $ do
-      H.td $ H.text $ Inter.pad traceNesting <> show traceLineNbr
+      H.td $ H.text $ Interpret.pad traceNesting <> show traceLineNbr
       H.td . H.code $ H.text traceCommand
       H.td
         $ H.a
@@ -2653,7 +2653,7 @@ partialScenario scenariosDir name = do
         H.td ""
         (H.td ! A.colspan "3")
           .  H.code
-          $  H.text (Inter.pad traceNesting)
+          $  H.text (Interpret.pad traceNesting)
           >> H.text o
       )
       traceOutput
@@ -2662,7 +2662,7 @@ partialScenario scenariosDir name = do
   --                   remove padding on td
 
 listScenarioNames scenariosDir = do
-  paths <- liftIO $ Inter.listScenarios scenariosDir
+  paths <- liftIO $ Interpret.listScenarios scenariosDir
   let names = map takeBaseName paths
   pure names
 
