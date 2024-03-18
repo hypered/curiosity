@@ -2,12 +2,11 @@ module Curiosity.CoreSpec
   ( spec
   ) where
 
-import           Curiosity.Core
-import qualified Curiosity.Types.Store as Store 
-import qualified Curiosity.Types.Counter as C 
-import           Curiosity.Types.User
-import           Test.Hspec
-
+import Curiosity.Core
+import Curiosity.Types.Counter qualified as C
+import Curiosity.Types.Store qualified as Store
+import Curiosity.Types.User
+import Test.Hspec
 
 --------------------------------------------------------------------------------
 spec :: Spec

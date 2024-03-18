@@ -4,10 +4,9 @@ module Main
   ( main
   ) where
 
-import qualified Curiosity.Command             as Command
-import qualified Curiosity.Run                 as Run
-import qualified Options.Applicative           as A
-
+import Curiosity.Command qualified as Command
+import Curiosity.Run qualified as Run
+import Options.Applicative qualified as A
 
 --------------------------------------------------------------------------------
 main :: IO ExitCode

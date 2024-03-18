@@ -1,6 +1,5 @@
 module Curiosity.Runtime.IO
-  (
-    -- * managing runtimes: boot, shutdown etc. 
+  ( -- * managing runtimes: boot, shutdown etc.
     bootConf
   , bootDbAndLogFile
   , instantiateDb
@@ -9,70 +8,70 @@ module Curiosity.Runtime.IO
   , powerdown
   , saveDb
   , saveDbAs
-  , readFullStmDbInHask 
+  , readFullStmDbInHask
   ) where
 
-import qualified Curiosity.Core                as Core
-import qualified Data.ByteString.Lazy          as BS
-import qualified Commence.Multilogging         as ML
-import qualified Commence.Runtime.Errors       as Errs
-import qualified Control.Concurrent.STM        as STM
-import           Control.Lens
-import qualified Curiosity.Parse               as Command
-import qualified Curiosity.Runtime.Error       as RErr
-import           Curiosity.Runtime.Type
-import qualified Curiosity.Types.Store         as Store
-import qualified Data.Text                     as T
-import qualified Data.Text.Encoding            as TE
-import qualified Data.Text.IO                  as T
-import           System.Directory               ( doesFileExist )
-
+import Commence.Multilogging qualified as ML
+import Commence.Runtime.Errors qualified as Errs
+import Control.Concurrent.STM qualified as STM
+import Control.Lens
+import Curiosity.Core qualified as Core
+import Curiosity.Parse qualified as Command
+import Curiosity.Runtime.Error qualified as RErr
+import Curiosity.Runtime.Type
+import Curiosity.Types.Store qualified as Store
+import Data.ByteString.Lazy qualified as BS
+import Data.Text qualified as T
+import Data.Text.Encoding qualified as TE
+import Data.Text.IO qualified as T
+import System.Directory (doesFileExist)
 
 --------------------------------------------------------------------------------
+
 -- | Boot up a runtime.
 bootConf
   :: MonadIO m
-  => Command.Conf -- ^ configuration to bootConf with.
+  => Command.Conf
+  -- ^ configuration to bootConf with.
   -> Threads
   -> m (Either Errs.RuntimeErr Runtime)
 bootConf _rConf _rThreads =
   liftIO
-      (  try @SomeException
-      .  ML.makeDefaultLoggersWithConf
-      $  _rConf
-      ^. Command.confLogging
-      )
+    ( try @SomeException
+        . ML.makeDefaultLoggersWithConf
+        $ _rConf
+          ^. Command.confLogging
+    )
     >>= \case
-          Left loggerErrs ->
-            putStrLn @Text
-                (  "Cannot instantiate, logger instantiation failed: "
-                <> show loggerErrs
-                )
-              $> Left (Errs.RuntimeException loggerErrs)
-          Right _rLoggers -> do
-            eDb <- instantiateDb _rConf
-            pure $ case eDb of
-              Left  err  -> Left err
-              Right _rDb -> Right Runtime { .. }
+      Left loggerErrs ->
+        putStrLn @Text
+          ( "Cannot instantiate, logger instantiation failed: "
+              <> show loggerErrs
+          )
+          $> Left (Errs.RuntimeException loggerErrs)
+      Right _rLoggers -> do
+        eDb <- instantiateDb _rConf
+        pure $ case eDb of
+          Left err -> Left err
+          Right _rDb -> Right Runtime {..}
 
 -- | Create a runtime from a given state.
 bootDbAndLogFile :: MonadIO m => Store.HaskDb -> FilePath -> m Runtime
 bootDbAndLogFile db logsPath = do
   let loggingConf = Command.mkLoggingConf logsPath
-      _rConf      = Command.defaultConf { Command._confLogging = loggingConf }
-  _rDb      <- liftIO . STM.atomically $ Core.instantiateStmDb db
+      _rConf = Command.defaultConf {Command._confLogging = loggingConf}
+  _rDb <- liftIO . STM.atomically $ Core.instantiateStmDb db
   _rLoggers <- ML.makeDefaultLoggersWithConf loggingConf
   let _rThreads = NoThreads
-  pure $ Runtime { .. }
+  pure $ Runtime {..}
 
-{- | Instantiate the db.
-
-1. The state is either the empty db, or if a _confDbFile file is specified, is
-read from the file.
-
-2. Whenever the application exits, the state is written to disk, if a
-_confDbFile is specified.
--}
+-- | Instantiate the db.
+--
+--1. The state is either the empty db, or if a _confDbFile file is specified, is
+--read from the file.
+--
+--2. Whenever the application exits, the state is written to disk, if a
+--_confDbFile is specified.
 instantiateDb
   :: forall m
    . MonadIO m
@@ -92,17 +91,18 @@ readDb mpath = case mpath of
     if exists then fromFile fpath else useEmpty
   Nothing -> useEmpty
  where
-  fromFile fpath = liftIO (try @SomeException $ T.readFile fpath) >>= \case
-    Left err ->
-      putStrLn @Text ("Unable to read db file: " <> maybe "" T.pack mpath)
-        $> Left (Errs.RuntimeException err)
-    Right fdata ->
-           -- We may want to deserialise the data only when the data is non-empty.
-                   if T.null fdata
-      then useEmpty
-      else
-        Store.deserialiseDbStrict (TE.encodeUtf8 fdata)
-          & either (pure . Left . Errs.knownErr) useState
+  fromFile fpath =
+    liftIO (try @SomeException $ T.readFile fpath) >>= \case
+      Left err ->
+        putStrLn @Text ("Unable to read db file: " <> maybe "" T.pack mpath)
+          $> Left (Errs.RuntimeException err)
+      Right fdata ->
+        -- We may want to deserialise the data only when the data is non-empty.
+        if T.null fdata
+          then useEmpty
+          else
+            Store.deserialiseDbStrict (TE.encodeUtf8 fdata)
+              & either (pure . Left . Errs.knownErr) useState
   useEmpty = Right <$> liftIO (STM.atomically Core.instantiateEmptyStmDb)
   useState = fmap Right . liftIO . STM.atomically . Core.instantiateStmDb
 
@@ -137,21 +137,23 @@ powerdown runtime@Runtime {..} = do
   mDbSaveErr <- saveDb runtime
   reportDbSaveErr mDbSaveErr
   -- finally, close loggers.
-  eLoggingCloseErrs <- liftIO . try @SomeException $ ML.flushAndCloseLoggers
-    _rLoggers
+  eLoggingCloseErrs <-
+    liftIO . try @SomeException $
+      ML.flushAndCloseLoggers
+        _rLoggers
   reportLoggingCloseErrs eLoggingCloseErrs
   pure $ mDbSaveErr <|> first Errs.RuntimeException eLoggingCloseErrs ^? _Left
  where
   reportLoggingCloseErrs eLoggingCloseErrs =
     when (isLeft eLoggingCloseErrs)
-      .  putStrLn @Text
-      $  "Errors when closing loggers: "
-      <> show eLoggingCloseErrs
+      . putStrLn @Text
+      $ "Errors when closing loggers: "
+        <> show eLoggingCloseErrs
   reportDbSaveErr mDbSaveErr =
     when (isJust mDbSaveErr)
-      .  putStrLn @Text
-      $  "DB state cannot be saved: "
-      <> show mDbSaveErr
+      . putStrLn @Text
+      $ "DB state cannot be saved: "
+        <> show mDbSaveErr
 
 saveDb :: MonadIO m => Runtime -> m (Maybe Errs.RuntimeErr)
 saveDb runtime =
@@ -162,7 +164,7 @@ saveDbAs runtime fpath = do
   haskDb <- readFullStmDbInHask $ _rDb runtime
   let bs = Store.serialiseDb haskDb
   liftIO
-      (try @SomeException (T.writeFile fpath . TE.decodeUtf8 $ BS.toStrict bs))
+    (try @SomeException (T.writeFile fpath . TE.decodeUtf8 $ BS.toStrict bs))
     <&> either (Just . Errs.RuntimeException) (const Nothing)
 
 -- | Reads all values of the `Db` product type from `STM.STM` to @Hask@.

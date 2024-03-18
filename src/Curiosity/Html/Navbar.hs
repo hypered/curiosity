@@ -1,23 +1,20 @@
-{- |
-Module: Curiosity.Html.Navbar
-Description: A navigation bar for Curiosity.
--}
+-- |
+--Module: Curiosity.Html.Navbar
+--Description: A navigation bar for Curiosity.
 module Curiosity.Html.Navbar
   ( navbarWebsite
   , navbar
   ) where
 
-import qualified Curiosity.Html.LandingPage    as Pages
-import           Smart.Html.Avatar
-import qualified Smart.Html.Navbar             as Navbar
-import           Smart.Html.Shared.Html.Icons
-
+import Curiosity.Html.LandingPage qualified as Pages
+import Smart.Html.Avatar
+import Smart.Html.Navbar qualified as Navbar
+import Smart.Html.Shared.Html.Icons
 
 --------------------------------------------------------------------------------
 -- The (not logged-in) website navbar.
 navbarWebsite :: Navbar.NavbarWebsite
 navbarWebsite = Pages.navigation
-
 
 --------------------------------------------------------------------------------
 -- The (logged-in) application navbar.
@@ -33,8 +30,8 @@ userEntries name =
   , Navbar.Divider
   , Navbar.SubEntry "Settings" "/settings/profile" False
   , Navbar.Divider
-  -- TODO: change to `POST` in the future. 
-  , Navbar.SubEntry "Sign out" "/a/logout" False
+  , -- TODO: change to `POST` in the future.
+    Navbar.SubEntry "Sign out" "/a/logout" False
   ]
 
 helpEntry :: Navbar.RightEntry

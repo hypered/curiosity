@@ -8,16 +8,16 @@ module Curiosity.Runtime.Quotation
   , createOrderForQuotation
   ) where
 
-import qualified Control.Concurrent.STM        as STM
-import qualified Curiosity.Core                as Core
-import qualified Curiosity.Types.Store         as Store
-import qualified Curiosity.Types.Counter       as C
-import qualified Curiosity.Types.Order         as Order
-import qualified Curiosity.Types.Quotation     as Quotation
-import qualified Curiosity.Types.User          as User
-import           Curiosity.Runtime.Order        ( createOrder )
-import           Curiosity.Runtime.Type        as RType
-import           Curiosity.STM.Helpers          ( atomicallyM )
+import Control.Concurrent.STM qualified as STM
+import Curiosity.Core qualified as Core
+import Curiosity.Runtime.Order (createOrder)
+import Curiosity.Runtime.Type as RType
+import Curiosity.STM.Helpers (atomicallyM)
+import Curiosity.Types.Counter qualified as C
+import Curiosity.Types.Order qualified as Order
+import Curiosity.Types.Quotation qualified as Quotation
+import Curiosity.Types.Store qualified as Store
+import Curiosity.Types.User qualified as User
 
 filterQuotations
   :: Core.StmDb -> Quotation.Predicate -> STM [Quotation.Quotation]
@@ -48,7 +48,7 @@ createQuotation db quotation = do
  where
   transaction = do
     newId <- C.newIdOf @Quotation.QuotationId (Store._dbNextQuotationId db)
-    let new = quotation { Quotation._quotationId = newId }
+    let new = quotation {Quotation._quotationId = newId}
     createQuotationFull db new >>= either STM.throwSTM pure
 
 createQuotationFull
@@ -67,11 +67,10 @@ modifyQuotations db f =
 createOrderForQuotation
   :: Core.StmDb
   -> (User.UserProfile, Quotation.QuotationId)
-     -- ^ TODO SignQuotation data type, including e.g. the signature data.
+  -- ^ TODO SignQuotation data type, including e.g. the signature data.
   -> STM (Either Quotation.Err Order.OrderId)
 createOrderForQuotation db _ = do
   mid <- createOrder db
   case mid of
-    Right id              -> pure $ Right id
-    Left  (Order.Err err) -> pure $ Left $ Quotation.Err err
-
+    Right id -> pure $ Right id
+    Left (Order.Err err) -> pure $ Left $ Quotation.Err err

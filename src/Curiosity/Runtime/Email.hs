@@ -5,12 +5,12 @@ module Curiosity.Runtime.Email
   , selectEmailById
   ) where
 
-import qualified Control.Concurrent.STM        as STM
-import qualified Curiosity.Core                as Core
-import qualified Curiosity.Types.Store         as Store
-import qualified Curiosity.Types.Email         as Email
-import           Curiosity.Runtime.Type
-import           Curiosity.STM.Helpers          ( atomicallyM )
+import Control.Concurrent.STM qualified as STM
+import Curiosity.Core qualified as Core
+import Curiosity.Runtime.Type
+import Curiosity.STM.Helpers (atomicallyM)
+import Curiosity.Types.Email qualified as Email
+import Curiosity.Types.Store qualified as Store
 
 filterEmails :: Core.StmDb -> Email.Predicate -> STM [Email.Email]
 filterEmails db predicate = do
@@ -31,11 +31,11 @@ setEmailDone :: Core.StmDb -> Email.Email -> STM (Either Email.Err ())
 setEmailDone db Email.Email {..} = do
   mrecord <- Core.selectEmailById db _emailId
   case mrecord of
-    Just Email.Email{} -> do
+    Just Email.Email {} -> do
       let replaceOlder records =
             [ if Email._emailId e == _emailId
-                then e { Email._emailState = Email.EmailDone }
-                else e
+              then e {Email._emailState = Email.EmailDone}
+              else e
             | e <- records
             ]
       Core.modifyEmails db replaceOlder
@@ -50,4 +50,3 @@ selectEmailById
 selectEmailById eid = do
   db <- asks _rDb
   atomicallyM $ Core.selectEmailById db eid
-

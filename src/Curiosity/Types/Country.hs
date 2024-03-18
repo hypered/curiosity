@@ -1,17 +1,15 @@
-{- |
-Module: Curiosity.Types.Country
-Description: A list of countries, as used in the simple contract form.
-
--}
+-- |
+--Module: Curiosity.Types.Country
+--Description: A list of countries, as used in the simple contract form.
 module Curiosity.Types.Country
   ( countries
   , lookupCountry
   ) where
 
-import           Data.List                      ( lookup )
-
+import Data.List (lookup)
 
 --------------------------------------------------------------------------------
+
 -- | From https://github.com/noteed/start-web/blob/main/data/countries.sql.
 -- Originally from pycountry.
 countries :: [(Text, Text)]

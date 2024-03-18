@@ -2,9 +2,8 @@ module Curiosity.DataSpec
   ( spec
   ) where
 
-import           Test.Hspec
-import qualified Test.QuickCheck               as Q
-
+import Test.Hspec
+import Test.QuickCheck qualified as Q
 
 --------------------------------------------------------------------------------
 spec :: Spec

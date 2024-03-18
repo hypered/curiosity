@@ -2,9 +2,8 @@ module Curiosity.DslSpec
   ( spec
   ) where
 
-import           Curiosity.Dsl
-import           Test.Hspec
-
+import Curiosity.Dsl
+import Test.Hspec
 
 --------------------------------------------------------------------------------
 spec :: Spec

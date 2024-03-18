@@ -6,20 +6,19 @@ module Curiosity.Runner
   , runScenarios
   ) where
 
-import qualified CuriositySpec
-import qualified Curiosity.CommandSpec
-import qualified Curiosity.CoreSpec
-import qualified Curiosity.DataSpec
-import qualified Curiosity.DslSpec
-import qualified Curiosity.Interpret           as Interpret
-import qualified Curiosity.RunSpec
-import qualified Curiosity.RuntimeSpec
-import qualified Data.Text                     as T
-import           System.FilePath
-import           Test.Hspec
-import           Test.Tasty
-import qualified Test.Tasty.Silver             as Silver
-
+import Curiosity.CommandSpec qualified
+import Curiosity.CoreSpec qualified
+import Curiosity.DataSpec qualified
+import Curiosity.DslSpec qualified
+import Curiosity.Interpret qualified as Interpret
+import Curiosity.RunSpec qualified
+import Curiosity.RuntimeSpec qualified
+import CuriositySpec qualified
+import Data.Text qualified as T
+import System.FilePath
+import Test.Hspec
+import Test.Tasty
+import Test.Tasty.Silver qualified as Silver
 
 --------------------------------------------------------------------------------
 runSpec :: IO ()
@@ -32,7 +31,6 @@ runSpec = hspec $ do
   Curiosity.RunSpec.spec
   Curiosity.RuntimeSpec.spec
 
-
 --------------------------------------------------------------------------------
 runScenarios :: IO ()
 runScenarios = do
@@ -40,14 +38,13 @@ runScenarios = do
   goldens <- Interpret.listScenarios "scenarios/" >>= mapM mkGoldenTest
   defaultMain $ testGroup "Tests" goldens
 
-
 --------------------------------------------------------------------------------
 mkGoldenTest :: FilePath -> IO TestTree
 mkGoldenTest path = do
   -- `path` looks like @scenarios/quotation-flow.txt@.
   -- `testName` looks like @quotation-flow@.
   -- `goldenPath` looks like @scenarios/quotation-flow.golden@.
-  let testName   = takeBaseName path
+  let testName = takeBaseName path
       goldenPath = replaceExtension path ".golden"
   pure $ Silver.goldenVsAction testName goldenPath action convert
  where

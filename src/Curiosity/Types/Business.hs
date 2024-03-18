@@ -1,30 +1,30 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
-{- |
-Module: Curiosity.Types.Business
-Description: Business entities related datatypes
--}
+
+-- |
+--Module: Curiosity.Types.Business
+--Description: Business entities related datatypes
 module Curiosity.Types.Business
-  ( Unit(..)
-  , Create(..)
-  , Update(..)
-  , UnitId(..)
-  , ActingRole(..)
-  , Authorization(..)
-  , Scope(..)
-  , Err(..)
+  ( Unit (..)
+  , Create (..)
+  , Update (..)
+  , UnitId (..)
+  , ActingRole (..)
+  , Authorization (..)
+  , Scope (..)
+  , Err (..)
   ) where
 
-import qualified Commence.Types.Wrapped        as W
-import qualified Curiosity.Types.PrefixedId    as Pre
-import qualified Curiosity.Types.User          as User
-import           Data.Aeson
-import qualified Text.Blaze.Html5              as H
-import           Web.FormUrlEncoded             ( FromForm(..)
-                                                , parseMaybe
-                                                , parseUnique
-                                                )
-
+import Commence.Types.Wrapped qualified as W
+import Curiosity.Types.PrefixedId qualified as Pre
+import Curiosity.Types.User qualified as User
+import Data.Aeson
+import Text.Blaze.Html5 qualified as H
+import Web.FormUrlEncoded
+  ( FromForm (..)
+  , parseMaybe
+  , parseUnique
+  )
 
 --------------------------------------------------------------------------------
 data Create = Create
@@ -38,7 +38,7 @@ instance FromForm Create where
 
 -- | Represents the input data to update a business unit profile.
 data Update = Update
-  { _updateSlug        :: Text
+  { _updateSlug :: Text
   , _updateDescription :: Maybe Text
   }
   deriving (Eq, Show, Generic)
@@ -46,33 +46,34 @@ data Update = Update
 instance FromForm Update where
   fromForm f = Update <$> parseUnique "slug" f <*> parseMaybe "description" f
 
-
 --------------------------------------------------------------------------------
 data Unit = Unit
-  { _entityId             :: UnitId
-  , _entitySlug           :: Text
-    -- ^ An identifier suitable for URLs
-  , _entityName           :: Text
-  , _entityDescription    :: Maybe Text
-  , _entityType           :: Text
-  , _entityHolders        :: [User.UserId]
+  { _entityId :: UnitId
+  , _entitySlug :: Text
+  -- ^ An identifier suitable for URLs
+  , _entityName :: Text
+  , _entityDescription :: Maybe Text
+  , _entityType :: Text
+  , _entityHolders :: [User.UserId]
   , _entityAuthorizations :: [Authorization]
-  , _entityScopes         :: [Scope]
+  , _entityScopes :: [Scope]
   }
   deriving (Show, Eq, Generic)
   deriving anyclass (ToJSON, FromJSON)
 
 -- | Record ID of the form BENT-xxx.
-newtype UnitId = UnitId { unUnitId :: Text }
-               deriving (Eq, Show)
-               deriving ( IsString
-                        , FromJSON
-                        , ToJSON
-                        , H.ToMarkup
-                        , H.ToValue
-                        ) via Text
-               deriving FromForm via W.Wrapped "unit-id" Text
-               deriving Pre.PrefixedId via W.Wrapped "BENT-" Text
+newtype UnitId = UnitId {unUnitId :: Text}
+  deriving (Eq, Show)
+  deriving
+    ( IsString
+    , FromJSON
+    , ToJSON
+    , H.ToMarkup
+    , H.ToValue
+    )
+    via Text
+  deriving (FromForm) via W.Wrapped "unit-id" Text
+  deriving (Pre.PrefixedId) via W.Wrapped "BENT-" Text
 
 data ActingRole = Dummy | Holder
   deriving (Eq, Generic, Show)

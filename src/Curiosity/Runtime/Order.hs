@@ -4,11 +4,11 @@ module Curiosity.Runtime.Order
   , modifyOrders
   ) where
 
-import qualified Control.Concurrent.STM        as STM
-import qualified Curiosity.Core                as Core
-import qualified Curiosity.Types.Store         as Store
-import qualified Curiosity.Types.Counter       as C 
-import qualified Curiosity.Types.Order         as Order
+import Control.Concurrent.STM qualified as STM
+import Curiosity.Core qualified as Core
+import Curiosity.Types.Counter qualified as C
+import Curiosity.Types.Order qualified as Order
+import Curiosity.Types.Store qualified as Store
 
 createOrder :: Core.StmDb -> STM (Either Order.Err Order.OrderId)
 createOrder db = do
@@ -26,4 +26,3 @@ createOrderFull db new =
 
 modifyOrders :: Core.StmDb -> ([Order.Order] -> [Order.Order]) -> STM ()
 modifyOrders db f = let tvar = Store._dbOrders db in STM.modifyTVar tvar f
-

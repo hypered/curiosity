@@ -1,10 +1,12 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
--- | STM operations around `Curiosity.Types`.
 
 -- brittany-disable-next-binding
+
+-- | STM operations around `Curiosity.Types`.
 module Curiosity.Core
   ( StmDb
-  -- * Whole database manipulation
+
+    -- * Whole database manipulation
   , instantiateEmptyStmDb
   , instantiateStmDb
   , reset
@@ -22,51 +24,57 @@ module Curiosity.Core
   , modifyQuotations
   , selectQuotationById
   , checkCredentials
-  -- * Operations on legal entities
+
+    -- * Operations on legal entities
   , selectEntityBySlug
   , selectEntitiesWhereUserId
-  -- * Operations on business units
+
+    -- * Operations on business units
   , createBusiness
   , updateBusiness
   , selectUnitBySlug
   , linkBusinessUnitToUser
-  -- * Operations on emails
+
+    -- * Operations on emails
   , createEmail
   , modifyEmails
   , selectEmailById
-  -- * Pseudo-random number generation
+
+    -- * Pseudo-random number generation
   , genRandomText
   , readStdGen
   , writeStdGen
-  -- * Simulated time
+
+    -- * Simulated time
   , readTime
   , writeTime
   , stepTime
   , readSteppingMode
-  -- * User rights
+
+    -- * User rights
   , canPerform
   ) where
 
-import qualified Control.Concurrent.STM        as STM
-import qualified Curiosity.Types.Business       as Business
-import qualified Curiosity.Types.Counter        as C
-import qualified Curiosity.Types.Email          as Email
-import qualified Curiosity.Types.Legal          as Legal
-import qualified Curiosity.Types.Quotation      as Quotation
-import           Curiosity.Types.Store
-import qualified Curiosity.Types.User           as User
-import           Data.List                      ( lookup, nub )
-import qualified Data.List                     as L
-import qualified Data.Text                     as T
-import           Foreign.C.Types                ( CTime(..) )
-import qualified Language.Haskell.TH.Syntax    as Syntax
-import           System.PosixCompat.Types       ( EpochTime )
-import qualified System.Random                 as Rand
-import qualified System.Random.Internal        as Rand
-import qualified System.Random.SplitMix        as SM
-
+import Control.Concurrent.STM qualified as STM
+import Curiosity.Types.Business qualified as Business
+import Curiosity.Types.Counter qualified as C
+import Curiosity.Types.Email qualified as Email
+import Curiosity.Types.Legal qualified as Legal
+import Curiosity.Types.Quotation qualified as Quotation
+import Curiosity.Types.Store
+import Curiosity.Types.User qualified as User
+import Data.List (lookup, nub)
+import Data.List qualified as L
+import Data.Text qualified as T
+import Foreign.C.Types (CTime (..))
+import Language.Haskell.TH.Syntax qualified as Syntax
+import System.PosixCompat.Types (EpochTime)
+import System.Random qualified as Rand
+import System.Random.Internal qualified as Rand
+import System.Random.SplitMix qualified as SM
 
 --------------------------------------------------------------------------------
+
 -- | Stm database type, used for live example applications, values reside in @STM@
 type StmDb = Db STM.TVar
 
@@ -75,66 +83,70 @@ instantiateEmptyStmDb :: STM StmDb
 instantiateEmptyStmDb = instantiateStmDb emptyHask
 
 -- brittany-disable-next-binding
+
 -- | Generate a new database from a given pure value.
 instantiateStmDb :: HaskDb -> STM StmDb
-instantiateStmDb Db
-  { _dbNextBusinessId = C.CounterValue (Identity seedNextBusinessId)
-  , _dbBusinessUnits = Identity seedBusinessUnits
-  , _dbNextLegalId = C.CounterValue (Identity seedNextLegalId)
-  , _dbLegalEntities = Identity seedLegalEntities
-  , _dbNextUserId = C.CounterValue (Identity seedNextUserId)
-  , _dbUserProfiles = Identity seedProfiles
-  , _dbNextQuotationId = C.CounterValue (Identity seedNextQuotationId)
-  , _dbQuotations = Identity seedQuotations
-  , _dbNextOrderId = C.CounterValue (Identity seedNextOrderId)
-  , _dbOrders = Identity seedOrders
-  , _dbNextInvoiceId = C.CounterValue (Identity seedNextInvoiceId)
-  , _dbInvoices = Identity seedInvoices
-  , _dbNextRemittanceAdvId = C.CounterValue (Identity seedNextRemittanceAdvId)
-  , _dbRemittanceAdvs = Identity seedRemittanceAdvs
-  , _dbNextEmploymentId = C.CounterValue (Identity seedNextEmploymentId)
-  , _dbEmployments = Identity seedEmployments
-  , _dbRandomGenState = Identity seedRandomGenState
-  , _dbEpochTime = Identity seedEpochTime
-  , _dbSteppingMode = Identity seedSteppingMode
-  , _dbFormCreateQuotationAll = Identity seedFormCreateQuotationAll
-  , _dbFormCreateContractAll = Identity seedFormCreateContractAll
-  , _dbFormCreateSimpleContractAll = Identity seedFormCreateSimpleContractAll
-  , _dbNextEmailId = C.CounterValue (Identity seedNextEmailId)
-  , _dbEmails = Identity seedEmails
-  }
-  = do
-    _dbNextBusinessId              <- C.newCounter seedNextBusinessId
-    _dbBusinessUnits               <- STM.newTVar seedBusinessUnits
-    _dbNextLegalId                 <- C.newCounter seedNextLegalId
-    _dbLegalEntities               <- STM.newTVar seedLegalEntities
-    _dbNextUserId                  <- C.newCounter seedNextUserId
-    _dbUserProfiles                <- STM.newTVar seedProfiles
-    _dbNextQuotationId             <- C.newCounter seedNextQuotationId
-    _dbQuotations                  <- STM.newTVar seedQuotations
-    _dbNextOrderId                 <- C.newCounter seedNextOrderId
-    _dbOrders                      <- STM.newTVar seedOrders
-    _dbNextInvoiceId               <- C.newCounter seedNextInvoiceId
-    _dbInvoices                    <- STM.newTVar seedInvoices
-    _dbNextRemittanceAdvId         <- C.newCounter seedNextRemittanceAdvId
-    _dbRemittanceAdvs              <- STM.newTVar seedRemittanceAdvs
-    _dbNextEmploymentId            <- C.newCounter seedNextEmploymentId
-    _dbEmployments                 <- STM.newTVar seedEmployments
+instantiateStmDb
+  Db
+    { _dbNextBusinessId = C.CounterValue (Identity seedNextBusinessId)
+    , _dbBusinessUnits = Identity seedBusinessUnits
+    , _dbNextLegalId = C.CounterValue (Identity seedNextLegalId)
+    , _dbLegalEntities = Identity seedLegalEntities
+    , _dbNextUserId = C.CounterValue (Identity seedNextUserId)
+    , _dbUserProfiles = Identity seedProfiles
+    , _dbNextQuotationId = C.CounterValue (Identity seedNextQuotationId)
+    , _dbQuotations = Identity seedQuotations
+    , _dbNextOrderId = C.CounterValue (Identity seedNextOrderId)
+    , _dbOrders = Identity seedOrders
+    , _dbNextInvoiceId = C.CounterValue (Identity seedNextInvoiceId)
+    , _dbInvoices = Identity seedInvoices
+    , _dbNextRemittanceAdvId = C.CounterValue (Identity seedNextRemittanceAdvId)
+    , _dbRemittanceAdvs = Identity seedRemittanceAdvs
+    , _dbNextEmploymentId = C.CounterValue (Identity seedNextEmploymentId)
+    , _dbEmployments = Identity seedEmployments
+    , _dbRandomGenState = Identity seedRandomGenState
+    , _dbEpochTime = Identity seedEpochTime
+    , _dbSteppingMode = Identity seedSteppingMode
+    , _dbFormCreateQuotationAll = Identity seedFormCreateQuotationAll
+    , _dbFormCreateContractAll = Identity seedFormCreateContractAll
+    , _dbFormCreateSimpleContractAll = Identity seedFormCreateSimpleContractAll
+    , _dbNextEmailId = C.CounterValue (Identity seedNextEmailId)
+    , _dbEmails = Identity seedEmails
+    } =
+    do
+      _dbNextBusinessId <- C.newCounter seedNextBusinessId
+      _dbBusinessUnits <- STM.newTVar seedBusinessUnits
+      _dbNextLegalId <- C.newCounter seedNextLegalId
+      _dbLegalEntities <- STM.newTVar seedLegalEntities
+      _dbNextUserId <- C.newCounter seedNextUserId
+      _dbUserProfiles <- STM.newTVar seedProfiles
+      _dbNextQuotationId <- C.newCounter seedNextQuotationId
+      _dbQuotations <- STM.newTVar seedQuotations
+      _dbNextOrderId <- C.newCounter seedNextOrderId
+      _dbOrders <- STM.newTVar seedOrders
+      _dbNextInvoiceId <- C.newCounter seedNextInvoiceId
+      _dbInvoices <- STM.newTVar seedInvoices
+      _dbNextRemittanceAdvId <- C.newCounter seedNextRemittanceAdvId
+      _dbRemittanceAdvs <- STM.newTVar seedRemittanceAdvs
+      _dbNextEmploymentId <- C.newCounter seedNextEmploymentId
+      _dbEmployments <- STM.newTVar seedEmployments
 
-    _dbRandomGenState              <- STM.newTVar seedRandomGenState
-    _dbEpochTime                   <- STM.newTVar seedEpochTime
-    _dbSteppingMode                <- STM.newTVar seedSteppingMode
+      _dbRandomGenState <- STM.newTVar seedRandomGenState
+      _dbEpochTime <- STM.newTVar seedEpochTime
+      _dbSteppingMode <- STM.newTVar seedSteppingMode
 
-    _dbFormCreateQuotationAll      <- STM.newTVar seedFormCreateQuotationAll
-    _dbFormCreateContractAll       <- STM.newTVar seedFormCreateContractAll
-    _dbFormCreateSimpleContractAll <- STM.newTVar
-      seedFormCreateSimpleContractAll
+      _dbFormCreateQuotationAll <- STM.newTVar seedFormCreateQuotationAll
+      _dbFormCreateContractAll <- STM.newTVar seedFormCreateContractAll
+      _dbFormCreateSimpleContractAll <-
+        STM.newTVar
+          seedFormCreateSimpleContractAll
 
-    _dbNextEmailId                 <- C.newCounter seedNextEmailId
-    _dbEmails                      <- STM.newTVar seedEmails
-    pure Db { .. }
+      _dbNextEmailId <- C.newCounter seedNextEmailId
+      _dbEmails <- STM.newTVar seedEmails
+      pure Db {..}
 
 -- brittany-disable-next-binding
+
 -- | Reset the database to the empty state.
 reset :: StmDb -> EpochTime -> STM ()
 reset stmDb now = do
@@ -161,8 +173,9 @@ reset stmDb now = do
 
   STM.writeTVar (_dbFormCreateQuotationAll stmDb) seedFormCreateQuotationAll
   STM.writeTVar (_dbFormCreateContractAll stmDb) seedFormCreateContractAll
-  STM.writeTVar (_dbFormCreateSimpleContractAll stmDb)
-                seedFormCreateSimpleContractAll
+  STM.writeTVar
+    (_dbFormCreateSimpleContractAll stmDb)
+    seedFormCreateSimpleContractAll
 
   C.writeCounter (_dbNextEmailId stmDb) seedNextEmailId
   STM.writeTVar (_dbEmails stmDb) seedEmails
@@ -191,54 +204,58 @@ reset stmDb now = do
     , _dbFormCreateSimpleContractAll = Identity seedFormCreateSimpleContractAll
     , _dbNextEmailId = C.CounterValue (Identity seedNextEmailId)
     , _dbEmails = Identity seedEmails
-    }
-    = emptyHask
+    } =
+      emptyHask
 
 -- | Reads all values of the `Db` product type from `STM.STM` to @Hask@.
 readFullStmDbInHask' :: StmDb -> STM HaskDb
 readFullStmDbInHask' stmDb = do
-  _dbNextBusinessId      <- pure <$> C.readCounter (_dbNextBusinessId stmDb)
-  _dbBusinessUnits       <- pure <$> STM.readTVar (_dbBusinessUnits stmDb)
-  _dbNextLegalId         <- pure <$> C.readCounter (_dbNextLegalId stmDb)
-  _dbLegalEntities       <- pure <$> STM.readTVar (_dbLegalEntities stmDb)
-  _dbNextUserId          <- pure <$> C.readCounter (_dbNextUserId stmDb)
-  _dbUserProfiles        <- pure <$> STM.readTVar (_dbUserProfiles stmDb)
-  _dbNextQuotationId     <- pure <$> C.readCounter (_dbNextQuotationId stmDb)
-  _dbQuotations          <- pure <$> STM.readTVar (_dbQuotations stmDb)
-  _dbNextOrderId         <- pure <$> C.readCounter (_dbNextOrderId stmDb)
-  _dbOrders              <- pure <$> STM.readTVar (_dbOrders stmDb)
-  _dbNextInvoiceId       <- pure <$> C.readCounter (_dbNextInvoiceId stmDb)
-  _dbInvoices            <- pure <$> STM.readTVar (_dbInvoices stmDb)
-  _dbNextRemittanceAdvId <- pure
-    <$> C.readCounter (_dbNextRemittanceAdvId stmDb)
-  _dbRemittanceAdvs         <- pure <$> STM.readTVar (_dbRemittanceAdvs stmDb)
+  _dbNextBusinessId <- pure <$> C.readCounter (_dbNextBusinessId stmDb)
+  _dbBusinessUnits <- pure <$> STM.readTVar (_dbBusinessUnits stmDb)
+  _dbNextLegalId <- pure <$> C.readCounter (_dbNextLegalId stmDb)
+  _dbLegalEntities <- pure <$> STM.readTVar (_dbLegalEntities stmDb)
+  _dbNextUserId <- pure <$> C.readCounter (_dbNextUserId stmDb)
+  _dbUserProfiles <- pure <$> STM.readTVar (_dbUserProfiles stmDb)
+  _dbNextQuotationId <- pure <$> C.readCounter (_dbNextQuotationId stmDb)
+  _dbQuotations <- pure <$> STM.readTVar (_dbQuotations stmDb)
+  _dbNextOrderId <- pure <$> C.readCounter (_dbNextOrderId stmDb)
+  _dbOrders <- pure <$> STM.readTVar (_dbOrders stmDb)
+  _dbNextInvoiceId <- pure <$> C.readCounter (_dbNextInvoiceId stmDb)
+  _dbInvoices <- pure <$> STM.readTVar (_dbInvoices stmDb)
+  _dbNextRemittanceAdvId <-
+    pure
+      <$> C.readCounter (_dbNextRemittanceAdvId stmDb)
+  _dbRemittanceAdvs <- pure <$> STM.readTVar (_dbRemittanceAdvs stmDb)
   _dbNextEmploymentId <- pure <$> C.readCounter (_dbNextEmploymentId stmDb)
-  _dbEmployments            <- pure <$> STM.readTVar (_dbEmployments stmDb)
+  _dbEmployments <- pure <$> STM.readTVar (_dbEmployments stmDb)
 
-  _dbRandomGenState         <- pure <$> STM.readTVar (_dbRandomGenState stmDb)
-  _dbEpochTime              <- pure <$> STM.readTVar (_dbEpochTime stmDb)
-  _dbSteppingMode           <- pure <$> STM.readTVar (_dbSteppingMode stmDb)
+  _dbRandomGenState <- pure <$> STM.readTVar (_dbRandomGenState stmDb)
+  _dbEpochTime <- pure <$> STM.readTVar (_dbEpochTime stmDb)
+  _dbSteppingMode <- pure <$> STM.readTVar (_dbSteppingMode stmDb)
 
-  _dbFormCreateQuotationAll <- pure
-    <$> STM.readTVar (_dbFormCreateQuotationAll stmDb)
-  _dbFormCreateContractAll <- pure
-    <$> STM.readTVar (_dbFormCreateContractAll stmDb)
-  _dbFormCreateSimpleContractAll <- pure
-    <$> STM.readTVar (_dbFormCreateSimpleContractAll stmDb)
+  _dbFormCreateQuotationAll <-
+    pure
+      <$> STM.readTVar (_dbFormCreateQuotationAll stmDb)
+  _dbFormCreateContractAll <-
+    pure
+      <$> STM.readTVar (_dbFormCreateContractAll stmDb)
+  _dbFormCreateSimpleContractAll <-
+    pure
+      <$> STM.readTVar (_dbFormCreateSimpleContractAll stmDb)
 
   _dbNextEmailId <- pure <$> C.readCounter (_dbNextEmailId stmDb)
-  _dbEmails      <- pure <$> STM.readTVar (_dbEmails stmDb)
-  pure Db { .. }
+  _dbEmails <- pure <$> STM.readTVar (_dbEmails stmDb)
+  pure Db {..}
 
 --------------------------------------------------------------------------------
 signup
   :: StmDb -> User.Signup -> STM (Either User.Err (User.UserId, Email.EmailId))
-signup db@Db{..} input@User.Signup {..} = do
+signup db@Db {..} input@User.Signup {..} = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    now        <- readTime db
-    newId      <- C.newIdOf @User.UserId _dbNextUserId
+    now <- readTime db
+    newId <- C.newIdOf @User.UserId _dbNextUserId
     newProfile <-
       pure (User.validateSignup now newId input)
         >>= either (STM.throwSTM . User.ValidationErrs) pure
@@ -256,27 +273,28 @@ inviteUser db@Db {..} User.Invite {..} = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
-    now   <- readTime db
+    now <- readTime db
     newId <- C.newIdOf @User.UserId _dbNextUserId
-    let email      = _inviteEmail
-        token      = "TODO"
-        newProfile = User.UserProfile
-          newId
-          (User.InviteToken token)
-          Nothing
-          Nothing
-          email
-          Nothing
-          False
-          (User.UserCompletion1 Nothing Nothing Nothing)
-          (User.UserCompletion2 Nothing Nothing)
-          now
-          Nothing
-          -- The very first user has plenty of rights:
-          (if newId == User.firstUserId then User.firstUserRights else [])
-          -- TODO Define some mechanism to get the initial authorizations
-          [User.AuthorizedAsEmployee]
-          Nothing
+    let email = _inviteEmail
+        token = "TODO"
+        newProfile =
+          User.UserProfile
+            newId
+            (User.InviteToken token)
+            Nothing
+            Nothing
+            email
+            Nothing
+            False
+            (User.UserCompletion1 Nothing Nothing Nothing)
+            (User.UserCompletion2 Nothing Nothing)
+            now
+            Nothing
+            -- The very first user has plenty of rights:
+            (if newId == User.firstUserId then User.firstUserRights else [])
+            -- TODO Define some mechanism to get the initial authorizations
+            [User.AuthorizedAsEmployee]
+            Nothing
     emailId <-
       createEmail db (Email.InviteEmail token) Email.systemEmailAddr email
         >>= either STM.throwSTM pure
@@ -289,12 +307,12 @@ createUserFull
   :: StmDb -> User.UserProfile -> STM (Either User.Err User.UserId)
 createUserFull db newProfile = case User._userProfileCreds newProfile of
   User.Credentials {..} -> do
-    let username     = _userCredsName
+    let username = _userCredsName
         newProfileId = User._userProfileId newProfile
-        createNew    = do
+        createNew = do
           mprofile <- selectUserByUsername db username
           case mprofile of
-            Just _  -> existsErr
+            Just _ -> existsErr
             Nothing -> do
               modifyUsers db (++ [newProfile])
               pure $ Right newProfileId
@@ -304,7 +322,7 @@ createUserFull db newProfile = case User._userProfileCreds newProfile of
       else do
         mprofile <- selectUserById db newProfileId
         case mprofile of
-          Just _  -> existsErr
+          Just _ -> existsErr
           Nothing -> createNew
   User.InviteToken _ -> createUserFull' db newProfile
 
@@ -314,11 +332,11 @@ createUserFull'
 createUserFull' db newProfile = do
   mprofile <- selectUserById db newProfileId
   case mprofile of
-    Just _  -> existsErr
+    Just _ -> existsErr
     Nothing -> createNew
  where
   newProfileId = User._userProfileId newProfile
-  createNew    = do
+  createNew = do
     modifyUsers db (<> [newProfile])
     pure $ Right newProfileId
   existsErr = pure . Left $ User.UserExists
@@ -327,14 +345,16 @@ updateUser :: StmDb -> User.Update -> STM (Either User.Err ())
 updateUser db User.Update {..} = do
   mrecord <- selectUserById db _updateUserId
   case mrecord of
-    Just User.UserProfile{} -> do
+    Just User.UserProfile {} -> do
       let replaceOlder records =
             [ if User._userProfileId r == _updateUserId
-                then r { User._userProfileDisplayName = _updateDisplayName
-                       , User._userProfileBio = _updateBio
-                       , User._userProfileTwitterUsername = _updateTwitterUsername
-                       }
-                else r
+              then
+                r
+                  { User._userProfileDisplayName = _updateDisplayName
+                  , User._userProfileBio = _updateBio
+                  , User._userProfileTwitterUsername = _updateTwitterUsername
+                  }
+              else r
             | r <- records
             ]
       modifyUsers db replaceOlder
@@ -346,7 +366,7 @@ deleteUser :: StmDb -> User.UserId -> STM (Either User.Err ())
 deleteUser db uid = do
   mrecord <- selectUserById db uid
   case mrecord of
-    Just User.UserProfile{} -> do
+    Just User.UserProfile {} -> do
       let replaceOlder = filter ((/= uid) . User._userProfileId)
       modifyUsers db replaceOlder
       pure $ Right ()
@@ -365,8 +385,10 @@ selectUserByUsername :: StmDb -> User.UserName -> STM (Maybe User.UserProfile)
 selectUserByUsername db username = do
   let tvar = _dbUserProfiles db
   records <- STM.readTVar tvar
-  pure $ find ((== Just username) . User.getUsername . User._userProfileCreds)
-              records
+  pure $
+    find
+      ((== Just username) . User.getUsername . User._userProfileCreds)
+      records
 
 selectUserByUsernameResolved
   :: StmDb
@@ -375,21 +397,20 @@ selectUserByUsernameResolved
 selectUserByUsernameResolved db username = do
   let usersTVar = _dbUserProfiles db
   users' <- STM.readTVar usersTVar
-  case
-      find ((== username) . User._userCredsName . User._userProfileCreds) users'
-    of
-      Just user -> do
-        entities <- selectEntitiesWhereUserId db $ User._userProfileId user
-        pure $ Just (user, entities)
-      Nothing -> pure Nothing
+  case find ((== username) . User._userCredsName . User._userProfileCreds) users' of
+    Just user -> do
+      entities <- selectEntitiesWhereUserId db $ User._userProfileId user
+      pure $ Just (user, entities)
+    Nothing -> pure Nothing
 
 selectUserByInviteToken :: StmDb -> Text -> STM (Maybe User.UserProfile)
 selectUserByInviteToken db token = do
   let tvar = _dbUserProfiles db
   records <- STM.readTVar tvar
-  pure $ find ((== Just token) . User.getInviteToken . User._userProfileCreds)
-              records
-
+  pure $
+    find
+      ((== Just token) . User.getInviteToken . User._userProfileCreds)
+      records
 
 --------------------------------------------------------------------------------
 checkCredentials
@@ -397,15 +418,15 @@ checkCredentials
 checkCredentials db User.Credentials {..} = do
   mprofile <- selectUserByUsername db _userCredsName
   case mprofile of
-    Just profile | User.checkPassword profile _userCredsPassword ->
-      pure $ Just profile
+    Just profile
+      | User.checkPassword profile _userCredsPassword ->
+          pure $ Just profile
     _ -> pure Nothing
 checkCredentials db User.InviteToken {..} = do
   mprofile <- selectUserByInviteToken db _inviteToken
   case mprofile of
     Just profile -> pure $ Just profile
     _ -> pure Nothing
-
 
 --------------------------------------------------------------------------------
 modifyQuotations
@@ -418,7 +439,6 @@ selectQuotationById db id = do
   let tvar = _dbQuotations db
   records <- STM.readTVar tvar
   pure $ find ((== id) . Quotation._quotationId) records
-
 
 --------------------------------------------------------------------------------
 selectEntityBySlug :: StmDb -> Text -> STM (Maybe Legal.Entity)
@@ -441,11 +461,10 @@ selectEntitiesWhereUserId db uid = do
       . Legal._entityUsersAndRoles
   getEntityAndRole e = Legal.EntityAndRole e <$> getRole e
 
-
 --------------------------------------------------------------------------------
 createBusiness
   :: StmDb -> Business.Create -> STM (Either Business.Err Business.UnitId)
-createBusiness db@Db{..} Business.Create {..} = do
+createBusiness db@Db {..} Business.Create {..} = do
   STM.catchSTM (Right <$> transaction) (pure . Left)
  where
   transaction = do
@@ -464,11 +483,11 @@ updateBusiness :: StmDb -> Business.Update -> STM (Either Business.Err ())
 updateBusiness db Business.Update {..} = do
   mentity <- selectUnitBySlug db _updateSlug
   case mentity of
-    Just Business.Unit{} -> do
+    Just Business.Unit {} -> do
       let replaceOlder entities =
             [ if Business._entitySlug e == _updateSlug
-                then e { Business._entityDescription = _updateDescription }
-                else e
+              then e {Business._entityDescription = _updateDescription}
+              else e
             | e <- entities
             ]
       modifyBusinessUnits db replaceOlder
@@ -488,11 +507,11 @@ linkBusinessUnitToUser db slug uid role = do
     Just Business.Unit {..} -> do
       let replaceOlder units =
             [ if Business._entitySlug e == slug
-                then case role of
-                  Business.Holder ->
-                    e { Business._entityHolders = nub $ uid : _entityHolders }
-                  _ -> e
-                else e
+              then case role of
+                Business.Holder ->
+                  e {Business._entityHolders = nub $ uid : _entityHolders}
+                _ -> e
+              else e
             | e <- units
             ]
       modifyBusinessUnits db replaceOlder
@@ -509,8 +528,8 @@ selectUnitBySlug db name = do
   records <- STM.readTVar tvar
   pure $ find ((== name) . Business._entitySlug) records
 
-
 --------------------------------------------------------------------------------
+
 -- | This enqueues an email (i.e. it is in the Todo state).
 createEmail
   :: StmDb
@@ -543,11 +562,10 @@ selectEmailById db id = do
 --------------------------------------------------------------------------------
 canPerform :: Syntax.Name -> StmDb -> User.UserProfile -> STM Bool
 canPerform action _ User.UserProfile {..}
-  | action == 'User.SetUserEmailAddrAsVerified
-  = pure $ User.CanVerifyEmailAddr `elem` _userProfileRights
-  | otherwise
-  = pure False
-
+  | action == 'User.SetUserEmailAddrAsVerified =
+      pure $ User.CanVerifyEmailAddr `elem` _userProfileRights
+  | otherwise =
+      pure False
 
 --------------------------------------------------------------------------------
 readStdGen :: StmDb -> STM Rand.StdGen
@@ -564,14 +582,15 @@ writeStdGen db g = do
 genRandomText :: StmDb -> STM Text
 genRandomText db = do
   g1 <- readStdGen db
-  let ags = take 8 $ unfoldr
-        (\g -> let (a, g') = Rand.uniformR ('A', 'Z') g in Just ((a, g'), g'))
-        g1
-      s  = T.pack $ fst <$> ags
+  let ags =
+        take 8 $
+          unfoldr
+            (\g -> let (a, g') = Rand.uniformR ('A', 'Z') g in Just ((a, g'), g'))
+            g1
+      s = T.pack $ fst <$> ags
       g2 = snd $ L.last ags
   writeStdGen db g2
   pure s
-
 
 --------------------------------------------------------------------------------
 readTime :: StmDb -> STM EpochTime
@@ -583,7 +602,7 @@ writeTime db = STM.writeTVar (_dbEpochTime db)
 stepTime :: StmDb -> Bool -> STM EpochTime
 stepTime db minute = do
   CTime t <- STM.readTVar $ _dbEpochTime db
-  let d  = 60 - (t `mod` 60) -- seconds remaining before the next minute
+  let d = 60 - (t `mod` 60) -- seconds remaining before the next minute
       t' = CTime $ if minute then t + d else t + 1
   STM.writeTVar (_dbEpochTime db) t'
   pure t'

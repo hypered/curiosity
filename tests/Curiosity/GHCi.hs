@@ -5,7 +5,6 @@
 --
 -- - Run `runSpec`
 -- - Run `runScenarios`
-
 module Curiosity.GHCi
   (
   ) where

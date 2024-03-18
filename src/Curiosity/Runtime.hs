@@ -3,6 +3,7 @@
 {-# LANGUAGE TemplateHaskellQuotes #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
+
 -- brittany-disable-next-binding
 module Curiosity.Runtime
   ( emptyReplThreads
@@ -10,7 +11,7 @@ module Curiosity.Runtime
   , spawnEmailThread
   , spawnUnixThread
   , runWithRuntime
-  , RunM(..)
+  , RunM (..)
   , reset
   , state
   , setTime
@@ -18,7 +19,8 @@ module Curiosity.Runtime
   , submitQuotationSuccess
   , runRunM
   , withRuntimeAtomically
-  -- * High-level user operations
+
+    -- * High-level user operations
   , setUserEmailAddrAsVerifiedFull
   , selectUserByIdResolved
   , selectUserByUsername
@@ -26,13 +28,17 @@ module Curiosity.Runtime
   , filterUsers
   , filterUsers'
   , signup
-  -- * High-level entity operations
+
+    -- * High-level entity operations
   , selectEntityBySlugResolved
   , readLegalEntities
-  -- * High-level unit operations
+
+    -- * High-level unit operations
   , selectUnitBySlug
-  -- * Form edition
-  -- ** Quotation
+
+    -- * Form edition
+
+    -- ** Quotation
   , formNewQuotation'
   , readCreateQuotationForm'
   , readCreateQuotationForms'
@@ -41,17 +47,20 @@ module Curiosity.Runtime
   , submitCreateQuotationForm
   , setQuotationAsSignedFull
   , setQuotationAsRejectedFull
-  -- ** Orders
+
+    -- ** Orders
   , filterOrders
   , filterOrders'
-  -- ** Contract
+
+    -- ** Contract
   , newCreateContractForm
   , readCreateContractForm
   , writeCreateContractForm
   , addExpenseToContractForm
   , writeExpenseToContractForm
   , removeExpenseFromContractForm
-  -- ** Simple Contract
+
+    -- ** Simple Contract
   , newCreateSimpleContractForm
   , readCreateSimpleContractForm
   , writeCreateSimpleContractForm
@@ -63,9 +72,11 @@ module Curiosity.Runtime
   , addExpenseToSimpleContractForm
   , writeExpenseToSimpleContractForm
   , removeExpenseFromSimpleContractForm
-  -- * Servant compat
+
+    -- * Servant compat
   , appMHandlerNatTrans
-  -- * Re-exports for backwards compat: must be removed in the future.
+
+    -- * Re-exports for backwards compat: must be removed in the future.
   , module RType
   , module RErr
   , module RIO
@@ -75,67 +86,71 @@ module Curiosity.Runtime
   , module Runtime.E
   ) where
 
-import qualified Commence.Multilogging         as ML
-import qualified Commence.Runtime.Errors       as Errs
-import qualified Control.Concurrent.STM        as STM
-import           Control.Lens                  as Lens
-import "exceptions" Control.Monad.Catch         ( MonadCatch
-                                                , MonadMask
-                                                , MonadThrow
-                                                )
-import qualified Curiosity.Command             as Command
-import qualified Curiosity.Core                as Core
-import qualified Curiosity.Types.Business       as Business
-import qualified Curiosity.Types.Counter        as C
-import qualified Curiosity.Types.Email          as Email
-import qualified Curiosity.Types.Employment     as Employment
-import qualified Curiosity.Types.Invoice        as Invoice
-import qualified Curiosity.Types.Legal          as Legal
-import qualified Curiosity.Types.Order          as Order
-import           Curiosity.Types.PrefixedId      ( showWithPrefix )
-import qualified Curiosity.Types.Quotation      as Quotation
-import qualified Curiosity.Types.RemittanceAdv  as RemittanceAdv
-import qualified Curiosity.Types.SimpleContract as SimpleContract
-import qualified Curiosity.Types.Store          as Store
-import qualified Curiosity.Types.User           as User
-import qualified Curiosity.Graph               as Graph
-import           Curiosity.Runtime.Email       as Runtime.E
-import           Curiosity.Runtime.Error       as RErr
-import           Curiosity.Runtime.IO          as RIO
-import           Curiosity.Runtime.IO.AppM      ( AppM
-                                                , runAppM
-                                                , runAppMSafe
-                                                )
-import qualified Curiosity.Runtime.IO.AppM     as AppM
-import           Curiosity.Runtime.Order       as Runtime.Ord
-import           Curiosity.Runtime.Quotation   as Runtime.Q
-import           Curiosity.Runtime.Type        as RType
-import           Curiosity.STM.Helpers          ( atomicallyM )
-import qualified Data.Aeson.Text               as Aeson
-import qualified Data.ByteString.Char8         as B
-import           Data.List                      ( nub )
-import qualified Data.Map                      as M
-import qualified Data.Text.Encoding            as T
-import qualified Data.Text.Lazy                as LT
-import           Data.UnixTime                  ( formatUnixTime
-                                                , fromEpochTime
-                                                , getUnixTime
-                                                , toEpochTime
-                                                )
-import           Network.Socket
-import           Network.Socket.ByteString      ( recv
-                                                , sendAll
-                                                )
-import qualified Options.Applicative           as A
-import           Prelude                 hiding ( state )
-import qualified Servant
-import           System.PosixCompat.Types       ( EpochTime )
+import Commence.Multilogging qualified as ML
+import Commence.Runtime.Errors qualified as Errs
+import Control.Concurrent.STM qualified as STM
+import Control.Lens as Lens
+import "exceptions" Control.Monad.Catch
+  ( MonadCatch
+  , MonadMask
+  , MonadThrow
+  )
+import Curiosity.Command qualified as Command
+import Curiosity.Core qualified as Core
+import Curiosity.Graph qualified as Graph
+import Curiosity.Runtime.Email as Runtime.E
+import Curiosity.Runtime.Error as RErr
+import Curiosity.Runtime.IO as RIO
+import Curiosity.Runtime.IO.AppM
+  ( AppM
+  , runAppM
+  , runAppMSafe
+  )
+import Curiosity.Runtime.IO.AppM qualified as AppM
+import Curiosity.Runtime.Order as Runtime.Ord
+import Curiosity.Runtime.Quotation as Runtime.Q
+import Curiosity.Runtime.Type as RType
+import Curiosity.STM.Helpers (atomicallyM)
+import Curiosity.Types.Business qualified as Business
+import Curiosity.Types.Counter qualified as C
+import Curiosity.Types.Email qualified as Email
+import Curiosity.Types.Employment qualified as Employment
+import Curiosity.Types.Invoice qualified as Invoice
+import Curiosity.Types.Legal qualified as Legal
+import Curiosity.Types.Order qualified as Order
+import Curiosity.Types.PrefixedId (showWithPrefix)
+import Curiosity.Types.Quotation qualified as Quotation
+import Curiosity.Types.RemittanceAdv qualified as RemittanceAdv
+import Curiosity.Types.SimpleContract qualified as SimpleContract
+import Curiosity.Types.Store qualified as Store
+import Curiosity.Types.User qualified as User
+import Data.Aeson.Text qualified as Aeson
+import Data.ByteString.Char8 qualified as B
+import Data.List (nub)
+import Data.Map qualified as M
+import Data.Text.Encoding qualified as T
+import Data.Text.Lazy qualified as LT
+import Data.UnixTime
+  ( formatUnixTime
+  , fromEpochTime
+  , getUnixTime
+  , toEpochTime
+  )
+import Network.Socket
+import Network.Socket.ByteString
+  ( recv
+  , sendAll
+  )
+import Options.Applicative qualified as A
+import Servant qualified
+import System.PosixCompat.Types (EpochTime)
+import Prelude hiding (state)
 
 --------------------------------------------------------------------------------
 showThreads :: Threads -> IO [Text]
 showThreads ts = case ts of
-  NoThreads                       -> pure ["Threads are disabled."]
-  ReplThreads mvarEmails          -> showThreads' "Email" mvarEmails
+  NoThreads -> pure ["Threads are disabled."]
+  ReplThreads mvarEmails -> showThreads' "Email" mvarEmails
   HttpThreads mvarEmails mvarUnix -> do
     t1 <- showThreads' "Email" mvarEmails
     t2 <- showThreads' "UNIX-domain socket" mvarUnix
@@ -148,27 +163,28 @@ showThreads' name mvar = do
     then pure [name <> " thread: stopped."]
     else pure [name <> " thread: running."]
 
-
 --------------------------------------------------------------------------------
+
 -- | `RunM` is basically STM operations (from `Curiosity.Core`) together with
 -- the ability to do IO for logging.
-newtype RunM a = RunM { unRunM :: ReaderT Runtime IO a }
-  deriving ( Functor
-           , Applicative
-           , Monad
-           , MonadIO
-           , MonadReader Runtime
-           , MonadError IOException
-           , MonadThrow
-           , MonadCatch
-           , MonadMask
-           )
+newtype RunM a = RunM {unRunM :: ReaderT Runtime IO a}
+  deriving
+    ( Functor
+    , Applicative
+    , Monad
+    , MonadIO
+    , MonadReader Runtime
+    , MonadError IOException
+    , MonadThrow
+    , MonadCatch
+    , MonadMask
+    )
 
-runRunM :: forall a m . MonadIO m => Runtime -> RunM a -> m a
+runRunM :: forall a m. MonadIO m => Runtime -> RunM a -> m a
 runRunM runtime RunM {..} = liftIO $ runReaderT unRunM runtime
 
 -- | Same as `runRunM` but advance the simulated time.
-stepRunM :: forall a m . MonadIO m => Runtime -> RunM a -> m a
+stepRunM :: forall a m. MonadIO m => Runtime -> RunM a -> m a
 stepRunM runtime RunM {..} = liftIO $ do
   -- We're injecting (into the STM-readable state) the current time once per
   -- `runRunM` call.
@@ -177,11 +193,11 @@ stepRunM runtime RunM {..} = liftIO $ do
   let RunM setNow = do
         mode <- readSteppingMode
         case mode of
-          Store.Normal  -> setTime now
-            -- TODO This should be False on automated actions.
+          Store.Normal -> setTime now
+          -- TODO This should be False on automated actions.
           Store.Stepped -> void $ stepTime True
-            -- TODO Mixed is not yet implemented.
-          Store.Mixed   -> void $ stepTime True
+          -- TODO Mixed is not yet implemented.
+          Store.Mixed -> void $ stepTime True
   runReaderT (setNow >> unRunM) runtime
 
 -- | Support for logging for the application
@@ -190,18 +206,18 @@ instance ML.MonadAppNameLogMulti RunM where
   localLoggers modLogger =
     local (over rLoggers . over ML.appNameLoggers $ fmap modLogger)
 
-
 --------------------------------------------------------------------------------
+
 -- | Reset the database to the empty state.
 reset :: RunM ()
 reset = ML.localEnv (<> "Command" <> "Reset") $ do
   ML.info "Resetting to the empty state."
-  db   <- asks _rDb
+  db <- asks _rDb
   mode <- readSteppingMode
-  now  <- case mode of
-    Store.Normal  -> liftIO $ toEpochTime <$> getUnixTime
+  now <- case mode of
+    Store.Normal -> liftIO $ toEpochTime <$> getUnixTime
     Store.Stepped -> pure 0
-    Store.Mixed   -> liftIO $ toEpochTime <$> getUnixTime
+    Store.Mixed -> liftIO $ toEpochTime <$> getUnixTime
   atomicallyM $ Core.reset db now
   ML.info "State is now empty."
 
@@ -250,10 +266,10 @@ emptyHttpThreads = HttpThreads <$> newEmptyMVar <*> newEmptyMVar
 spawnEmailThread :: RunM Text
 spawnEmailThread = do
   runtime <- ask
-  ts      <- asks _rThreads
+  ts <- asks _rThreads
   case ts of
-    NoThreads                -> pure "Threads are disabled."
-    ReplThreads mvarEmails   -> spawnEmailThread' runtime mvarEmails
+    NoThreads -> pure "Threads are disabled."
+    ReplThreads mvarEmails -> spawnEmailThread' runtime mvarEmails
     HttpThreads mvarEmails _ -> spawnEmailThread' runtime mvarEmails
 
 spawnEmailThread' :: Runtime -> MVar ThreadId -> RunM Text
@@ -275,8 +291,8 @@ killEmailThread :: RunM Text
 killEmailThread = do
   ts <- asks _rThreads
   case ts of
-    NoThreads                -> pure "Threads are disabled."
-    ReplThreads mvarEmails   -> killEmailThread' mvarEmails
+    NoThreads -> pure "Threads are disabled."
+    ReplThreads mvarEmails -> killEmailThread' mvarEmails
     HttpThreads mvarEmails _ -> killEmailThread' mvarEmails
 
 killEmailThread' :: MVar ThreadId -> RunM Text
@@ -303,7 +319,7 @@ emailThread = do
 -- | One iteration of the `emailThread` loop.
 emailStep :: RunM [Email.Email]
 emailStep = do
-  db      <- asks _rDb
+  db <- asks _rDb
   records <- emailStepDryRun
   logEmails records
   -- TODO Have a single operation ?
@@ -312,11 +328,11 @@ emailStep = do
  where
   logEmails records =
     ML.localEnv (<> "Actions" <> "SendEmails")
-      .  unless (null records)
-      .  ML.info
-      $  "Processing "
-      <> show (length records)
-      <> " emails..."
+      . unless (null records)
+      . ML.info
+      $ "Processing "
+        <> show (length records)
+        <> " emails..."
 
 emailStepDryRun :: RunM [Email.Email]
 emailStepDryRun = do
@@ -325,25 +341,26 @@ emailStepDryRun = do
 
 verifyEmailStep :: RunM [User.UserProfile]
 verifyEmailStep = do
-  db      <- asks _rDb
+  db <- asks _rDb
   records <- verifyEmailStepDryRun
   logUsers records
   -- TODO Have a single operation ?
-  atomicallyM $ mapM_
-    ( setUserEmailAddrAsVerified db
-    . User._userCredsName
-    . User._userProfileCreds
-    )
-    records
+  atomicallyM $
+    mapM_
+      ( setUserEmailAddrAsVerified db
+          . User._userCredsName
+          . User._userProfileCreds
+      )
+      records
   pure records
  where
   logUsers records =
-    ML.localEnv (<> "Actions" <> "VerifyEmails")
-      $  unless (null records)
-      $  ML.info
-      $  "Processing "
-      <> show (length records)
-      <> " users..."
+    ML.localEnv (<> "Actions" <> "VerifyEmails") $
+      unless (null records) $
+        ML.info $
+          "Processing "
+            <> show (length records)
+            <> " users..."
 
 verifyEmailStepDryRun :: RunM [User.UserProfile]
 verifyEmailStepDryRun = do
@@ -353,10 +370,10 @@ verifyEmailStepDryRun = do
 spawnUnixThread :: RunM Text
 spawnUnixThread = do
   runtime <- ask
-  ts      <- asks _rThreads
+  ts <- asks _rThreads
   case ts of
-    NoThreads              -> pure "Threads are disabled."
-    ReplThreads _          -> pure "No UNIX-domain socket thread in REPL." -- TODO
+    NoThreads -> pure "Threads are disabled."
+    ReplThreads _ -> pure "No UNIX-domain socket thread in REPL." -- TODO
     HttpThreads _ mvarUnix -> spawnUnixThread' runtime mvarUnix
 
 spawnUnixThread' :: Runtime -> MVar ThreadId -> RunM Text
@@ -381,36 +398,38 @@ unixThread = do
 
 -- | Natural transformation from some `AppM` in any given mode, to a servant
 -- Handler.
-appMHandlerNatTrans :: forall a . Runtime -> AppM a -> Servant.Handler a
+appMHandlerNatTrans :: forall a. Runtime -> AppM a -> Servant.Handler a
 appMHandlerNatTrans rt appM =
   let
-      -- We peel off the AppM + ReaderT layers, exposing our ExceptT
-      -- RuntimeErr IO a This is very similar to Servant's Handler:
-      -- https://hackage.haskell.org/package/servant-server-0.17/docs/Servant-Server-Internal-Handler.html#t:Handler
-      unwrapReaderT          = (`runReaderT` rt) . runAppM $ appM
-      -- Map our errors to `ServantError`
-      runtimeErrToServantErr = withExceptT Errs.asServantError
-  in
-      -- Re-wrap as servant `Handler`
-      Servant.Handler $ runtimeErrToServantErr unwrapReaderT
-
+    -- We peel off the AppM + ReaderT layers, exposing our ExceptT
+    -- RuntimeErr IO a This is very similar to Servant's Handler:
+    -- https://hackage.haskell.org/package/servant-server-0.17/docs/Servant-Server-Internal-Handler.html#t:Handler
+    unwrapReaderT = (`runReaderT` rt) . runAppM $ appM
+    -- Map our errors to `ServantError`
+    runtimeErrToServantErr = withExceptT Errs.asServantError
+   in
+    -- Re-wrap as servant `Handler`
+    Servant.Handler $ runtimeErrToServantErr unwrapReaderT
 
 --------------------------------------------------------------------------------
+
 -- | Handle a single command. The return type provides some flexibility, so
 -- this function can be used in both `cty` and `cty repl`.
 handleCommand
   :: MonadIO m
   => Runtime
-  -> User.UserName -- ^ The user performing the command.
+  -> User.UserName
+  -- ^ The user performing the command.
   -> Command.Command
   -> m (ExitCode, [Text])
 handleCommand runtime@Runtime {..} user command = do
   case command of
     Command.State useHs -> do
       value <- runRunM runtime state
-      let value' = if useHs
-            then show value
-            else LT.toStrict (Aeson.encodeToLazyText value)
+      let value' =
+            if useHs
+              then show value
+              else LT.toStrict (Aeson.encodeToLazyText value)
       pure (ExitSuccess, [value'])
     Command.Graph out format -> do
       value <- runRunM runtime state
@@ -438,8 +457,11 @@ handleCommand runtime@Runtime {..} user command = do
       stepRunM runtime emailStep
       pure (ExitSuccess, ["Email queue processed."])
     Command.CreateBusinessUnit input -> do
-      output <- runAppMSafe runtime . atomicallyM $ Core.createBusiness _rDb
-                                                                        input
+      output <-
+        runAppMSafe runtime . atomicallyM $
+          Core.createBusiness
+            _rDb
+            input
       case output of
         Right mid -> do
           case mid of
@@ -448,8 +470,11 @@ handleCommand runtime@Runtime {..} user command = do
             Left err -> pure (ExitFailure 1, [show err])
         Left err -> pure (ExitFailure 1, [show err])
     Command.UpdateBusinessUnit input -> do
-      output <- runAppMSafe runtime . atomicallyM $ Core.updateBusiness _rDb
-                                                                        input
+      output <-
+        runAppMSafe runtime . atomicallyM $
+          Core.updateBusiness
+            _rDb
+            input
       case output of
         Right mid -> do
           case mid of
@@ -503,15 +528,17 @@ handleCommand runtime@Runtime {..} user command = do
     Command.Signup input -> do
       muid <- stepRunM runtime $ signup input
       case muid of
-        Right (uid, Email.EmailId eid) -> pure
-          ( ExitSuccess
-          , [ "User created: " <> showWithPrefix uid
-            , "Signup confirmation email enqueued: " <> eid
-            ]
-          )
+        Right (uid, Email.EmailId eid) ->
+          pure
+            ( ExitSuccess
+            ,
+              [ "User created: " <> showWithPrefix uid
+              , "Signup confirmation email enqueued: " <> eid
+              ]
+            )
         Left err -> case err of
           User.ValidationErrs errs -> pure (ExitFailure 1, map show errs)
-          _                        -> pure (ExitFailure 1, [show err])
+          _ -> pure (ExitFailure 1, [show err])
     Command.Invite input -> do
       muid <- stepRunM runtime $ inviteUser input
       case muid of
@@ -524,18 +551,21 @@ handleCommand runtime@Runtime {..} user command = do
         Right mprofile -> do
           case mprofile of
             Just value -> do
-              let value' = if useHs
-                    then show value
-                    else LT.toStrict (Aeson.encodeToLazyText value)
+              let value' =
+                    if useHs
+                      then show value
+                      else LT.toStrict (Aeson.encodeToLazyText value)
               if short
-                then pure
-                  ( ExitSuccess
-                  , [ showWithPrefix (User._userProfileId value)
-                      <> " "
-                      <> User.unUserName
-                           (User._userCredsName $ User._userProfileCreds value)
-                    ]
-                  )
+                then
+                  pure
+                    ( ExitSuccess
+                    ,
+                      [ showWithPrefix (User._userProfileId value)
+                          <> " "
+                          <> User.unUserName
+                            (User._userCredsName $ User._userProfileCreds value)
+                      ]
+                    )
                 else pure (ExitSuccess, [value'])
             Nothing -> pure (ExitFailure 1, ["No such user."])
         Left err -> pure (ExitFailure 1, [show err])
@@ -547,7 +577,7 @@ handleCommand runtime@Runtime {..} user command = do
                   User.Credentials {..} ->
                     let User.UserName n' = _userCredsName in n'
                   User.InviteToken _ -> "/"
-            in  showWithPrefix i <> " " <> n
+             in showWithPrefix i <> " " <> n
       pure (ExitSuccess, map f profiles)
     Command.UpdateUser input -> do
       output <- runAppMSafe runtime . atomicallyM $ Core.updateUser _rDb input
@@ -573,10 +603,10 @@ handleCommand runtime@Runtime {..} user command = do
     Command.SetUserEmailAddrAsVerified username -> do
       output <-
         runAppMSafe runtime
-        .   liftIO
-        .   STM.atomically
-        $   Core.selectUserByUsername _rDb user
-        >>= \case
+          . liftIO
+          . STM.atomically
+          $ Core.selectUserByUsername _rDb user
+            >>= \case
               Just profile ->
                 setUserEmailAddrAsVerifiedFull _rDb (profile, username)
               Nothing -> pure . Left . User.UserNotFound $ User.unUserName user
@@ -584,14 +614,14 @@ handleCommand runtime@Runtime {..} user command = do
         Right (Right ()) -> do
           pure (ExitSuccess, ["User successfully updated."])
         Right (Left err) -> pure (ExitFailure 1, [show err])
-        Left  err        -> pure (ExitFailure 1, [show err])
+        Left err -> pure (ExitFailure 1, [show err])
     Command.CreateEmployment input -> do
       output <-
         runAppMSafe runtime
-        .   liftIO
-        .   STM.atomically
-        $   Core.selectUserByUsername _rDb user
-        >>= \case
+          . liftIO
+          . STM.atomically
+          $ Core.selectUserByUsername _rDb user
+            >>= \case
               Just profile -> do
                 merror <- submitCreateContractForm' _rDb (profile, input)
                 -- TODO Should we have a type to combine multiple possible errors ?
@@ -623,34 +653,35 @@ handleCommand runtime@Runtime {..} user command = do
           pure (ExitSuccess, ["Quotation form created: " <> key])
         Left err -> pure (ExitFailure 1, [show err])
     Command.FormValidateQuotation input ->
-      atomicallyM $ Core.selectUserByUsername _rDb user >>= \case
-        Just profile -> do
-          mcontract <- readCreateQuotationFormResolved _rDb profile input
-          case mcontract of
-            Right (contract, resolvedClient, resolvedSellerEntity, resolvedSellerUnit, resolvedBuyerEntity, resolvedBuyerUnit) -> do
-              case
-                  Quotation.validateCreateQuotation profile
-                                                    contract
-                                                    resolvedClient
-                                                    resolvedSellerEntity
-                                                    resolvedSellerUnit
-                                                    resolvedBuyerEntity
-                                                    resolvedBuyerUnit
-                of
-                  Right _    -> pure (ExitSuccess, ["Quotation form is valid."])
-                  Left  errs -> pure (ExitFailure 1, map Quotation.unErr errs)
-            Left _ -> pure (ExitFailure 1, ["Key not found: " <> input])
-        Nothing ->
-          pure (ExitFailure 1, ["Username not found: " <> User.unUserName user])
+      atomicallyM $
+        Core.selectUserByUsername _rDb user >>= \case
+          Just profile -> do
+            mcontract <- readCreateQuotationFormResolved _rDb profile input
+            case mcontract of
+              Right (contract, resolvedClient, resolvedSellerEntity, resolvedSellerUnit, resolvedBuyerEntity, resolvedBuyerUnit) -> do
+                case Quotation.validateCreateQuotation
+                  profile
+                  contract
+                  resolvedClient
+                  resolvedSellerEntity
+                  resolvedSellerUnit
+                  resolvedBuyerEntity
+                  resolvedBuyerUnit of
+                  Right _ -> pure (ExitSuccess, ["Quotation form is valid."])
+                  Left errs -> pure (ExitFailure 1, map Quotation.unErr errs)
+              Left _ -> pure (ExitFailure 1, ["Key not found: " <> input])
+          Nothing ->
+            pure (ExitFailure 1, ["Username not found: " <> User.unUserName user])
     Command.FormSubmitQuotation input ->
-      atomicallyM $ Core.selectUserByUsername _rDb user >>= \case
-        Just profile -> do
-          mid <- submitCreateQuotationForm _rDb (profile, input)
-          case mid of
-            Right id  -> pure (ExitSuccess, submitQuotationSuccess id)
-            Left  err -> pure (ExitFailure 1, [Quotation.unErr err])
-        Nothing ->
-          pure (ExitFailure 1, ["Username not found: " <> User.unUserName user])
+      atomicallyM $
+        Core.selectUserByUsername _rDb user >>= \case
+          Just profile -> do
+            mid <- submitCreateQuotationForm _rDb (profile, input)
+            case mid of
+              Right id -> pure (ExitSuccess, submitQuotationSuccess id)
+              Left err -> pure (ExitFailure 1, [Quotation.unErr err])
+          Nothing ->
+            pure (ExitFailure 1, ["Username not found: " <> User.unUserName user])
     Command.SignQuotation input -> do
       moid <- stepRunM runtime $ signQuotation user input
       case moid of
@@ -660,62 +691,68 @@ handleCommand runtime@Runtime {..} user command = do
     Command.RejectQuotation input mcomment -> do
       moid <- stepRunM runtime $ rejectQuotation user input mcomment
       case moid of
-        Right ()  -> pure (ExitSuccess, ["Quotation rejected."])
-        Left  err -> pure (ExitFailure 1, [show err])
+        Right () -> pure (ExitSuccess, ["Quotation rejected."])
+        Left err -> pure (ExitFailure 1, [show err])
     Command.EmitInvoice input ->
-      atomicallyM $ Core.selectUserByUsername _rDb user >>= \case
-        Just profile -> do
-          mids <- invoiceOrder _rDb (profile, input)
-          case mids of
-            Right (id0, id1, id2, id3) -> pure
-              ( ExitSuccess
-              , [ "Invoice created: " <> showWithPrefix id0
-                , "Internal (proxy) invoice created: "
-                  <> showWithPrefix id1
-                , "Generating payment for " <> showWithPrefix id1 <> "..."
-                , "Remittance advice (using proxy bank account) created: "
-                  <> showWithPrefix id2
-                , "Remittance advice (using business unit bank account) created: "
-                  <> showWithPrefix id3
-                , "Invoice sent to client: " <> showWithPrefix id0
-                ]
-              )
-            Left err -> pure (ExitFailure 1, [Order.unErr err])
-        Nothing ->
-          pure (ExitFailure 1, ["Username not found: " <> User.unUserName user])
+      atomicallyM $
+        Core.selectUserByUsername _rDb user >>= \case
+          Just profile -> do
+            mids <- invoiceOrder _rDb (profile, input)
+            case mids of
+              Right (id0, id1, id2, id3) ->
+                pure
+                  ( ExitSuccess
+                  ,
+                    [ "Invoice created: " <> showWithPrefix id0
+                    , "Internal (proxy) invoice created: "
+                        <> showWithPrefix id1
+                    , "Generating payment for " <> showWithPrefix id1 <> "..."
+                    , "Remittance advice (using proxy bank account) created: "
+                        <> showWithPrefix id2
+                    , "Remittance advice (using business unit bank account) created: "
+                        <> showWithPrefix id3
+                    , "Invoice sent to client: " <> showWithPrefix id0
+                    ]
+                  )
+              Left err -> pure (ExitFailure 1, [Order.unErr err])
+          Nothing ->
+            pure (ExitFailure 1, ["Username not found: " <> User.unUserName user])
     Command.SendReminder input ->
       -- TODO Check this is the "system" user ?
-                                  atomicallyM $ do
-      Core.createEmail _rDb
-                       Email.InvoiceReminderEmail
-                       "TODO sender email addr"
-                       "TODO client email addr"
-      pure
-        ( ExitSuccess
-        , ["Reminder for invoice sent: " <> showWithPrefix input]
-        )
+      atomicallyM $ do
+        Core.createEmail
+          _rDb
+          Email.InvoiceReminderEmail
+          "TODO sender email addr"
+          "TODO client email addr"
+        pure
+          ( ExitSuccess
+          , ["Reminder for invoice sent: " <> showWithPrefix input]
+          )
     Command.MatchPayment input ->
       -- TODO Check this is the "system" user ?
-                                  atomicallyM $ do
-      mids <- matchPayment _rDb input
-      case mids of
-        Right (id0, id1) -> pure
-          ( ExitSuccess
-          , [ "Generating payment for " <> showWithPrefix input <> "..."
-            , "Remittance advice (using client bank account) created: "
-              <> showWithPrefix id0
-            , "Remittance advice (using business unit bank account) created: "
-              <> showWithPrefix id1
-            ]
-          )
-        Left err -> pure (ExitFailure 1, [Invoice.unErr err])
+      atomicallyM $ do
+        mids <- matchPayment _rDb input
+        case mids of
+          Right (id0, id1) ->
+            pure
+              ( ExitSuccess
+              ,
+                [ "Generating payment for " <> showWithPrefix input <> "..."
+                , "Remittance advice (using client bank account) created: "
+                    <> showWithPrefix id0
+                , "Remittance advice (using business unit bank account) created: "
+                    <> showWithPrefix id1
+                ]
+              )
+          Left err -> pure (ExitFailure 1, [Invoice.unErr err])
     Command.FormNewSimpleContract input -> do
       output <-
         runAppMSafe runtime
-        .   liftIO
-        .   STM.atomically
-        $   Core.selectUserByUsername _rDb user
-        >>= \case
+          . liftIO
+          . STM.atomically
+          $ Core.selectUserByUsername _rDb user
+            >>= \case
               Just profile -> do
                 key <- newCreateSimpleContractForm _rDb (profile, input)
                 pure $ Right key
@@ -728,48 +765,50 @@ handleCommand runtime@Runtime {..} user command = do
             Left err -> pure (ExitFailure 1, [show err])
         Left err -> pure (ExitFailure 1, [show err])
     Command.FormValidateSimpleContract input ->
-      atomicallyM $ Core.selectUserByUsername _rDb user >>= \case
-        Just profile -> do
-          mcontract <- readCreateSimpleContractForm _rDb (profile, input)
-          case mcontract of
-            Right contract -> do
-              case
-                  SimpleContract.validateCreateSimpleContract profile contract
-                of
+      atomicallyM $
+        Core.selectUserByUsername _rDb user >>= \case
+          Just profile -> do
+            mcontract <- readCreateSimpleContractForm _rDb (profile, input)
+            case mcontract of
+              Right contract -> do
+                case SimpleContract.validateCreateSimpleContract profile contract of
                   Right _ ->
                     pure (ExitSuccess, ["Simple contract form is valid."])
                   Left errs ->
                     pure (ExitFailure 1, map SimpleContract.unErr errs)
-            Left _ -> pure (ExitFailure 1, ["Key not found: " <> input])
-        Nothing ->
-          pure (ExitFailure 1, ["Username not found: " <> User.unUserName user])
+              Left _ -> pure (ExitFailure 1, ["Key not found: " <> input])
+          Nothing ->
+            pure (ExitFailure 1, ["Username not found: " <> User.unUserName user])
     Command.FilterEmails predicate -> do
       records <- runRunM runtime $ filterEmails' predicate
       let f Email.Email {..} =
-            let Email.EmailId      i         = _emailId
+            let Email.EmailId i = _emailId
                 User.UserEmailAddr recipient = _emailRecipient
-            in  i <> " " <> recipient
+             in i <> " " <> recipient
       pure (ExitSuccess, map f records)
     Command.ViewQueues _ -> do
       -- TODO Check first if the user has the necessary rights to handle this
       -- queue.
-      (_, output1) <- handleCommand
-        runtime
-        user
-        (Command.FilterUsers User.PredicateEmailAddrToVerify)
-      (_, output2) <- handleCommand runtime
-                                    user
-                                    (Command.FilterEmails Email.EmailsTodo)
+      (_, output1) <-
+        handleCommand
+          runtime
+          user
+          (Command.FilterUsers User.PredicateEmailAddrToVerify)
+      (_, output2) <-
+        handleCommand
+          runtime
+          user
+          (Command.FilterEmails Email.EmailsTodo)
       pure
         ( ExitSuccess
         , ["Email addresses to verify:"]
-        <> output1
-        <> ["Emails to send:"]
-        <> output2
+            <> output1
+            <> ["Emails to send:"]
+            <> output2
         )
     Command.Step True dryRun -> do
       (users, emails) <- runRunM runtime $ do
-        users  <- if dryRun then verifyEmailStepDryRun else verifyEmailStep
+        users <- if dryRun then verifyEmailStepDryRun else verifyEmailStep
         emails <- if dryRun then emailStepDryRun else emailStep
         pure (users, emails)
       let
@@ -783,9 +822,10 @@ handleCommand runtime@Runtime {..} user command = do
       pure (ExitSuccess, output1 <> output2 <> ["All steps done."])
     Command.Time step minute -> do
       let fmt = "%d/%b/%Y:%T %z"
-      output <- if step
-        then runRunM runtime $ stepTime minute
-        else runRunM runtime time
+      output <-
+        if step
+          then runRunM runtime $ stepTime minute
+          else runRunM runtime time
       output' <- liftIO $ formatUnixTime fmt $ fromEpochTime output
       pure (ExitSuccess, [T.decodeUtf8 output'])
     _ -> do
@@ -811,7 +851,6 @@ setUserEmailAddrAsVerifiedFull db (user, input) = transaction
       then setUserEmailAddrAsVerified db input
       else pure . Left $ User.MissingRight User.CanVerifyEmailAddr
 
-
 --------------------------------------------------------------------------------
 createLegal
   :: Core.StmDb -> Legal.Create -> STM (Either Legal.Err Legal.EntityId)
@@ -820,18 +859,19 @@ createLegal db Legal.Create {..} = do
  where
   transaction = do
     newId <- C.newIdOf @Legal.EntityId (Store._dbNextLegalId db)
-    let new = Legal.Entity
-          newId
-          _createSlug
-          _createName
-          _createCbeNumber
-          _createVatNumber
-          Nothing
-          []
-                           -- TODO Better logic for initial values.
-          [Legal.AuthorizedAsBuyer, Legal.AuthorizedAsSeller]
-          False
-          False
+    let new =
+          Legal.Entity
+            newId
+            _createSlug
+            _createName
+            _createCbeNumber
+            _createVatNumber
+            Nothing
+            []
+            -- TODO Better logic for initial values.
+            [Legal.AuthorizedAsBuyer, Legal.AuthorizedAsSeller]
+            False
+            False
     createLegalFull db new >>= either STM.throwSTM pure
 
 createLegalFull
@@ -844,11 +884,11 @@ updateLegal :: Core.StmDb -> Legal.Update -> STM (Either User.Err ())
 updateLegal db Legal.Update {..} = do
   mentity <- Core.selectEntityBySlug db _updateSlug
   case mentity of
-    Just Legal.Entity{} -> do
+    Just Legal.Entity {} -> do
       let replaceOlder entities =
             [ if Legal._entitySlug e == _updateSlug
-                then e { Legal._entityDescription = _updateDescription }
-                else e
+              then e {Legal._entityDescription = _updateDescription}
+              else e
             | e <- entities
             ]
       modifyLegalEntities db replaceOlder
@@ -872,12 +912,14 @@ linkLegalEntityToUser db slug uid role = do
     Just Legal.Entity {..} -> do
       let replaceOlder entities =
             [ if Legal._entitySlug e == slug
-                then e
-                  { Legal._entityUsersAndRoles = nub
-                                                 $ Legal.ActingUserId uid role
-                                                 : _entityUsersAndRoles
+              then
+                e
+                  { Legal._entityUsersAndRoles =
+                      nub $
+                        Legal.ActingUserId uid role
+                          : _entityUsersAndRoles
                   }
-                else e
+              else e
             | e <- entities
             ]
       modifyLegalEntities db replaceOlder
@@ -895,11 +937,11 @@ updateLegalEntityIsSupervised
 updateLegalEntityIsSupervised db slug b = do
   mentity <- Core.selectEntityBySlug db slug
   case mentity of
-    Just Legal.Entity{} -> do
+    Just Legal.Entity {} -> do
       let replaceOlder entities =
             [ if Legal._entitySlug e == slug
-                then e { Legal._entityIsSupervised = b }
-                else e
+              then e {Legal._entityIsSupervised = b}
+              else e
             | e <- entities
             ]
       modifyLegalEntities db replaceOlder
@@ -916,11 +958,11 @@ updateLegalEntityIsHost
 updateLegalEntityIsHost db slug b = do
   mentity <- Core.selectEntityBySlug db slug
   case mentity of
-    Just Legal.Entity{} -> do
+    Just Legal.Entity {} -> do
       let replaceOlder entities =
             [ if Legal._entitySlug e == slug
-                then e { Legal._entityIsHost = b }
-                else e
+              then e {Legal._entityIsHost = b}
+              else e
             | e <- entities
             ]
       modifyLegalEntities db replaceOlder
@@ -936,7 +978,6 @@ modifyLegalEntities
   :: Core.StmDb -> ([Legal.Entity] -> [Legal.Entity]) -> STM ()
 modifyLegalEntities db f =
   let tvar = Store._dbLegalEntities db in STM.modifyTVar tvar f
-
 
 --------------------------------------------------------------------------------
 selectUnitBySlug :: Text -> RunM (Maybe Business.Unit)
@@ -954,23 +995,24 @@ invoiceOrder
   :: Core.StmDb
   -> (User.UserProfile, Order.OrderId)
   -> STM
-       ( Either
-           Order.Err
-           ( Invoice.InvoiceId
-           , Invoice.InvoiceId
-           , RemittanceAdv.RemittanceAdvId
-           , RemittanceAdv.RemittanceAdvId
-           )
-       )
+      ( Either
+          Order.Err
+          ( Invoice.InvoiceId
+          , Invoice.InvoiceId
+          , RemittanceAdv.RemittanceAdvId
+          , RemittanceAdv.RemittanceAdvId
+          )
+      )
 invoiceOrder db (profile, _) = do
   mids <- STM.catchSTM (Right <$> createTwoInvoices db) (pure . Left)
   case mids of
     Right (id0, id1, id2, id3) -> do
       -- Invoices and remittance advices created, do the rest of the atomic process.
-      Core.createEmail db
-                       Email.InvoiceEmail
-                       (User._userProfileEmailAddr profile)
-                       (User._userProfileEmailAddr profile)
+      Core.createEmail
+        db
+        Email.InvoiceEmail
+        (User._userProfileEmailAddr profile)
+        (User._userProfileEmailAddr profile)
       -- TODO The email address should be the one from the client.
       pure $ Right (id0, id1, id2, id3)
     Left (Invoice.Err err) -> pure $ Left $ Order.Err err
@@ -983,7 +1025,6 @@ createTwoInvoices db = do
   case (mid0, mid1, mid2, mid3) of
     (Right id0, Right id1, Right id2, Right id3) -> pure (id0, id1, id2, id3)
     _ -> STM.throwSTM $ Invoice.Err "Failed to create invoices."
-
 
 --------------------------------------------------------------------------------
 createRemittanceAdv
@@ -1010,7 +1051,6 @@ modifyRemittanceAdvs
   -> STM ()
 modifyRemittanceAdvs db f =
   let tvar = Store._dbRemittanceAdvs db in STM.modifyTVar tvar f
-
 
 --------------------------------------------------------------------------------
 createEmployment
@@ -1040,8 +1080,8 @@ modifyEmployments db f =
 
 newCreateContractForm
   :: Core.StmDb -> (User.UserProfile, Employment.CreateContractAll') -> STM Text
-newCreateContractForm db (profile, Employment.CreateContractAll' gi ty ld rs inv)
-  = do
+newCreateContractForm db (profile, Employment.CreateContractAll' gi ty ld rs inv) =
+  do
     key <- Core.genRandomText db
     STM.modifyTVar (Store._dbFormCreateContractAll db) (add key)
     pure key
@@ -1058,23 +1098,25 @@ readCreateContractForm db (profile, key) = do
   m <- STM.readTVar $ Store._dbFormCreateContractAll db
   let mform = M.lookup (username, key) m
   pure $ maybe (Left ()) Right mform
-  where username = User._userCredsName $ User._userProfileCreds profile
+ where
+  username = User._userCredsName $ User._userProfileCreds profile
 
 writeCreateContractForm
   :: Core.StmDb
   -> (User.UserProfile, Text, Employment.CreateContractAll')
   -> STM Text
-writeCreateContractForm db (profile, key, Employment.CreateContractAll' gi ty ld rs inv)
-  = do
+writeCreateContractForm db (profile, key, Employment.CreateContractAll' gi ty ld rs inv) =
+  do
     STM.modifyTVar (Store._dbFormCreateContractAll db) save
     pure key
  where
   -- TODO Return an error when the key is not found.
-  save = M.adjust
-    (\(Employment.CreateContractAll _ _ _ _ _ es) ->
-      Employment.CreateContractAll gi ty ld rs inv es
-    )
-    (username, key)
+  save =
+    M.adjust
+      ( \(Employment.CreateContractAll _ _ _ _ _ es) ->
+          Employment.CreateContractAll gi ty ld rs inv es
+      )
+      (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
 addExpenseToContractForm
@@ -1082,11 +1124,12 @@ addExpenseToContractForm
 addExpenseToContractForm db (profile, key, expense) = do
   STM.modifyTVar (Store._dbFormCreateContractAll db) save
  where
-  save = M.adjust
-    (\(Employment.CreateContractAll gi ty ld rs inv es) ->
-      Employment.CreateContractAll gi ty ld rs inv $ es ++ [expense]
-    )
-    (username, key)
+  save =
+    M.adjust
+      ( \(Employment.CreateContractAll gi ty ld rs inv es) ->
+          Employment.CreateContractAll gi ty ld rs inv $ es ++ [expense]
+      )
+      (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
 writeExpenseToContractForm
@@ -1096,13 +1139,14 @@ writeExpenseToContractForm
 writeExpenseToContractForm db (profile, key, idx, expense) = do
   STM.modifyTVar (Store._dbFormCreateContractAll db) save
  where
-  save = M.adjust
-    (\(Employment.CreateContractAll gi ty ld rs inv es) ->
-      let f i e = if i == idx then expense else e
-          es' = zipWith f [0 ..] es
-      in  Employment.CreateContractAll gi ty ld rs inv es'
-    )
-    (username, key)
+  save =
+    M.adjust
+      ( \(Employment.CreateContractAll gi ty ld rs inv es) ->
+          let f i e = if i == idx then expense else e
+              es' = zipWith f [0 ..] es
+           in Employment.CreateContractAll gi ty ld rs inv es'
+      )
+      (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
 removeExpenseFromContractForm
@@ -1110,12 +1154,13 @@ removeExpenseFromContractForm
 removeExpenseFromContractForm db (profile, key, idx) = do
   STM.modifyTVar (Store._dbFormCreateContractAll db) save
  where
-  save = M.adjust
-    (\(Employment.CreateContractAll gi ty ld rs inv es) ->
-      let es' = map snd . filter ((/= idx) . fst) $ zip [0 ..] es
-      in  Employment.CreateContractAll gi ty ld rs inv es'
-    )
-    (username, key)
+  save =
+    M.adjust
+      ( \(Employment.CreateContractAll gi ty ld rs inv es) ->
+          let es' = map snd . filter ((/= idx) . fst) $ zip [0 ..] es
+           in Employment.CreateContractAll gi ty ld rs inv es'
+      )
+      (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
 -- | Attempt to validate a contract form and create it.
@@ -1126,11 +1171,11 @@ submitCreateContractForm'
 submitCreateContractForm' db (profile, input) = do
   let mc = Employment.validateCreateContract profile input
   case mc of
-    Right c   -> createEmployment db c
-    Left  err -> pure . Left $ Employment.Err (show err)
-
+    Right c -> createEmployment db c
+    Left err -> pure . Left $ Employment.Err (show err)
 
 --------------------------------------------------------------------------------
+
 -- | Create a new form instance in the staging area.
 formNewQuotation
   :: User.UserName
@@ -1139,14 +1184,16 @@ formNewQuotation
 formNewQuotation user input =
   ML.localEnv (<> "Command" <> "FormNewQuotation") $ do
     ML.info "Instantiating new quotation form..."
-    db   <- asks _rDb
-    mkey <- atomicallyM $ Core.selectUserByUsername db user >>= \case
-      Just profile -> do
-        key <- newCreateQuotationForm db (profile, input)
-        pure $ Right key
-      Nothing -> pure . Left . User.UserNotFound $ User.unUserName user
+    db <- asks _rDb
+    mkey <-
+      atomicallyM $
+        Core.selectUserByUsername db user >>= \case
+          Just profile -> do
+            key <- newCreateQuotationForm db (profile, input)
+            pure $ Right key
+          Nothing -> pure . Left . User.UserNotFound $ User.unUserName user
     case mkey of
-      Left  err -> ML.info $ "Can't instantiate form: " <> show err
+      Left err -> ML.info $ "Can't instantiate form: " <> show err
       Right key -> ML.info $ "Quotation form created: " <> key
     pure mkey
 
@@ -1157,7 +1204,7 @@ formNewQuotation'
 formNewQuotation' profile input =
   ML.localEnv (<> "Command" <> "FormNewQuotation") $ do
     ML.info "Instantiating new quotation form..."
-    db  <- asks _rDb
+    db <- asks _rDb
     key <- atomicallyM $ do
       newCreateQuotationForm db (profile, input)
     ML.info $ "Quotation form created: " <> key
@@ -1178,7 +1225,7 @@ readCreateQuotationFormResolved'
   :: User.UserProfile
   -> Text
   -> RunM
-       (Either () (Quotation.CreateQuotationAll, Maybe User.UserProfile, Maybe Legal.Entity, Maybe Business.Unit, Maybe Legal.Entity, Maybe Business.Unit))
+      (Either () (Quotation.CreateQuotationAll, Maybe User.UserProfile, Maybe Legal.Entity, Maybe Business.Unit, Maybe Legal.Entity, Maybe Business.Unit))
 readCreateQuotationFormResolved' profile key = do
   db <- asks _rDb
   atomicallyM $ readCreateQuotationFormResolved db profile key
@@ -1190,24 +1237,29 @@ readCreateQuotationFormResolved
   -> User.UserProfile
   -> Text
   -> STM
-       ( Either
-           ()
-           (Quotation.CreateQuotationAll, Maybe User.UserProfile, Maybe Legal.Entity, Maybe Business.Unit, Maybe Legal.Entity, Maybe Business.Unit)
-       )
+      ( Either
+          ()
+          (Quotation.CreateQuotationAll, Maybe User.UserProfile, Maybe Legal.Entity, Maybe Business.Unit, Maybe Legal.Entity, Maybe Business.Unit)
+      )
 readCreateQuotationFormResolved db profile key = do
   mform <- readCreateQuotationForm db (profile, key)
   case mform of
     Right form -> do
-      mclient <- maybe (pure Nothing) (Core.selectUserByUsername db)
-        $ Quotation._createQuotationClientUsername form
-      mSellerEntity <- maybe (pure Nothing) (Core.selectEntityBySlug db)
-        $ Quotation._createQuotationSellerEntity form
-      mSellerUnit <- maybe (pure Nothing) (Core.selectUnitBySlug db)
-        $ Quotation._createQuotationSellerUnit form
-      mBuyerEntity <- maybe (pure Nothing) (Core.selectEntityBySlug db)
-        $ Quotation._createQuotationBuyerEntity form
-      mBuyerUnit <- maybe (pure Nothing) (Core.selectUnitBySlug db)
-        $ Quotation._createQuotationBuyerUnit form
+      mclient <-
+        maybe (pure Nothing) (Core.selectUserByUsername db) $
+          Quotation._createQuotationClientUsername form
+      mSellerEntity <-
+        maybe (pure Nothing) (Core.selectEntityBySlug db) $
+          Quotation._createQuotationSellerEntity form
+      mSellerUnit <-
+        maybe (pure Nothing) (Core.selectUnitBySlug db) $
+          Quotation._createQuotationSellerUnit form
+      mBuyerEntity <-
+        maybe (pure Nothing) (Core.selectEntityBySlug db) $
+          Quotation._createQuotationBuyerEntity form
+      mBuyerUnit <-
+        maybe (pure Nothing) (Core.selectUnitBySlug db) $
+          Quotation._createQuotationBuyerUnit form
       pure $ Right (form, mclient, mSellerEntity, mSellerUnit, mBuyerEntity, mBuyerUnit)
     Left err -> pure $ Left err
 
@@ -1244,7 +1296,7 @@ writeCreateQuotationForm db (profile, key, form) = do
   pure key
  where
   -- TODO Return an error when the key is not found.
-  save     = M.adjust (const form) (username, key)
+  save = M.adjust (const form) (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
 deleteCreateQuotationForm :: Core.StmDb -> (User.UserProfile, Text) -> STM () -- TODO Error
@@ -1265,10 +1317,11 @@ submitCreateQuotationForm db (profile, Quotation.SubmitQuotation key) = do
         Right (id, resolvedClient) -> do
           -- Quotation created, do the rest of the atomic process.
           deleteCreateQuotationForm db (profile, key)
-          Core.createEmail db
-                           Email.QuotationEmail
-                           (User._userProfileEmailAddr profile)
-                           (User._userProfileEmailAddr resolvedClient)
+          Core.createEmail
+            db
+            Email.QuotationEmail
+            (User._userProfileEmailAddr profile)
+            (User._userProfileEmailAddr resolvedClient)
           pure $ Right id
         Left err -> pure $ Left err
     Left err -> pure . Left $ Quotation.Err (show err)
@@ -1283,15 +1336,15 @@ submitCreateQuotationForm'
   -> Maybe Legal.Entity
   -> Maybe Business.Unit
   -> STM
-       (Either Quotation.Err (Quotation.QuotationId, User.UserProfile))
+      (Either Quotation.Err (Quotation.QuotationId, User.UserProfile))
 submitCreateQuotationForm' db (profile, input) mresolvedClient mresolvedSellerEntity mresolvedSellerUnit mresolvedBuyerEntity mresolvedBuyerUnit = do
   let mc = Quotation.validateCreateQuotation profile input mresolvedClient mresolvedSellerEntity mresolvedSellerUnit mresolvedBuyerEntity mresolvedBuyerUnit
   case mc of
     Right (c, resolvedClient, _, _, _, _) -> do
       mid <- createQuotation db c
       case mid of
-        Right id  -> pure $ Right (id, resolvedClient)
-        Left  err -> pure $ Left err
+        Right id -> pure $ Right (id, resolvedClient)
+        Left err -> pure $ Left err
     Left err -> pure . Left $ Quotation.Err (show err)
 
 signQuotation
@@ -1300,7 +1353,7 @@ signQuotation
   -> RunM (Either Quotation.Err Order.OrderId)
 signQuotation user input = ML.localEnv (<> "Command" <> "SignQuotation") $ do
   ML.info "Signing quotation..."
-  db   <- asks _rDb
+  db <- asks _rDb
   moid <- atomicallyM $ signQuotation' db user input
   case moid of
     Right oid -> do
@@ -1318,7 +1371,7 @@ rejectQuotation
 rejectQuotation user input mcomment =
   ML.localEnv (<> "Command" <> "RejectQuotation") $ do
     ML.info "Rejecting quotation..."
-    db   <- asks _rDb
+    db <- asks _rDb
     moid <- atomicallyM $ rejectQuotation' db user input mcomment
     case moid of
       Right () -> do
@@ -1328,22 +1381,24 @@ rejectQuotation user input mcomment =
         ML.info msg
         pure $ Left err
 
-signQuotation' db user input = Core.selectUserByUsername db user >>= \case
-  Just profile -> do
-    mid <- setQuotationAsSignedFull db (profile, input)
-    case mid of
-      Right id  -> pure $ Right id
-      Left  err -> pure $ Left err
-  Nothing ->
-    pure $ Left $ Quotation.Err $ "Username not found: " <> User.unUserName user
+signQuotation' db user input =
+  Core.selectUserByUsername db user >>= \case
+    Just profile -> do
+      mid <- setQuotationAsSignedFull db (profile, input)
+      case mid of
+        Right id -> pure $ Right id
+        Left err -> pure $ Left err
+    Nothing ->
+      pure $ Left $ Quotation.Err $ "Username not found: " <> User.unUserName user
 
 setQuotationAsSignedFull
   :: Core.StmDb
   -> (User.UserProfile, Quotation.QuotationId)
   -> STM (Either Quotation.Err Order.OrderId)
-setQuotationAsSignedFull db (user, input) = STM.catchSTM
-  (Right <$> transaction)
-  (pure . Left)
+setQuotationAsSignedFull db (user, input) =
+  STM.catchSTM
+    (Right <$> transaction)
+    (pure . Left)
  where
   transaction = do
     -- TODO Check the user can sign (e.g. the quotation is her).
@@ -1363,10 +1418,11 @@ setQuotationAsSigned db id oid = do
       Quotation.QuotationSent -> do
         let replaceOlder records =
               [ if Quotation._quotationId r == id
-                  then r
+                then
+                  r
                     { Quotation._quotationState = Quotation.QuotationSigned oid
                     }
-                  else r
+                else r
               | r <- records
               ]
         Core.modifyQuotations db replaceOlder
@@ -1378,11 +1434,11 @@ rejectQuotation' db user input mcomment =
   Core.selectUserByUsername db user >>= \case
     Just profile -> setQuotationAsRejectedFull db profile input mcomment
     Nothing ->
-      pure
-        $  Left
-        $  Quotation.Err
-        $  "Username not found: "
-        <> User.unUserName user
+      pure $
+        Left $
+          Quotation.Err $
+            "Username not found: "
+              <> User.unUserName user
 
 -- FIXME: Remove the "user" param since not used.
 setQuotationAsRejectedFull
@@ -1391,9 +1447,10 @@ setQuotationAsRejectedFull
   -> Quotation.QuotationId
   -> Maybe Text
   -> STM (Either Quotation.Err ())
-setQuotationAsRejectedFull db _ input mcomment = STM.catchSTM
-  (Right <$> transaction)
-  (pure . Left)
+setQuotationAsRejectedFull db _ input mcomment =
+  STM.catchSTM
+    (Right <$> transaction)
+    (pure . Left)
  where
   transaction = do
     -- TODO Check the user can reject (e.g. the quotation is her).
@@ -1411,18 +1468,19 @@ setQuotationAsRejected db id mcomment = do
       Quotation.QuotationSent -> do
         let replaceOlder records =
               [ if Quotation._quotationId r == id
-                  then r
-                    { Quotation._quotationState = Quotation.QuotationRejected
-                                                    mcomment
+                then
+                  r
+                    { Quotation._quotationState =
+                        Quotation.QuotationRejected
+                          mcomment
                     }
-                  else r
+                else r
               | r <- records
               ]
         Core.modifyQuotations db replaceOlder
         pure $ Right ()
       _ -> pure . Left $ Quotation.Err "Quotation is not in the Sent state."
     Nothing -> pure . Left $ Quotation.Err $ "No such quotation." <> show id
-
 
 --------------------------------------------------------------------------------
 filterOrders :: Core.StmDb -> Order.Predicate -> STM [Order.Order]
@@ -1436,21 +1494,23 @@ filterOrders' predicate = do
   db <- asks _rDb
   atomicallyM $ filterOrders db predicate
 
-
 --------------------------------------------------------------------------------
+
 -- | Create a new form instance in the staging area.
 newCreateSimpleContractForm
   :: Core.StmDb
   -> (User.UserProfile, SimpleContract.CreateContractAll')
   -> STM Text
-newCreateSimpleContractForm db (profile, SimpleContract.CreateContractAll' ty rs cl inv)
-  = do
+newCreateSimpleContractForm db (profile, SimpleContract.CreateContractAll' ty rs cl inv) =
+  do
     key <- Core.genRandomText db
     STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) (add key)
     pure key
  where
-  add key = M.insert (username, key)
-                     (SimpleContract.CreateContractAll ty rs cl inv [] [])
+  add key =
+    M.insert
+      (username, key)
+      (SimpleContract.CreateContractAll ty rs cl inv [] [])
   username = User._userCredsName $ User._userProfileCreds profile
 
 readCreateSimpleContractForm
@@ -1463,17 +1523,18 @@ writeCreateSimpleContractForm
   :: Core.StmDb
   -> (User.UserProfile, Text, SimpleContract.CreateContractAll')
   -> STM Text
-writeCreateSimpleContractForm db (profile, key, SimpleContract.CreateContractAll' ty rs cl inv)
-  = do
+writeCreateSimpleContractForm db (profile, key, SimpleContract.CreateContractAll' ty rs cl inv) =
+  do
     STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
     pure key
  where
   -- TODO Return an error when the key is not found.
-  save = M.adjust
-    (\(SimpleContract.CreateContractAll _ _ _ _ ds es) ->
-      SimpleContract.CreateContractAll ty rs cl inv ds es
-    )
-    (username, key)
+  save =
+    M.adjust
+      ( \(SimpleContract.CreateContractAll _ _ _ _ ds es) ->
+          SimpleContract.CreateContractAll ty rs cl inv ds es
+      )
+      (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
 addRoleToSimpleContractForm
@@ -1482,12 +1543,13 @@ addRoleToSimpleContractForm db (profile, key, SimpleContract.SelectRole role) =
   do
     STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
-  save = M.adjust
-    (\(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
-      let ty' = ty { SimpleContract._createContractRole = role }
-      in  SimpleContract.CreateContractAll ty' rs cl inv ds es
-    )
-    (username, key)
+  save =
+    M.adjust
+      ( \(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
+          let ty' = ty {SimpleContract._createContractRole = role}
+           in SimpleContract.CreateContractAll ty' rs cl inv ds es
+      )
+      (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
 addDateToSimpleContractForm
@@ -1495,11 +1557,12 @@ addDateToSimpleContractForm
 addDateToSimpleContractForm db (profile, key, date) = do
   STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
-  save = M.adjust
-    (\(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
-      SimpleContract.CreateContractAll ty rs cl inv (ds ++ [date]) es
-    )
-    (username, key)
+  save =
+    M.adjust
+      ( \(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
+          SimpleContract.CreateContractAll ty rs cl inv (ds ++ [date]) es
+      )
+      (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
 writeDateToSimpleContractForm
@@ -1509,13 +1572,14 @@ writeDateToSimpleContractForm
 writeDateToSimpleContractForm db (profile, key, idx, date) = do
   STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
-  save = M.adjust
-    (\(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
-      let f i e = if i == idx then date else e
-          ds' = zipWith f [0 ..] ds
-      in  SimpleContract.CreateContractAll ty rs cl inv ds' es
-    )
-    (username, key)
+  save =
+    M.adjust
+      ( \(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
+          let f i e = if i == idx then date else e
+              ds' = zipWith f [0 ..] ds
+           in SimpleContract.CreateContractAll ty rs cl inv ds' es
+      )
+      (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
 removeDateFromSimpleContractForm
@@ -1523,12 +1587,13 @@ removeDateFromSimpleContractForm
 removeDateFromSimpleContractForm db (profile, key, idx) = do
   STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
-  save = M.adjust
-    (\(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
-      let ds' = map snd . filter ((/= idx) . fst) $ zip [0 ..] ds
-      in  SimpleContract.CreateContractAll ty rs cl inv ds' es
-    )
-    (username, key)
+  save =
+    M.adjust
+      ( \(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
+          let ds' = map snd . filter ((/= idx) . fst) $ zip [0 ..] ds
+           in SimpleContract.CreateContractAll ty rs cl inv ds' es
+      )
+      (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
 addVATToSimpleContractForm
@@ -1537,12 +1602,13 @@ addVATToSimpleContractForm db (profile, key, SimpleContract.SelectVAT rate) =
   do
     STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
-  save = M.adjust
-    (\(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
-      let inv' = inv { SimpleContract._createContractVAT = rate }
-      in  SimpleContract.CreateContractAll ty rs cl inv' ds es
-    )
-    (username, key)
+  save =
+    M.adjust
+      ( \(SimpleContract.CreateContractAll ty rs cl inv ds es) ->
+          let inv' = inv {SimpleContract._createContractVAT = rate}
+           in SimpleContract.CreateContractAll ty rs cl inv' ds es
+      )
+      (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
 addExpenseToSimpleContractForm
@@ -1550,11 +1616,12 @@ addExpenseToSimpleContractForm
 addExpenseToSimpleContractForm db (profile, key, expense) = do
   STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
-  save = M.adjust
-    (\(SimpleContract.CreateContractAll ty ld cl rs inv es) ->
-      SimpleContract.CreateContractAll ty ld cl rs inv $ es ++ [expense]
-    )
-    (username, key)
+  save =
+    M.adjust
+      ( \(SimpleContract.CreateContractAll ty ld cl rs inv es) ->
+          SimpleContract.CreateContractAll ty ld cl rs inv $ es ++ [expense]
+      )
+      (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
 writeExpenseToSimpleContractForm
@@ -1564,13 +1631,14 @@ writeExpenseToSimpleContractForm
 writeExpenseToSimpleContractForm db (profile, key, idx, expense) = do
   STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
-  save = M.adjust
-    (\(SimpleContract.CreateContractAll ty ld rs cl inv es) ->
-      let f i e = if i == idx then expense else e
-          es' = zipWith f [0 ..] es
-      in  SimpleContract.CreateContractAll ty ld rs cl inv es'
-    )
-    (username, key)
+  save =
+    M.adjust
+      ( \(SimpleContract.CreateContractAll ty ld rs cl inv es) ->
+          let f i e = if i == idx then expense else e
+              es' = zipWith f [0 ..] es
+           in SimpleContract.CreateContractAll ty ld rs cl inv es'
+      )
+      (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
 
 removeExpenseFromSimpleContractForm
@@ -1578,14 +1646,14 @@ removeExpenseFromSimpleContractForm
 removeExpenseFromSimpleContractForm db (profile, key, idx) = do
   STM.modifyTVar (Store._dbFormCreateSimpleContractAll db) save
  where
-  save = M.adjust
-    (\(SimpleContract.CreateContractAll ty ld rs cl inv es) ->
-      let es' = map snd . filter ((/= idx) . fst) $ zip [0 ..] es
-      in  SimpleContract.CreateContractAll ty ld rs cl inv es'
-    )
-    (username, key)
+  save =
+    M.adjust
+      ( \(SimpleContract.CreateContractAll ty ld rs cl inv es) ->
+          let es' = map snd . filter ((/= idx) . fst) $ zip [0 ..] es
+           in SimpleContract.CreateContractAll ty ld rs cl inv es'
+      )
+      (username, key)
   username = User._userCredsName $ User._userProfileCreds profile
-
 
 --------------------------------------------------------------------------------
 createInvoice :: Core.StmDb -> STM (Either Invoice.Err Invoice.InvoiceId)
@@ -1611,10 +1679,10 @@ matchPayment
   :: Core.StmDb
   -> Invoice.InvoiceId
   -> STM
-       ( Either
-           Invoice.Err
-           (RemittanceAdv.RemittanceAdvId, RemittanceAdv.RemittanceAdvId)
-       )
+      ( Either
+          Invoice.Err
+          (RemittanceAdv.RemittanceAdvId, RemittanceAdv.RemittanceAdvId)
+      )
 matchPayment db _ =
   STM.catchSTM (Right <$> createTwoRemittanceAdvs db) (pure . Left)
 
@@ -1660,7 +1728,7 @@ filterUsers' predicate = do
 signup :: User.Signup -> RunM (Either User.Err (User.UserId, Email.EmailId))
 signup input = ML.localEnv (<> "Command" <> "Signup") $ do
   ML.info "Signing up new user..."
-  db   <- asks _rDb
+  db <- asks _rDb
   muid <- atomicallyM $ Core.signup db input
   case muid of
     Right (uid, eid) -> do
@@ -1674,7 +1742,7 @@ signup input = ML.localEnv (<> "Command" <> "Signup") $ do
 inviteUser :: User.Invite -> RunM (Either User.Err User.UserId)
 inviteUser input = ML.localEnv (<> "Command" <> "Signup") $ do
   ML.info "Inviting new user..."
-  db   <- asks _rDb
+  db <- asks _rDb
   muid <- atomicallyM $ Core.inviteUser db input
   case muid of
     Right (uid, eid) -> do
@@ -1694,8 +1762,8 @@ setUserEmailAddrAsVerified db username = do
       Nothing -> do
         let replaceOlder users =
               [ if User._userCredsName (User._userProfileCreds u) == username
-                  then u { User._userProfileEmailAddrVerified = Just "TODO" }
-                  else u
+                then u {User._userProfileEmailAddrVerified = Just "TODO"}
+                else u
               | u <- users
               ]
         Core.modifyUsers db replaceOlder
@@ -1716,9 +1784,11 @@ selectEntityBySlugResolved db name = do
       musers <- mapM select $ Legal._entityUsersAndRoles entity
       if any (isNothing . fst) musers
         then pure Nothing -- TODO Error
-        else pure . Just . (entity, ) $ map
-          (\(Just u, role) -> Legal.ActingUser u role)
-          musers
+        else
+          pure . Just . (entity,) $
+            map
+              (\(Just u, role) -> Legal.ActingUser u role)
+              musers
     Nothing -> pure Nothing
 
 readLegalEntities :: Core.StmDb -> STM [Legal.Entity]
@@ -1727,7 +1797,6 @@ readLegalEntities db = do
   STM.readTVar tvar
 
 withRuntimeAtomically f a = ask >>= \rt -> atomicallyM $ f rt a
-
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -1741,7 +1810,8 @@ readForm getTVar db (profile, key) = do
   m <- STM.readTVar $ getTVar db
   let mform = M.lookup (username, key) m
   pure $ maybe (Left ()) Right mform
-  where username = User._userCredsName $ User._userProfileCreds profile
+ where
+  username = User._userCredsName $ User._userProfileCreds profile
 
 readForms
   :: forall a
@@ -1753,7 +1823,8 @@ readForms getTVar db profile = do
   m <- STM.readTVar $ getTVar db
   let mform = M.filterWithKey (\(username', _) _ -> username == username') m
   pure $ Right $ map (\((_, key), a) -> (key, a)) $ M.toList mform
-  where username = User._userCredsName $ User._userProfileCreds profile
+ where
+  username = User._userCredsName $ User._userProfileCreds profile
 
 deleteForm
   :: forall a
@@ -1763,10 +1834,10 @@ deleteForm
   -> STM ()
 deleteForm getTVar db (profile, key) =
   let tvar = getTVar db
-      f    = M.delete (username, key)
-  in  STM.modifyTVar tvar f
-  where username = User._userCredsName $ User._userProfileCreds profile
-
+      f = M.delete (username, key)
+   in STM.modifyTVar tvar f
+ where
+  username = User._userCredsName $ User._userProfileCreds profile
 
 --------------------------------------------------------------------------------
 runWithRuntime runtime = do
@@ -1781,9 +1852,10 @@ runWithRuntime runtime = do
 
 server runtime sock = do
   (conn, _) <- accept sock -- TODO bracket (or catch) and close too
-  void $ forkFinally
-    (handler runtime conn)
-    (const $ putStrLn @Text "Closing connection." >> close conn) -- fixme: use logger?
+  void $
+    forkFinally
+      (handler runtime conn)
+      (const $ putStrLn @Text "Closing connection." >> close conn) -- fixme: use logger?
   server runtime sock
 
 handler runtime conn = do
@@ -1796,9 +1868,9 @@ repl runtime conn = do
   let input = B.unpack <$> B.words msg -- TODO decodeUtf8
   case input of
     _ | B.null msg -> return () -- Connection lost.
-    ["quit"]       -> return ()
-    []             -> repl runtime conn
-    _              -> do
+    ["quit"] -> return ()
+    [] -> repl runtime conn
+    _ -> do
       let result = A.execParserPure A.defaultPrefs Command.parserInfo input
       case result of
         A.Success command -> do
@@ -1809,5 +1881,4 @@ repl runtime conn = do
             let (errMsg, _, _) = execFailure "cty"
             sendAll conn (B.pack $ show errMsg <> "\n")
         A.CompletionInvoked _ -> print @IO @Text "Shouldn't happen" -- fixme: use logger?
-
       repl runtime conn
