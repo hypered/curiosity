@@ -68,7 +68,7 @@ from unit testing to end-to-end testing. But more importantly, you can think of
 it as moving the burden from developers to business experts. Indeed, I claim
 that the most important subject to overcome for Smart when it comes to internal
 software development is not on the programming side (even if there are
-important chanllenges there) but is to be able to express and master what the
+important challenges there) but is to be able to express and master what the
 software is supposed to do.
 
 So the central theme I tried to follow was this: I wanted to expose the system
@@ -123,7 +123,7 @@ developers.
 
 Furthermore, because the design exists in Figma, in a reference implementation
 (using [Pugs](https://pugjs.org/), making it very straightforward to create new
-screens) and, over time, in the various technolgies used in the different
+screens) and, over time, in the various technologies used in the different
 applications (e.g.  [Razor templates](https://github.com/smartcoop/design-cs)),
 this means that a lot of different profiles are autonomous to create new
 screens. For instance, a backend developer can quickly generate the same HTML
