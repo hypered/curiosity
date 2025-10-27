@@ -17,10 +17,10 @@
         "homepage": null,
         "owner": "hypered",
         "repo": "curiosity",
-        "rev": "68d8d2a29001364f76a714cdd60e6010f4292f5f",
-        "sha256": "0qabyjc737j4w5kipxfbsgvl9905x5pbglcl0zs77kj10absn983",
+        "rev": "8db69a5dc5bff838a0f17515ff4ec0ae170e59da",
+        "sha256": "19fzg64wvlb48pg76vpw66psx9cbm1x8kbax3nvmn6mazyb9v4i7",
         "type": "tarball",
-        "url": "https://github.com/hypered/curiosity/archive/68d8d2a29001364f76a714cdd60e6010f4292f5f.tar.gz",
+        "url": "https://github.com/hypered/curiosity/archive/8db69a5dc5bff838a0f17515ff4ec0ae170e59da.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "niv": {
