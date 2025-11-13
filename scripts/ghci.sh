@@ -8,7 +8,6 @@
 #   - Then load what we want: cty-interactive.hs
 
 ghc --interactive \
-  -i../smart-design-hs/lib/src/ \
   -ibin/ \
   -isrc/ \
   -hide-package base \
@@ -31,3 +30,6 @@ ghc --interactive \
   -XOverloadedStrings \
   -XPackageImports \
   -ghci-script scripts/ghci.conf
+
+# This line can be used during development against a local smart-design-hs.
+#  -i../smart-design-hs/lib/src/ \
