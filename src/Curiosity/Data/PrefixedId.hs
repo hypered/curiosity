@@ -30,7 +30,7 @@ import qualified Text.Blaze.Html5              as H
 import  Network.HTTP.Types.Status (unprocessableEntity422)
 import qualified Commence.Runtime.Errors as Errs
 import qualified Commence.Types.Wrapped        as W
-import           Control.Lens
+import           Control.Lens hiding (Prefixed)
 import           Data.Aeson
 import qualified Data.Text                     as T
 import           Web.HttpApiData

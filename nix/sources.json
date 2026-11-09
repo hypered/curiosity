@@ -5,10 +5,10 @@
         "homepage": null,
         "owner": "hypered",
         "repo": "commence",
-        "rev": "9896c3278020ddb9f4c60fb3dc748ad4dfe7fce6",
-        "sha256": "0582jr141fqrbjsng2aq49247k7acgqnvs2kg0avkln983y51ap8",
+        "rev": "dfd7f0ff5051169b6a7e2a5064902f36b3eae598",
+        "sha256": "19wl1v93ih3hhpq67nxnznxg1yfn26a9bgiwjlzfb0j5qi58qbng",
         "type": "tarball",
-        "url": "https://github.com/hypered/commence/archive/9896c3278020ddb9f4c60fb3dc748ad4dfe7fce6.tar.gz",
+        "url": "https://github.com/hypered/commence/archive/dfd7f0ff5051169b6a7e2a5064902f36b3eae598.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "gitignore": {
@@ -48,15 +48,15 @@
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "nixpkgs": {
-        "branch": "nixos-22.05",
+        "branch": "nixos-26.05",
         "description": "Nix Packages collection",
         "homepage": "https://github.com/NixOS/nixpkgs",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "b3a8f7ed267e0a7ed100eb7d716c9137ff120fe3",
-        "sha256": "1q8hin4wj8iic4f9nlrpfh3pnyba1v89hfv9vlkgii37v44yl5cr",
+        "rev": "08d3a97586f6b6343b3b5e799980773629432610",
+        "sha256": "18yjn1zdwhkn2p9yf95xw73pk4qsg2w6w80pc9gv6y11zwqqbag7",
         "type": "tarball",
-        "url": "https://github.com/NixOS/nixpkgs/archive/b3a8f7ed267e0a7ed100eb7d716c9137ff120fe3.tar.gz",
+        "url": "https://github.com/NixOS/nixpkgs/archive/08d3a97586f6b6343b3b5e799980773629432610.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "smart-design-hs": {

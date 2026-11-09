@@ -1,4 +1,4 @@
 { pkgs, ... }:
 {
-  virtualisation.digitalOceanImage.diskSize = 8192;
+  virtualisation.diskSize = 8192;
 }

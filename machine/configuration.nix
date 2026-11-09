@@ -46,7 +46,7 @@ in
       ''ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILMtgSsi3eFUXHQtpJ0xxhv9AUVSvgmp/c6F7ieJ1u/+ github-deploy-key''
     ];
   };
-  services.openssh.permitRootLogin = lib.mkDefault "yes";
+  services.openssh.settings.PermitRootLogin = lib.mkDefault "yes";
   services.getty.autologinUser = lib.mkDefault "root";
 
   imports = [
